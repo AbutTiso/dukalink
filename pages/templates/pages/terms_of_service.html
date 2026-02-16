@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Terms of Service - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-file-contract fa-3x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h1 class="display-5 fw-bold mb-3">Terms of Service</h1>
+                <p class="lead text-muted">Last updated: February 12, 2026</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="card-modern p-5">
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">1. Acceptance of Terms</h4>
+                    <p class="text-muted">By accessing or using DukaLink's platform, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">2. Description of Service</h4>
+                    <p class="text-muted">DukaLink provides an online marketplace platform that connects vendors and customers in Kenya. We enable vendors to list and sell products, and customers to purchase products from multiple vendors through a single checkout process.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">3. Vendor Terms</h4>
+                    <p class="text-muted mb-3">Vendors agree to:</p>
+                    <ul class="text-muted">
+                        <li>Provide accurate business information and valid registration documents</li>
+                        <li>Maintain valid KRA PIN and business permits</li>
+                        <li>List genuine products with accurate descriptions and pricing</li>
+                        <li>Fulfill orders promptly and maintain good customer service</li>
+                        <li>Comply with all Kenyan laws and regulations</li>
+                        <li>Pay applicable platform fees and commissions</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">4. Customer Terms</h4>
+                    <p class="text-muted mb-3">Customers agree to:</p>
+                    <ul class="text-muted">
+                        <li>Provide accurate personal and payment information</li>
+                        <li>Not engage in fraudulent activities</li>
+                        <li>Respect vendor return and refund policies</li>
+                        <li>Use the platform for lawful purposes only</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">5. Payments and Fees</h4>
+                    <p class="text-muted">All payments are processed securely through M-Pesa or other integrated payment gateways. DukaLink charges a commission on successful sales. Vendors are responsible for any applicable taxes.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">6. Intellectual Property</h4>
+                    <p class="text-muted">The DukaLink platform, including its original content, features, and functionality, is owned by DukaLink and is protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">7. Termination</h4>
+                    <p class="text-muted">We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the service will immediately cease.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">8. Limitation of Liability</h4>
+                    <p class="text-muted">In no event shall DukaLink, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the service.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">9. Changes to Terms</h4>
+                    <p class="text-muted">We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days' notice prior to any new terms taking effect.</p>
+                </div>
+                
+                <div>
+                    <h4 class="fw-bold mb-3">10. Contact Information</h4>
+                    <p class="text-muted">If you have any questions about these Terms, please contact us at:</p>
+                    <p class="fw-medium mb-1">Email: legal@dukalink.com</p>
+                    <p class="fw-medium">Address: iHub, Nairobi, Kenya</p>
+                </div>
+            </div>
+            
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="javascript:history.back()" class="btn btn-light btn-lg" style="border-radius: 50px; padding: 0.75rem 2rem;">
+                    <i class="fas fa-arrow-left me-2"></i>Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    
+    ul li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

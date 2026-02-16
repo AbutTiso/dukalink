@@ -1,0 +1,306 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Verify Vendor Documents - DukaLink Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row">
+        <!-- Vendor Info Column -->
+        <div class="col-lg-4 mb-4">
+            <div class="card-modern p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-store me-2" style="color: var(--duka-blue);"></i>
+                    Vendor Information
+                </h5>
+                
+                <div class="text-center mb-4">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center mx-auto" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                        <span class="fw-bold text-white" style="font-size: 2rem;">{{ vendor.name|first|upper }}</span>
+                    </div>
+                    <h6 class="fw-bold mt-3">{{ vendor.name }}</h6>
+                    <span class="badge" style="background: 
+                        {% if vendor.verification_status == 'verified' %}#10b981
+                        {% elif vendor.verification_status == 'rejected' %}#ef4444
+                        {% elif vendor.verification_status == 'under_review' %}#f59e0b
+                        {% else %}#64748b{% endif %}; 
+                        color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                        {{ vendor.get_verification_status_display }}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Owner</small>
+                    <span class="fw-medium">{{ vendor.owner.get_full_name|default:vendor.owner.username }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Email</small>
+                    <span>{{ vendor.owner.email }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Phone</small>
+                    <span>{{ vendor.phone }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Business Type</small>
+                    <span>{{ vendor.get_business_type_display }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Registered</small>
+                    <span>{{ vendor.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Documents Column -->
+        <div class="col-lg-8 mb-4">
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-file-alt me-2" style="color: var(--duka-yellow);"></i>
+                    Business Documents
+                </h5>
+                
+                <div class="row g-4">
+                    <!-- Business Registration -->
+                    <div class="col-md-6">
+                        <div class="document-card p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-certificate fa-2x me-2" style="color: var(--duka-blue);"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Business Registration</h6>
+                                    <small class="text-muted">Certificate of Registration/BRS</small>
+                                </div>
+                            </div>
+                            {% if vendor.business_registration_cert %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success mb-2">✓ Uploaded</span>
+                                    <div>
+                                        <a href="{{ vendor.business_registration_cert.url }}" 
+                                           class="btn btn-sm" target="_blank"
+                                           style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye"></i> View Document
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        Reg No: {{ vendor.business_registration_number|default:"—" }}
+                                    </small>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- KRA Documents -->
+                    <div class="col-md-6">
+                        <div class="document-card p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-file-invoice fa-2x me-2" style="color: var(--duka-blue);"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0">KRA Documents</h6>
+                                    <small class="text-muted">PIN Certificate</small>
+                                </div>
+                            </div>
+                            {% if vendor.kra_certificate %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success mb-2">✓ Uploaded</span>
+                                    <div>
+                                        <a href="{{ vendor.kra_certificate.url }}" 
+                                           class="btn btn-sm" target="_blank"
+                                           style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye"></i> View Document
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        KRA PIN: {{ vendor.kra_pin|default:"—" }}
+                                    </small>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Tax Compliance -->
+                    <div class="col-md-6">
+                        <div class="document-card p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-file-invoice-dollar fa-2x me-2" style="color: var(--duka-blue);"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Tax Compliance</h6>
+                                    <small class="text-muted">Tax Compliance Certificate</small>
+                                </div>
+                            </div>
+                            {% if vendor.tax_compliance_cert %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success mb-2">✓ Uploaded</span>
+                                    <a href="{{ vendor.tax_compliance_cert.url }}" 
+                                       class="btn btn-sm" target="_blank"
+                                       style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-warning">Optional</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Owner ID -->
+                    <div class="col-md-6">
+                        <div class="document-card p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-id-card fa-2x me-2" style="color: var(--duka-blue);"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Owner ID</h6>
+                                    <small class="text-muted">National ID/Passport</small>
+                                </div>
+                            </div>
+                            {% if vendor.owner_id_front and vendor.owner_id_back %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success mb-2">✓ Uploaded</span>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ vendor.owner_id_front.url }}" 
+                                           class="btn btn-sm" target="_blank"
+                                           style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye"></i> Front
+                                        </a>
+                                        <a href="{{ vendor.owner_id_back.url }}" 
+                                           class="btn btn-sm" target="_blank"
+                                           style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye"></i> Back
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        ID No: {{ vendor.owner_id_number|default:"—" }}
+                                    </small>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Business Permit -->
+                    <div class="col-md-6">
+                        <div class="document-card p-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-file-signature fa-2x me-2" style="color: var(--duka-blue);"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Business Permit</h6>
+                                    <small class="text-muted">Single Business Permit</small>
+                                </div>
+                            </div>
+                            {% if vendor.business_permit %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success mb-2">✓ Uploaded</span>
+                                    <a href="{{ vendor.business_permit.url }}" 
+                                       class="btn btn-sm" target="_blank"
+                                       style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if vendor.permit_expiry_date %}
+                                        <small class="text-muted d-block mt-1">
+                                            Expires: {{ vendor.permit_expiry_date|date:"M d, Y" }}
+                                            {% if vendor.permit_expiry_date < today %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Verification Form -->
+            <div class="card-modern p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-check-circle me-2" style="color: var(--duka-green);"></i>
+                    Verification Decision
+                </h5>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Verification Status</label>
+                        <div class="verification-options">
+                            {% for radio in form.verification_status %}
+                                <div class="form-check mb-2">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Verification Notes</label>
+                        {{ form.verification_notes }}
+                        <small class="text-muted">{{ form.verification_notes.help_text }}</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.notify_vendor }}
+                            <label class="form-check-label" for="{{ form.notify_vendor.id_for_label }}">
+                                {{ form.notify_vendor.help_text }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-duka-green btn-lg">
+                            <i class="fas fa-save me-2"></i> Submit Verification
+                        </button>
+                        <a href="{% url 'admin_dashboard:vendor_documents' %}" 
+                           class="btn btn-light btn-lg">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .document-card {
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        height: 100%;
+    }
+    
+    .verification-options {
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--duka-blue);
+        border-color: var(--duka-blue);
+    }
+    
+    .btn-duka-green {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .btn-duka-green:hover {
+        background: #059669;
+        color: white;
+    }
+</style>
+{% endblock %}

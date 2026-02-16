@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} Details - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:vendor_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Order #{{ order.id }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Order Details Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>Order #{{ order.id }}
+                    </h4>
+                    <span class="badge bg-light text-dark">
+                        {{ order.created_at|date:"F j, Y H:i" }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Order Status -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Order Status</h6>
+                            <span class="badge 
+                                {% if order.status == 'completed' %}bg-success
+                                {% elif order.status == 'cancelled' %}bg-danger
+                                {% elif order.status == 'processing' %}bg-info
+                                {% else %}bg-warning{% endif %} p-3">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Payment Status</h6>
+                            <span class="badge {% if order.paid %}bg-success{% else %}bg-warning{% endif %} p-3">
+                                {% if order.paid %}Paid{% else %}Pending{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Customer Information</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1"><strong>Name:</strong></p>
+                            <p>{{ order.customer_name }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1"><strong>Phone:</strong></p>
+                            <p>
+                                <i class="fas fa-phone me-1"></i>{{ order.customer_phone }}
+                                {% if order.customer_phone %}
+                                <a href="https://wa.me/254{{ order.customer_phone|slice:'-9' }}" 
+                                   class="ms-2 text-success" target="_blank">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1"><strong>Email:</strong></p>
+                            <p>{{ order.customer_email|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Order Items</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product</th>
+                                            <th class="text-center">Quantity</th>
+                                            <th class="text-end">Unit Price</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in order_items %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if item.product.image %}
+                                                    <img src="{{ item.product.image.url }}" 
+                                                         alt="{{ item.product.name }}"
+                                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 10px;">
+                                                    {% else %}
+                                                    <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 8px; margin-right: 10px; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-box text-muted"></i>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ item.product.name }}</strong><br>
+                                                        <small class="text-muted">SKU: {{ item.product.sku|default:"N/A" }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center align-middle">{{ item.quantity }}</td>
+                                            <td class="text-end align-middle">KES {{ item.price|floatformat:2 }}</td>
+                                            <td class="text-end align-middle fw-bold">KES {{ item.quantity|floatformat:0|add:item.price|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="3" class="text-end fw-bold">Total Amount:</td>
+                                            <td class="text-end fw-bold text-primary">KES {{ total_amount|floatformat:2 }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    {% if order.payment_reference or order.transaction_code %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Payment Information</h5>
+                            <div class="row">
+                                {% if order.payment_reference %}
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>M-Pesa Receipt:</strong></p>
+                                    <p>{{ order.payment_reference }}</p>
+                                </div>
+                                {% endif %}
+                                {% if order.transaction_code %}
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Transaction Code:</strong></p>
+                                    <p>{{ order.transaction_code }}</p>
+                                </div>
+                                {% endif %}
+                                {% if order.payment_confirmed_at %}
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Confirmed At:</strong></p>
+                                    <p>{{ order.payment_confirmed_at|date:"F j, Y H:i" }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Notes -->
+                    {% if order.notes %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Notes</h5>
+                            <p>{{ order.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard:vendor_dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <div>
+                            <a href="{% url 'dashboard:order_receipt' order.id %}" class="btn btn-info me-2" target="_blank">
+                                <i class="fas fa-print"></i> Print Receipt
+                            </a>
+                            {% if not order.paid %}
+                            <button class="btn btn-warning" onclick="updateOrderStatus({{ order.id }})">
+                                <i class="fas fa-edit"></i> Update Status
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Quick Actions Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="https://wa.me/254{{ order.customer_phone|slice:'-9' }}" 
+                           class="btn btn-success" target="_blank">
+                            <i class="fab fa-whatsapp"></i> Message Customer
+                        </a>
+                        <a href="tel:{{ order.customer_phone }}" class="btn btn-primary">
+                            <i class="fas fa-phone"></i> Call Customer
+                        </a>
+                        {% if order.payment_method == 'pochi_biashara' and not order.paid %}
+                        <button class="btn btn-warning" onclick="confirmPayment({{ order.id }})">
+                            <i class="fas fa-check-circle"></i> Confirm Payment
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-simple me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Subtotal:</td>
+                            <td class="text-end">KES {{ total_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Shipping:</td>
+                            <td class="text-end">KES 0.00</td>
+                        </tr>
+                        <tr class="fw-bold">
+                            <td>Total:</td>
+                            <td class="text-end text-primary">KES {{ total_amount|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span>Payment Method:</span>
+                        <span class="badge bg-info">{{ order.get_payment_method_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateOrderStatus(orderId) {
+    window.location.href = "{% url 'dashboard:vendor_dashboard' %}?order_id=" + orderId;
+}
+
+function confirmPayment(orderId) {
+    if (confirm('Have you received this payment in your Pochi account?')) {
+        fetch("{% url 'dashboard:confirm_vendor_payment' 0 %}".replace('0', orderId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'confirm'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error confirming payment: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+
+<style>
+.table td, .table th {
+    vertical-align: middle;
+}
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+</style>
+{% endblock %}

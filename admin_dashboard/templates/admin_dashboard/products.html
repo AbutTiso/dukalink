@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Products - DukaLink Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-box me-2"></i>
+                </span> 
+                Manage Products
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-tags me-2" style="color: var(--duka-yellow);"></i>
+                {{ products.count }} total products • Monitor and manage all vendor products
+            </p>
+        </div>
+        <div class="mt-3 mt-lg-0 d-flex gap-3">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 50px 0 0 50px;">
+                    <i class="fas fa-search" style="color: var(--duka-blue);"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="productSearch" placeholder="Search products..." 
+                       style="border-radius: 0 50px 50px 0; border-left: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid/Table -->
+    <div class="card-modern">
+        <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-boxes me-2" style="color: var(--duka-yellow);"></i>
+                All Products
+            </h5>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" style="border-radius: 50px; width: auto; border: 1px solid #e2e8f0;">
+                    <option>All Categories</option>
+                    <option>Electronics</option>
+                    <option>Fashion</option>
+                    <option>Food</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-4 pt-2">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Vendor</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Orders</th>
+                            <th>Revenue</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                         style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; margin-right: 12px;">
+                                    {% else %}
+                                    <div style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                        <i class="fas fa-box fa-2x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <span class="fw-medium d-block">{{ product.name }}</span>
+                                        <small class="text-muted">{{ product.category|default:"Uncategorized" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                        <span class="fw-bold text-white" style="font-size: 0.8rem;">{{ product.business.name|make_list|first|upper }}</span>
+                                    </div>
+                                    <span>{{ product.business.name|truncatechars:20 }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-bold" style="color: var(--duka-blue);">KES {{ product.price }}</span>
+                            </td>
+                            <td>
+                                {% if product.stock > 10 %}
+                                <span class="badge bg-success">{{ product.stock }}</span>
+                                {% elif product.stock > 0 %}
+                                <span class="badge bg-warning">{{ product.stock }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">Out</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ product.order_count|default:"0" }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold" style="color: var(--duka-blue);">KES {{ product.revenue|floatformat:0 }}</span>
+                            </td>
+                            <td>
+                                <small>{{ product.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="#" class="btn btn-sm" style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm" style="background: rgba(234, 179, 8, 0.1); color: var(--duka-yellow-dark); border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-box fa-3x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No products yet</h6>
+                                <p class="text-muted mb-3">Products will appear here once vendors add them.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live search
+    document.getElementById('productSearch').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#productsTable tbody tr');
+        
+        tableRows.forEach(row => {
+            const productName = row.querySelector('td:first-child .fw-medium')?.textContent.toLowerCase() || '';
+            const vendorName = row.querySelector('td:nth-child(2) span')?.textContent.toLowerCase() || '';
+            const category = row.querySelector('td:first-child small')?.textContent.toLowerCase() || '';
+            
+            if (productName.includes(searchValue) || vendorName.includes(searchValue) || category.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<style>
+    .stock-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

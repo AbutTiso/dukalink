@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Document - {{ doc_info.name }} - {{ vendor.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-viewer-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+    
+    .document-header {
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+    }
+    
+    .document-preview {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .document-image {
+        max-width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .document-pdf {
+        width: 100%;
+        height: 70vh;
+        border: none;
+        border-radius: 12px;
+    }
+    
+    .document-fallback {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .document-fallback i {
+        font-size: 5rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+    }
+    
+    .document-info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+    
+    .verification-actions {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        margin-top: 1.5rem;
+    }
+    
+    .zoom-controls {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: white;
+        border-radius: 50px;
+        padding: 0.75rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        display: flex;
+        gap: 0.5rem;
+        z-index: 1000;
+    }
+    
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .zoom-btn:hover {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .thumbnail-strip {
+        display: flex;
+        gap: 0.75rem;
+        overflow-x: auto;
+        padding: 1rem 0;
+        margin-top: 1rem;
+    }
+    
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .thumbnail:hover, .thumbnail.active {
+        border-color: var(--duka-blue);
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'admin_dashboard:dashboard' %}" style="color: var(--duka-blue);">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'admin_dashboard:vendor_documents' %}" style="color: var(--duka-blue);">Document Verification</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" style="color: var(--duka-blue);">{{ vendor.name }}</a>
+            </li>
+            <li class="breadcrumb-item active">{{ doc_info.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="document-viewer-container">
+        <!-- Document Header -->
+        <div class="document-header">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                            <i class="fas {{ doc_info.icon }} fa-2x" style="color: var(--duka-blue);"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-bold mb-1">{{ doc_info.name }}</h2>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-store me-1"></i> {{ vendor.name }} • 
+                                <i class="fas fa-user me-1 ms-2"></i> {{ vendor.owner.get_full_name|default:vendor.owner.username }}
+                            </p>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-info-circle me-1"></i> {{ doc_info.description }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <div class="d-flex gap-2 justify-content-lg-end">
+                        <a href="{{ file_url }}" download class="btn btn-success" style="border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-download me-2"></i> Download
+                        </a>
+                        <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" class="btn btn-light" style="border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Review
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Document Viewer -->
+            <div class="col-lg-9 mb-4">
+                <div class="document-preview" id="documentPreview">
+                    {% if is_image %}
+                        <img src="{{ file_url }}" alt="{{ doc_info.name }}" class="document-image" id="mainDocument">
+                    {% elif file_url|lower|slice:'-4:' == '.pdf' %}
+                        <iframe src="{{ file_url }}#toolbar=1&navpanes=1" class="document-pdf"></iframe>
+                    {% else %}
+                        <div class="document-fallback">
+                            <i class="fas fa-file-alt"></i>
+                            <h5 class="mt-3 mb-2">Preview not available</h5>
+                            <p class="text-muted mb-3">This file type cannot be previewed online.</p>
+                            <a href="{{ file_url }}" download class="btn btn-primary">
+                                <i class="fas fa-download me-2"></i> Download File
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Thumbnail Strip (for multiple images) -->
+                {% if is_image and vendor.owner_id_front and vendor.owner_id_back and doc_type == 'id_front' %}
+                <div class="thumbnail-strip">
+                    <img src="{{ vendor.owner_id_front.url }}" class="thumbnail active" onclick="changeImage(this.src)">
+                    <img src="{{ vendor.owner_id_back.url }}" class="thumbnail" onclick="changeImage(this.src)">
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Document Information Sidebar -->
+            <div class="col-lg-3">
+                <div class="document-info-card mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle me-2" style="color: var(--duka-blue);"></i>
+                        Document Details
+                    </h6>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">File Name</small>
+                        <span class="fw-medium">{{ file_name|truncatechars:30 }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">File Size</small>
+                        <span class="fw-medium">
+                            {% if file_size < 1024 %}
+                                {{ file_size }} B
+                            {% elif file_size < 1048576 %}
+                                {{ file_size|divisibleby:1024|floatformat:1 }} KB
+                            {% else %}
+                                {{ file_size|divisibleby:1048576|floatformat:1 }} MB
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Uploaded</small>
+                        <span class="fw-medium">{{ vendor.documents_uploaded_at|date:"M d, Y H:i"|default:"N/A" }}</span>
+                    </div>
+                    {% if doc_info.name == 'Business Permit' and vendor.permit_expiry_date %}
+                    <div class="mt-3 pt-2 border-top">
+                        <small class="text-muted d-block">Permit Expiry</small>
+                        <span class="badge {% if vendor.permit_is_valid %}bg-success{% else %}bg-danger{% endif %} mt-1">
+                            {{ vendor.permit_expiry_date|date:"M d, Y" }}
+                            {% if not vendor.permit_is_valid %} (Expired){% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Vendor Quick Info -->
+                <div class="document-info-card mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-store me-2" style="color: var(--duka-yellow);"></i>
+                        Vendor Information
+                    </h6>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Business Name</small>
+                        <span class="fw-medium">{{ vendor.name }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Business Type</small>
+                        <span>{{ vendor.get_business_type_display }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Owner</small>
+                        <span>{{ vendor.owner.get_full_name|default:vendor.owner.username }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Contact</small>
+                        <span>{{ vendor.phone }}</span>
+                    </div>
+                    <div class="mt-3 pt-2 border-top">
+                        <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" class="btn btn-sm w-100" style="background: var(--duka-blue); color: white; border-radius: 50px;">
+                            <i class="fas fa-check-circle me-1"></i> Review All Documents
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Verification Status -->
+                <div class="verification-actions">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-shield-alt me-2" style="color: var(--duka-yellow);"></i>
+                        Verification Status
+                    </h6>
+                    <div class="mb-3">
+                        <span class="badge d-block p-3" style="background: 
+                            {% if vendor.verification_status == 'verified' %}#10b981
+                            {% elif vendor.verification_status == 'rejected' %}#ef4444
+                            {% elif vendor.verification_status == 'under_review' %}#3b82f6
+                            {% else %}#f59e0b{% endif %}; 
+                            color: white; border-radius: 12px; font-size: 0.9rem;">
+                            <i class="fas 
+                                {% if vendor.verification_status == 'verified' %}fa-check-circle
+                                {% elif vendor.verification_status == 'rejected' %}fa-times-circle
+                                {% elif vendor.verification_status == 'under_review' %}fa-spinner fa-spin
+                                {% else %}fa-clock{% endif %} me-2">
+                            </i>
+                            {{ vendor.get_verification_status_display }}
+                        </span>
+                    </div>
+                    
+                    {% if vendor.verification_notes %}
+                    <div class="mt-3 p-3" style="background: #fef9c3; border-radius: 12px;">
+                        <small class="text-muted d-block mb-1">Admin Notes</small>
+                        <p class="mb-0 small">{{ vendor.verification_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zoom Controls (only for images) -->
+{% if is_image %}
+<div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">
+        <i class="fas fa-minus"></i>
+    </button>
+    <span id="zoomLevel" style="min-width: 60px; text-align: center; font-weight: 600;">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">
+        <i class="fas fa-plus"></i>
+    </button>
+    <button class="zoom-btn" onclick="resetZoom()" title="Reset">
+        <i class="fas fa-undo-alt"></i>
+    </button>
+</div>
+{% endif %}
+
+<script>
+    // Image zoom functionality
+    let currentZoom = 1;
+    const img = document.getElementById('mainDocument');
+    const zoomLevel = document.getElementById('zoomLevel');
+    
+    function zoomIn() {
+        if (img) {
+            currentZoom += 0.1;
+            img.style.transform = `scale(${currentZoom})`;
+            img.style.transition = 'transform 0.2s ease';
+            if (zoomLevel) zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+        }
+    }
+    
+    function zoomOut() {
+        if (img) {
+            currentZoom = Math.max(0.5, currentZoom - 0.1);
+            img.style.transform = `scale(${currentZoom})`;
+            img.style.transition = 'transform 0.2s ease';
+            if (zoomLevel) zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+        }
+    }
+    
+    function resetZoom() {
+        if (img) {
+            currentZoom = 1;
+            img.style.transform = 'scale(1)';
+            if (zoomLevel) zoomLevel.textContent = '100%';
+        }
+    }
+    
+    // Change image (for thumbnails)
+    function changeImage(src) {
+        const mainImg = document.getElementById('mainDocument');
+        if (mainImg) {
+            mainImg.src = src;
+            resetZoom();
+            
+            // Update active thumbnail
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+                if (thumb.src === src) {
+                    thumb.classList.add('active');
+                }
+            });
+        }
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            zoomIn();
+        } else if (e.key === '-') {
+            e.preventDefault();
+            zoomOut();
+        } else if (e.key === '0') {
+            e.preventDefault();
+            resetZoom();
+        } else if (e.key === 'Escape') {
+            // Close or go back
+            window.history.back();
+        }
+    });
+</script>
+{% endblock %}

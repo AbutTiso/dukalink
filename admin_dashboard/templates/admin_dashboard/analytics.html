@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics - DukaLink Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-chart-pie me-2"></i>
+                </span> 
+                Analytics Dashboard
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-calendar-alt me-2" style="color: var(--duka-yellow);"></i>
+                Last 6 months performance • Real-time platform insights
+                <span class="ms-3 badge bg-success">{{ total_orders }} total orders</span>
+                <span class="ms-2 badge bg-primary">KES {{ total_revenue|floatformat:0 }} total revenue</span>
+            </p>
+        </div>
+        <div class="mt-3 mt-lg-0">
+            <button class="btn-duka-blue" onclick="exportData()">
+                <i class="fas fa-download me-2"></i>Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Revenue Chart & Order Status -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-line me-2" style="color: var(--duka-blue);"></i>
+                        Revenue Trend (6 Months)
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
+                            <i class="fas fa-circle me-1" style="color: var(--duka-blue); font-size: 0.5rem;"></i>
+                            Revenue
+                        </span>
+                        <span class="badge bg-success">+{{ revenue_growth }}% growth</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if revenue_data != '[]' %}
+                        <canvas id="revenueChart" style="width: 100%; height: 300px;"></canvas>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-4x mb-3" style="color: #cbd5e1;"></i>
+                            <h5 class="text-muted">No revenue data yet</h5>
+                            <p class="text-muted small">Revenue data will appear once orders start coming in</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-pie me-2" style="color: var(--duka-yellow);"></i>
+                        Order Status
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="statusChart" style="width: 100%; height: 200px;"></canvas>
+                    
+                    <div class="mt-4">
+                        {% for status, count in order_status.items %}
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; 
+                                           background: {% if status == 'pending' %}var(--duka-yellow){% elif status == 'processing' %}#3b82f6{% elif status == 'completed' %}#10b981{% else %}#ef4444{% endif %}; 
+                                           margin-right: 8px;"></span>
+                                <span class="text-capitalize">{{ status }}</span>
+                            </div>
+                            <span class="fw-bold">{{ count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                        <i class="fas fa-users fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Users</span>
+                        <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>Active accounts
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));">
+                        <i class="fas fa-store fa-2x" style="color: #0f172a;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Active Vendors</span>
+                        <h3 class="fw-bold mb-0">{{ total_vendors }}</h3>
+                        <small class="text-success">
+                            <i class="fas fa-store me-1"></i>{{ top_vendors|length }} top performers
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-shopping-cart fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Orders</span>
+                        <h3 class="fw-bold mb-0">{{ total_orders }}</h3>
+                        <small class="text-muted">
+                            <i class="fas fa-check-circle me-1 text-success"></i>{{ completion_rate }}% completed
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                        <i class="fas fa-wallet fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Revenue</span>
+                        <h3 class="fw-bold mb-0">KES {{ total_revenue|floatformat:0 }}</h3>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>KES {{ monthly_revenue|floatformat:0 }} this month
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <i class="fas fa-box fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Products</span>
+                        <h3 class="fw-bold mb-0">{{ total_products }}</h3>
+                        <small class="text-muted">Across all vendors</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-chart-line fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Avg Order Value</span>
+                        <h3 class="fw-bold mb-0">KES {{ avg_order_value|floatformat:0 }}</h3>
+                        <small class="text-muted">Per transaction</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                        <i class="fas fa-clock fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Avg Processing</span>
+                        <h3 class="fw-bold mb-0">{{ avg_processing_time }}h</h3>
+                        <small class="text-muted">From order to completion</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                        <i class="fas fa-phone-alt fa-2x" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">M-Pesa Orders</span>
+                        <h3 class="fw-bold mb-0">{{ mpesa_orders }}</h3>
+                        <small class="text-success">{{ cash_orders }} cash orders</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Vendors Table -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-trophy me-2" style="color: var(--duka-yellow);"></i>
+                        Top Performing Vendors
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Sales</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vendor in top_vendors %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--duka-blue); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                                <span class="text-white fw-bold">{{ forloop.counter }}</span>
+                                            </div>
+                                            {{ vendor.name }}
+                                        </div>
+                                    </td>
+                                    <td>{{ vendor.sales }} items</td>
+                                    <td>KES {{ vendor.revenue|floatformat:0 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">No vendor data yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td>Total</td>
+                                    <td></td>
+                                    <td>KES {{ total_vendor_revenue|floatformat:0 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history me-2" style="color: var(--duka-blue);"></i>
+                        Recent Completed Orders
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activity %}
+                                <tr>
+                                    <td>#{{ activity.order_id }}</td>
+                                    <td>{{ activity.customer }}</td>
+                                    <td>KES {{ activity.amount|floatformat:0 }}</td>
+                                    <td><small>{{ activity.time|timesince }} ago</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">No recent orders</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Charts Row -->
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-tag me-2" style="color: var(--duka-blue);"></i>
+                        Top Categories
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if category_names != '[]' %}
+                        <canvas id="categoriesChart" style="width: 100%; height: 250px;"></canvas>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tag fa-4x mb-3" style="color: #cbd5e1;"></i>
+                            <p class="text-muted">No category data yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
+                        Orders by Hour
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="hourlyChart" style="width: 100%; height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-calendar-week me-2" style="color: #10b981;"></i>
+                        Last 7 Days Orders
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="dailyChart" style="width: 100%; height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Revenue Chart
+    {% if revenue_data != '[]' %}
+    const ctx1 = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: {{ months|safe }},
+            datasets: [{
+                label: 'Revenue (KES)',
+                data: {{ revenue_data|safe }},
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#eab308',
+                pointBorderColor: 'white',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'KES ' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        callback: function(value) {
+                            return 'KES ' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+
+    // Status Chart
+    const ctx2 = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for status in order_status.keys %}'{{ status|title }}',{% endfor %}],
+            datasets: [{
+                data: [{% for count in order_status.values %}{{ count }},{% endfor %}],
+                backgroundColor: ['#eab308', '#3b82f6', '#10b981', '#ef4444'],
+                borderWidth: 0,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            cutout: '70%'
+        }
+    });
+
+    // Categories Chart
+    {% if category_names != '[]' %}
+    const ctx3 = document.getElementById('categoriesChart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: {{ category_names|safe }},
+            datasets: [{
+                label: 'Items Sold',
+                data: {{ category_sales|safe }},
+                backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        }
+    });
+    {% endif %}
+
+    // Hourly Chart
+    const ctx4 = document.getElementById('hourlyChart').getContext('2d');
+    new Chart(ctx4, {
+        type: 'line',
+        data: {
+            labels: {{ hours|safe }},
+            datasets: [{
+                label: 'Orders',
+                data: {{ hourly_counts|safe }},
+                borderColor: '#eab308',
+                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    title: { display: true, text: 'Hour of Day' }
+                }
+            }
+        }
+    });
+
+    // Daily Chart
+    const ctx5 = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx5, {
+        type: 'bar',
+        data: {
+            labels: {{ days|safe }},
+            datasets: [{
+                label: 'Orders',
+                data: {{ order_counts|safe }},
+                backgroundColor: '#10b981',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        }
+    });
+
+    // Export function
+    function exportData() {
+        let csv = 'Month,Revenue (KES)\n';
+        const months = {{ months|safe }};
+        const revenue = {{ revenue_data|safe }};
+        
+        for (let i = 0; i < months.length; i++) {
+            csv += months[i] + ',' + revenue[i] + '\n';
+        }
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dukalink-analytics-{{ today|date:"Y-m-d" }}.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        alert('Analytics report downloaded successfully!');
+    }
+</script>
+
+<style>
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+        height: 100%;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #64748b;
+        border-bottom-width: 1px;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        color: #334155;
+    }
+</style>
+{% endblock %}

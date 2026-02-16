@@ -1,0 +1,742 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Document Verification - DukaLink Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .pending-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .document-preview {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .document-preview:hover {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .verification-tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .verification-tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    .verification-tab:hover {
+        background: rgba(37, 99, 235, 0.1);
+        border-color: var(--duka-blue);
+    }
+    
+    .verification-tab.active {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .document-status {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .status-complete {
+        background: #10b981;
+    }
+    
+    .status-incomplete {
+        background: #ef4444;
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #475569;
+        border-bottom-width: 1px;
+        padding: 1rem 0.5rem;
+    }
+    
+    .table td {
+        padding: 1rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-file-invoice me-2"></i>
+                </span> 
+                Document Verification
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-shield-alt me-2" style="color: var(--duka-yellow);"></i>
+                Review and verify vendor business documents
+            </p>
+        </div>
+        <div class="mt-3 mt-lg-0 d-flex gap-2">
+            <a href="{% url 'admin_dashboard:export_vendors' %}" class="btn btn-light">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 50px 0 0 50px;">
+                    <i class="fas fa-search" style="color: var(--duka-blue);"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="vendorSearch" placeholder="Search vendors..." 
+                       style="border-radius: 0 50px 50px 0; border-left: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                <i class="fas fa-clock fa-2x" style="color: var(--duka-blue);"></i>
+            </div>
+            <div>
+                <span class="small text-uppercase fw-semibold text-muted">Pending Review</span>
+                <h3 class="fw-bold mb-0" id="pendingCount">{{ total_pending }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="rounded-3 p-3 me-3" style="background: rgba(234, 179, 8, 0.1);">
+                <i class="fas fa-spinner fa-2x" style="color: var(--duka-yellow);"></i>
+            </div>
+            <div>
+                <span class="small text-uppercase fw-semibold text-muted">Under Review</span>
+                <h3 class="fw-bold mb-0">{{ pending_vendors.count }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="rounded-3 p-3 me-3" style="background: rgba(16, 185, 129, 0.1);">
+                <i class="fas fa-check-circle fa-2x" style="color: #10b981;"></i>
+            </div>
+            <div>
+                <span class="small text-uppercase fw-semibold text-muted">Verified Today</span>
+                <h3 class="fw-bold mb-0">{{ total_verified_today }}</h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="rounded-3 p-3 me-3" style="background: rgba(239, 68, 68, 0.1);">
+                <i class="fas fa-exclamation-triangle fa-2x" style="color: #ef4444;"></i>
+            </div>
+            <div>
+                <span class="small text-uppercase fw-semibold text-muted">Need Info</span>
+                <h3 class="fw-bold mb-0">{{ info_needed_vendors.count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Tabs -->
+    <div class="verification-tabs">
+        <button class="verification-tab active" data-tab="pending">🕒 Pending Review</button>
+        <button class="verification-tab" data-tab="info">ℹ️ More Info Needed</button>
+        <button class="verification-tab" data-tab="verified">✅ Verified</button>
+        <button class="verification-tab" data-tab="rejected">❌ Rejected</button>
+    </div>
+
+    <!-- Pending Vendors Tab -->
+    <div id="pending-tab" class="verification-tab-content">
+        <div class="card-modern p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
+                    Vendors Pending Verification
+                    <span class="badge ms-2" style="background: var(--duka-blue);">{{ pending_vendors.count }}</span>
+                </h5>
+                <button class="btn btn-sm" id="bulkVerifyBtn" style="background: #10b981; color: white; border-radius: 50px; padding: 0.5rem 1.5rem;">
+                    <i class="fas fa-check-double me-1"></i> Bulk Verify
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAll">
+                            </th>
+                            <th>Vendor</th>
+                            <th>Documents</th>
+                            <th>Business Type</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in pending_vendors %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="vendor-select" value="{{ vendor.id }}">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                        <span class="fw-bold text-white">{{ vendor.name|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                        <small class="text-muted">{{ vendor.owner.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <span class="document-preview" title="Business Registration" 
+                                          onclick="viewDocument({{ vendor.id }}, 'registration')">
+                                        <i class="fas fa-certificate"></i>
+                                        {% if vendor.business_registration_cert %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="KRA PIN" 
+                                          onclick="viewDocument({{ vendor.id }}, 'kra')">
+                                        <i class="fas fa-file-invoice"></i>
+                                        {% if vendor.kra_certificate %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="ID Front" 
+                                          onclick="viewDocument({{ vendor.id }}, 'id_front')">
+                                        <i class="fas fa-id-card"></i>
+                                        {% if vendor.owner_id_front %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="ID Back" 
+                                          onclick="viewDocument({{ vendor.id }}, 'id_back')">
+                                        <i class="fas fa-id-card"></i>
+                                        {% if vendor.owner_id_back %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="Business Permit" 
+                                          onclick="viewDocument({{ vendor.id }}, 'permit')">
+                                        <i class="fas fa-file-signature"></i>
+                                        {% if vendor.business_permit %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    {% if vendor.documents_complete %}
+                                    <span class="text-success">✓ All documents uploaded</span>
+                                    {% else %}
+                                    <span class="text-danger">⚠ {{ vendor.missing_documents|length }} missing</span>
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td>{{ vendor.get_business_type_display }}</td>
+                            <td>
+                                <div>{{ vendor.created_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ vendor.created_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: 
+                                    {% if vendor.verification_status == 'pending' %}#f59e0b
+                                    {% elif vendor.verification_status == 'under_review' %}#3b82f6
+                                    {% endif %}; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                    {{ vendor.get_verification_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" 
+                                       class="btn btn-sm"
+                                       style="background: var(--duka-blue); color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-check-circle me-1"></i> Review
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-check-circle fa-3x" style="color: #10b981; opacity: 0.5;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No pending vendors</h6>
+                                <p class="text-muted mb-0">All vendors have been reviewed.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- More Info Needed Tab -->
+    <div id="info-tab" class="verification-tab-content" style="display: none;">
+        <div class="card-modern p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2" style="color: #f97316;"></i>
+                    Vendors Needing More Information
+                    <span class="badge ms-2" style="background: #f97316;">{{ info_needed_vendors.count }}</span>
+                </h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Documents</th>
+                            <th>Missing Items</th>
+                            <th>Admin Notes</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in info_needed_vendors %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #f97316, #ea580c);">
+                                        <span class="fw-bold text-white">{{ vendor.name|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                        <small class="text-muted">{{ vendor.owner.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <span class="document-preview" title="Business Registration" 
+                                          onclick="viewDocument({{ vendor.id }}, 'registration')">
+                                        <i class="fas fa-certificate"></i>
+                                        {% if vendor.business_registration_cert %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="KRA PIN" 
+                                          onclick="viewDocument({{ vendor.id }}, 'kra')">
+                                        <i class="fas fa-file-invoice"></i>
+                                        {% if vendor.kra_certificate %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="ID Front" 
+                                          onclick="viewDocument({{ vendor.id }}, 'id_front')">
+                                        <i class="fas fa-id-card"></i>
+                                        {% if vendor.owner_id_front %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="ID Back" 
+                                          onclick="viewDocument({{ vendor.id }}, 'id_back')">
+                                        <i class="fas fa-id-card"></i>
+                                        {% if vendor.owner_id_back %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="document-preview" title="Business Permit" 
+                                          onclick="viewDocument({{ vendor.id }}, 'permit')">
+                                        <i class="fas fa-file-signature"></i>
+                                        {% if vendor.business_permit %}
+                                        <span class="document-status status-complete"></span>
+                                        {% else %}
+                                        <span class="document-status status-incomplete"></span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-danger fw-medium">
+                                    {% if vendor.missing_documents %}
+                                        {{ vendor.missing_documents|join:", "|truncatechars:30 }}
+                                    {% else %}
+                                        Additional info required
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if vendor.verification_notes %}
+                                <span class="small">{{ vendor.verification_notes|truncatechars:50 }}</span>
+                                {% else %}
+                                <span class="text-muted small">No notes</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>{{ vendor.documents_updated_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ vendor.documents_updated_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" 
+                                       class="btn btn-sm"
+                                       style="background: #f97316; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-check-circle me-1"></i> Review
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #fff7ed; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-info-circle fa-3x" style="color: #f97316; opacity: 0.5;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No vendors need additional information</h6>
+                                <p class="text-muted mb-0">All vendors have complete documentation.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verified Vendors Tab -->
+    <div id="verified-tab" class="verification-tab-content" style="display: none;">
+        <div class="card-modern p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                    Verified Vendors
+                    <span class="badge ms-2" style="background: #10b981;">{{ verified_vendors.count }}</span>
+                </h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Business Type</th>
+                            <th>Verified On</th>
+                            <th>Verified By</th>
+                            <th>Products</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in verified_vendors %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #059669);">
+                                        <span class="fw-bold text-white">{{ vendor.name|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                        <small class="text-muted">{{ vendor.owner.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ vendor.get_business_type_display }}</td>
+                            <td>
+                                <div>{{ vendor.verified_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ vendor.verified_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                {% if vendor.verified_by %}
+                                <span class="fw-medium">{{ vendor.verified_by.username }}</span>
+                                {% else %}
+                                <span class="text-muted">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ vendor.products.count }} products</span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" 
+                                       class="btn btn-sm"
+                                       style="background: #10b981; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f0fdf4; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-check-circle fa-3x" style="color: #10b981; opacity: 0.5;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No verified vendors yet</h6>
+                                <p class="text-muted mb-0">Vendors will appear here once verified.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejected Vendors Tab -->
+    <div id="rejected-tab" class="verification-tab-content" style="display: none;">
+        <div class="card-modern p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-times-circle me-2" style="color: #ef4444;"></i>
+                    Rejected Vendors
+                    <span class="badge ms-2" style="background: #ef4444;">{{ rejected_vendors.count }}</span>
+                </h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Business Type</th>
+                            <th>Rejected On</th>
+                            <th>Rejection Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in rejected_vendors %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                        <span class="fw-bold text-white">{{ vendor.name|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                        <small class="text-muted">{{ vendor.owner.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ vendor.get_business_type_display }}</td>
+                            <td>
+                                <div>{{ vendor.verified_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ vendor.verified_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                {% if vendor.verification_notes %}
+                                <span class="small">{{ vendor.verification_notes|truncatechars:100 }}</span>
+                                {% else %}
+                                <span class="text-muted small">No reason provided</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'admin_dashboard:review_vendor' vendor.id %}" 
+                                       class="btn btn-sm"
+                                       style="background: #ef4444; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-redo-alt me-1"></i> Review Again
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #fef2f2; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-times-circle fa-3x" style="color: #ef4444; opacity: 0.5;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No rejected vendors</h6>
+                                <p class="text-muted mb-0">All vendors have been approved.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize tabs on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide all tab contents except pending
+        document.querySelectorAll('.verification-tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        document.getElementById('pending-tab').style.display = 'block';
+        
+        // Set active tab
+        document.querySelectorAll('.verification-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if(tab.dataset.tab === 'pending') {
+                tab.classList.add('active');
+            }
+        });
+    });
+
+    // View document function
+    function viewDocument(vendorId, docType) {
+        window.open(`/admin-panel/vendors/${vendorId}/documents/${docType}/`, '_blank');
+    }
+
+    // Search functionality (works on active tab)
+    document.getElementById('vendorSearch').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const activeTab = document.querySelector('.verification-tab.active').dataset.tab;
+        const tableRows = document.querySelectorAll(`#${activeTab}-tab tbody tr`);
+        
+        tableRows.forEach(row => {
+            const vendorName = row.querySelector('td:nth-child(2) .fw-medium')?.textContent.toLowerCase() || '';
+            const email = row.querySelector('td:nth-child(2) small')?.textContent.toLowerCase() || '';
+            
+            if (vendorName.includes(searchValue) || email.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Tab switching
+    document.querySelectorAll('.verification-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Update active tab
+            document.querySelectorAll('.verification-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Hide all tab contents
+            document.querySelectorAll('.verification-tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Show selected tab
+            const tabName = this.dataset.tab;
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+            
+            // Clear search when switching tabs
+            document.getElementById('vendorSearch').value = '';
+        });
+    });
+
+    // Select all checkbox (only in pending tab)
+    document.getElementById('selectAll')?.addEventListener('change', function() {
+        document.querySelectorAll('.vendor-select').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    // Bulk verify (only in pending tab)
+    document.getElementById('bulkVerifyBtn')?.addEventListener('click', function() {
+        const selectedVendors = [];
+        document.querySelectorAll('.vendor-select:checked').forEach(checkbox => {
+            selectedVendors.push(checkbox.value);
+        });
+        
+        if (selectedVendors.length === 0) {
+            alert('Please select at least one vendor to verify.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to verify ${selectedVendors.length} vendor(s)?`)) {
+            fetch('/admin-panel/vendors/bulk-verify/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    vendor_ids: selectedVendors,
+                    action: 'verify'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+    });
+</script>
+{% endblock %}

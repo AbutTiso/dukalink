@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - DukaLink{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-yellow: #eab308;
+        --duka-green: #10b981;
+        --duka-red: #ef4444;
+        --duka-gray-50: #f9fafb;
+        --duka-gray-100: #f3f4f6;
+        --duka-gray-200: #e5e7eb;
+        --duka-gray-600: #4b5563;
+        --duka-gray-700: #374151;
+        --duka-gray-800: #1f2937;
+        --duka-gray-900: #111827;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 0;
+        margin-top: -1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+    }
+
+    .business-stats-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+    .business-stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+    }
+
+    .shop-link-card {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 8px 15px rgba(37,99,235,0.2);
+    }
+
+    .shop-link {
+        background: rgba(255,255,255,0.2);
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+        display: inline-flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .shop-link a {
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        transition: opacity 0.3s ease;
+    }
+
+    .shop-link a:hover {
+        opacity: 0.9;
+        text-decoration: underline;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+
+    .product-image {
+        height: 200px;
+        background: linear-gradient(135deg, var(--duka-gray-100), var(--duka-gray-200));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.1);
+    }
+
+    .product-image-placeholder {
+        color: var(--duka-gray-600);
+        font-size: 3rem;
+    }
+
+    .product-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+    }
+
+    .product-body {
+        padding: 1.5rem;
+        flex: 1;
+    }
+
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--duka-gray-900);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--duka-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .product-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: var(--duka-gray-600);
+    }
+
+    .product-stock {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stock-in {
+        color: var(--duka-green);
+    }
+
+    .stock-low {
+        color: var(--duka-yellow);
+    }
+
+    .stock-out {
+        color: var(--duka-red);
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--duka-gray-200);
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .btn-edit {
+        background: var(--duka-gray-100);
+        color: var(--duka-gray-700);
+    }
+
+    .btn-edit:hover {
+        background: var(--duka-gray-200);
+        color: var(--duka-gray-900);
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--duka-red);
+    }
+
+    .btn-delete:hover {
+        background: var(--duka-red);
+        color: white;
+    }
+
+    .btn-add-product {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 6px rgba(37,99,235,0.2);
+    }
+
+    .btn-add-product:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(37,99,235,0.3);
+        color: white;
+    }
+
+    .empty-state {
+        background: var(--duka-gray-50);
+        border-radius: 1rem;
+        padding: 3rem;
+        text-align: center;
+        border: 2px dashed var(--duka-gray-200);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--duka-gray-200);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+        color: var(--duka-gray-700);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--duka-gray-600);
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-stat {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: var(--duka-gray-100);
+        border-radius: 2rem;
+        color: var(--duka-gray-700);
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .quick-stat i {
+        margin-right: 0.5rem;
+        color: var(--duka-blue);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--duka-gray-900);
+        margin: 0;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--duka-blue), var(--duka-blue-dark));
+        border-radius: 2px;
+    }
+
+    .welcome-name {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem 0;
+            border-radius: 0 0 1rem 1rem;
+        }
+        
+        .shop-link-card {
+            margin-top: 1rem;
+        }
+    }
+</style>
+
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-store-alt me-3"></i>
+                    Welcome back, <span class="welcome-name">{{ business.name }}</span>
+                </h1>
+                <p class="lead mb-0 opacity-90">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Here's what's happening with your business today
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <span class="quick-stat">
+                    <i class="fas fa-calendar-alt"></i>
+                    {% now "l, F j, Y" %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <!-- Business Stats Row -->
+    <div class="row mb-5 g-4">
+        <div class="col-md-3">
+            <div class="business-stats-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div style="width: 48px; height: 48px; background: rgba(37,99,235,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-boxes fa-2x" style="color: var(--duka-blue);"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Total Products</h6>
+                        <h3 class="fw-bold mb-0">{{ products.count|default:"0" }}</h3>
+                    </div>
+                </div>
+                <div class="progress" style="height: 6px; border-radius: 3px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ product_percentage|default:'60' }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="business-stats-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div style="width: 48px; height: 48px; background: rgba(16,185,129,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shopping-cart fa-2x" style="color: var(--duka-green);"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Total Orders</h6>
+                        <h3 class="fw-bold mb-0">{{ total_orders|default:"0" }}</h3>
+                    </div>
+                </div>
+                <small class="text-success"><i class="fas fa-arrow-up"></i> +12% from last month</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="business-stats-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div style="width: 48px; height: 48px; background: rgba(234,179,8,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-wallet fa-2x" style="color: var(--duka-yellow);"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Revenue</h6>
+                        <h3 class="fw-bold mb-0">Ksh {{ total_revenue|default:"0" }}</h3>
+                    </div>
+                </div>
+                <small class="text-muted">This month</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="business-stats-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div style="width: 48px; height: 48px; background: rgba(99,102,241,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-users fa-2x" style="color: #6366f1;"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Customers</h6>
+                        <h3 class="fw-bold mb-0">{{ total_customers|default:"0" }}</h3>
+                    </div>
+                </div>
+                <small class="text-primary"><i class="fas fa-user-plus"></i> +3 new</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Link & Actions Row -->
+    <div class="row mb-5 g-4">
+        <div class="col-lg-7">
+            <div class="shop-link-card">
+                <div class="d-flex align-items-start">
+                    <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                        <i class="fas fa-link fa-2x"></i>
+                    </div>
+                    <div class="ms-4 flex-grow-1">
+                        <h5 class="fw-bold mb-2">Your Public Shop Link</h5>
+                        <p class="opacity-75 mb-3">Share this link with customers to start receiving orders</p>
+                        <div class="shop-link">
+                            <i class="fas fa-store-alt"></i>
+                            <a href="{% url 'shops:shop_detail' business.slug %}" target="_blank">
+                                {{ request.get_host }}{% url 'shops:shop_detail' business.slug %}
+                            </a>
+                            <button class="btn btn-sm ms-auto" style="background: rgba(255,255,255,0.2); color: white;" onclick="copyToClipboard('{{ request.get_host }}{% url 'shops:shop_detail' business.slug %}')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="d-flex gap-3 h-100 align-items-center justify-content-lg-end">
+                <a href="{% url 'dashboard:vendor_dashboard' %}" class="btn btn-lg px-4" style="background: white; color: var(--duka-blue); border: 2px solid var(--duka-blue); border-radius: 0.75rem; font-weight: 600;">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    Manage Orders
+                    <span class="badge bg-primary ms-2">{{ pending_orders|default:"0" }}</span>
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="btn btn-lg px-4" style="background: white; color: var(--duka-gray-600); border: 2px solid var(--duka-gray-200); border-radius: 0.75rem; font-weight: 600;">
+                    <i class="fas fa-sign-out-alt me-2"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Your Products</h2>
+            <p class="text-muted mt-2">Manage your inventory and add new items</p>
+        </div>
+        <a href="{% url 'dashboard:product_add' %}" class="btn-add-product">
+            <i class="fas fa-plus-circle"></i>
+            Add New Product
+        </a>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-image-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    {% endif %}
+                    {% if product.is_featured %}
+                        <span class="product-badge">
+                            <i class="fas fa-star"></i> Featured
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="product-body">
+                    <h3 class="product-title">{{ product.name|truncatechars:30 }}</h3>
+                    <div class="product-price">Ksh {{ product.price|floatformat:2 }}</div>
+                    
+                    <div class="product-meta">
+                        {% if product.stock_quantity %}
+                        <span class="product-stock">
+                            {% if product.stock_quantity > 10 %}
+                                <i class="fas fa-check-circle stock-in"></i>
+                                <span class="stock-in">{{ product.stock_quantity }} in stock</span>
+                            {% elif product.stock_quantity > 0 %}
+                                <i class="fas fa-exclamation-circle stock-low"></i>
+                                <span class="stock-low">Low stock ({{ product.stock_quantity }})</span>
+                            {% else %}
+                                <i class="fas fa-times-circle stock-out"></i>
+                                <span class="stock-out">Out of stock</span>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.description %}
+                    <p class="text-muted small mb-3">{{ product.description|truncatechars:60 }}</p>
+                    {% endif %}
+                    
+                    <div class="product-actions">
+                        <a href="{% url 'dashboard:product_edit' product.id %}" class="btn-action btn-edit">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+                        <a href="{% url 'dashboard:product_delete' product.id %}" class="btn-action btn-delete" 
+                           onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <h4>No products yet</h4>
+                <p>Start adding your products to begin selling on DukaLink</p>
+                <a href="{% url 'dashboard:product_add' %}" class="btn-add-product">
+                    <i class="fas fa-plus-circle"></i>
+                    Add Your First Product
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Tips Section -->
+    {% if products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="bg-light p-4 rounded-4" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-lightbulb fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-bold mb-2">Pro Tips for Better Sales</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <small><i class="fas fa-camera text-primary me-2"></i> Add high-quality product images</small>
+                            </div>
+                            <div class="col-md-4">
+                                <small><i class="fas fa-tags text-primary me-2"></i> Use competitive pricing</small>
+                            </div>
+                            <div class="col-md-4">
+                                <small><i class="fas fa-file-alt text-primary me-2"></i> Write detailed descriptions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show a temporary tooltip or notification
+        alert('Shop link copied to clipboard!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+// Add animation to stats cards
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.business-stats-card');
+    cards.forEach((card, index) => {
+        card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.1}s`;
+    });
+});
+
+// Add this to your base CSS or keep here
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,359 @@
+{# templates/payments/vendor_payment.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment to {{ vendor.username }} - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Progress Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="progress" style="height: 30px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                     role="progressbar" 
+                     style="width: {% widthratio current total 100 %}%;"
+                     aria-valuenow="{% widthratio current total 100 %}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    Payment {{ current }} of {{ total }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <!-- Card Header with Vendor Info -->
+                <div class="card-header bg-success text-white py-3 rounded-top-4">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-white p-3 me-3">
+                            <i class="fas fa-store text-success fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0">Pay {{ business.name|default:vendor.username }}</h4>
+                            <small class="opacity-75">Vendor {{ current }} of {{ total }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Order Summary -->
+                    <div class="alert alert-info d-flex align-items-center mb-4">
+                        <i class="fas fa-shopping-cart fa-2x me-3"></i>
+                        <div>
+                            <strong>Order #{{ order.id }}</strong><br>
+                            <span>Amount due: KES {{ amount|floatformat:2 }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Details Card -->
+                    <div class="card bg-light mb-4 border-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-2">Vendor Information</h6>
+                                    <p class="mb-1"><i class="fas fa-user me-2"></i> {{ vendor.get_full_name|default:vendor.username }}</p>
+                                    <p class="mb-1"><i class="fas fa-phone me-2"></i> {{ business.phone|default:"Not provided" }}</p>
+                                    {% if business.email %}
+                                    <p class="mb-1"><i class="fas fa-envelope me-2"></i> {{ business.email }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-2">Order Items</h6>
+                                    {% for item in order.order_items.all %}
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>{{ item.product.name }} x{{ item.quantity }}</span>
+                                        <span class="fw-bold">KES {{ item.total_price|floatformat:2 }}</span>
+                                    </div>
+                                    {% endfor %}
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total:</span>
+                                        <span class="text-success">KES {{ amount|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Instructions -->
+                    <div class="alert alert-warning d-flex align-items-center mb-4">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <strong>You'll receive an STK push on your phone</strong><br>
+                            <small>Check your phone and enter your M-Pesa PIN to complete this payment</small>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="POST" id="paymentForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="phone" class="form-label fw-bold">
+                                <i class="fas fa-mobile-alt me-2"></i>Your M-Pesa Phone Number
+                            </label>
+                            <input type="tel" 
+                                   class="form-control form-control-lg" 
+                                   id="phone" 
+                                   name="phone" 
+                                   value="{{ request.user.profile.phone_number|default:'' }}"
+                                   placeholder="e.g., 0700 000 000"
+                                   required>
+                            <div class="form-text">Enter the phone number registered with M-Pesa</div>
+                        </div>
+
+                        <!-- Payment Summary -->
+                        <div class="card bg-light mb-4 border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 mb-0">Payment Amount:</span>
+                                    <span class="h4 mb-0 text-success fw-bold">KES {{ amount|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="payBtn">
+                                <i class="fas fa-lock me-2"></i>Pay KES {{ amount|floatformat:2 }}
+                            </button>
+                            
+                            {% if current < total %}
+                            <p class="text-center text-muted small mt-3">
+                                <i class="fas fa-arrow-right me-1"></i>
+                                After payment, you'll proceed to Vendor {{ current|add:1 }} of {{ total }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </form>
+
+                    <!-- Payment Progress Tracker -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Payment Progress</span>
+                            <span class="fw-bold">{{ current }}/{{ total }} completed</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio current total 100 %}%;" 
+                                 aria-valuenow="{% widthratio current total 100 %}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Footer with Help Links -->
+                <div class="card-footer bg-white border-0 py-3 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i> Secured by M-Pesa |
+                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#helpModal">
+                            <i class="fas fa-question-circle me-1"></i>Need help?
+                        </a>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Trust Badges - FIXED (no missing images) -->
+            <div class="text-center mt-4">
+                <i class="fab fa-cc-mastercard fa-2x text-muted me-3"></i>
+                <i class="fab fa-cc-visa fa-2x text-muted me-3"></i>
+                <i class="fas fa-shield-alt text-success fa-2x me-2"></i>
+                <i class="fas fa-lock text-success fa-2x"></i>
+                <span class="ms-2 text-muted small">Secured by M-Pesa</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Payment Help
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Having trouble with payment?</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Ensure your phone has M-Pesa service
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Confirm you have sufficient balance
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Check that your phone number is correct
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Wait for the STK push notification
+                    </li>
+                </ul>
+                <hr>
+                <p class="mb-0">
+                    <i class="fas fa-headset me-2"></i>
+                    Still need help? <a href="{% url 'pages:contact_us' %}">Contact Support</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="text-center">
+        <div class="spinner-border text-success" style="width: 4rem; height: 4rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="mt-3">Processing Payment...</h5>
+        <p class="text-muted">Please check your phone for the M-Pesa prompt</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('paymentForm');
+    const payBtn = document.getElementById('payBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const phoneInput = document.getElementById('phone');
+    
+    // Format phone number as user types
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            if (value.startsWith('0')) {
+                value = '254' + value.substring(1);
+            }
+        }
+        e.target.value = value;
+    });
+    
+    // Show loading overlay on form submit
+    paymentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate phone number
+        const phone = phoneInput.value.trim();
+        if (!phone) {
+            alert('Please enter your M-Pesa phone number');
+            return;
+        }
+        
+        // Simple validation for Kenyan numbers
+        if (!phone.match(/^(254|0)[17][0-9]{8}$/)) {
+            alert('Please enter a valid Kenyan phone number (e.g., 07XXXXXXXX or 2547XXXXXXXX)');
+            return;
+        }
+        
+        // Disable button and show loading
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Initiating Payment...';
+        loadingOverlay.style.display = 'flex';
+        
+        // Submit the form
+        paymentForm.submit();
+    });
+    
+    // Check for stored phone number in session
+    const savedPhone = sessionStorage.getItem('lastPaymentPhone');
+    if (savedPhone && !phoneInput.value) {
+        phoneInput.value = savedPhone;
+    }
+    
+    // Save phone number after successful payment (this would be handled by the backend)
+    // For now, we'll save when they submit
+    paymentForm.addEventListener('submit', function() {
+        sessionStorage.setItem('lastPaymentPhone', phoneInput.value);
+    });
+});
+
+// Auto-dismiss alerts after 5 seconds
+window.setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
+
+<style>
+/* Custom animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-header .d-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .card-header .rounded-circle {
+        margin-right: 0 !important;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Loading overlay */
+#loadingOverlay {
+    backdrop-filter: blur(5px);
+}
+
+/* Phone input styling */
+#phone {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+}
+
+/* Payment button pulse animation */
+@keyframes subtle-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+.btn-success {
+    animation: subtle-pulse 2s infinite;
+}
+
+.btn-success:not(:disabled):hover {
+    animation: none;
+    transform: translateY(-2px);
+}
+
+/* Progress bar smooth transition */
+.progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+</style>
+{% endblock %}

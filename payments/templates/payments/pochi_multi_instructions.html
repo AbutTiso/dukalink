@@ -1,0 +1,158 @@
+{# templates/payments/pochi_multi_instructions.html #}
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-success text-white p-4 rounded-top-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Pay via Pochi La Biashara
+                    </h3>
+                    <p class="mb-0 mt-2 opacity-75">Send payments directly to each vendor's phone</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You have {{ orders|length }} vendor(s) to pay. Follow the instructions for each.
+                    </div>
+
+                    <!-- Progress Tracker -->
+                    <div class="mb-4">
+                        <h5>Payment Progress</h5>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    {% for order in orders %}
+                    <div class="vendor-payment-card mb-4" data-vendor-index="{{ forloop.counter0 }}">
+                        <div class="card border-2 {% if forloop.first %}border-success{% else %}border-secondary{% endif %}">
+                            <div class="card-header bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <span class="badge bg-success me-2">{{ forloop.counter }}</span>
+                                        Vendor: {{ order.items.first.vendor.username }}
+                                    </h5>
+                                    <span class="badge bg-warning">Pending</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Order #{{ order.id }}</h6>
+                                        <table class="table table-sm">
+                                            {% for item in order.order_items.all %}
+                                            <tr>
+                                                <td>{{ item.product.name }} x{{ item.quantity }}</td>
+                                                <td class="text-end">KES {{ item.total_price|floatformat:2 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            <tr class="fw-bold">
+                                                <td>Total:</td>
+                                                <td class="text-end">KES {{ order.total|floatformat:2 }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="payment-instructions bg-light p-3 rounded">
+                                            <h6><i class="fas fa-mobile-alt me-2"></i>Payment Instructions:</h6>
+                                            <ol class="mb-0 small">
+                                                <li>Dial <strong>*334#</strong> on your phone</li>
+                                                <li>Select <strong>Pochi La Biashara</strong></li>
+                                                <li>Enter vendor's number: <strong class="text-primary">{{ order.items.first.product.business.phone }}</strong></li>
+                                                <li>Enter amount: <strong class="text-success">KES {{ order.total|floatformat:2 }}</strong></li>
+                                                <li>Enter your PIN to confirm</li>
+                                            </ol>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <button class="btn btn-outline-success btn-sm w-100" onclick="markAsPaid({{ order.id }})">
+                                                <i class="fas fa-check-circle me-2"></i>I've Paid This Vendor
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart me-2"></i>Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let paidVendors = 0;
+const totalVendors = {{ orders|length }};
+
+function markAsPaid(orderId) {
+    // Find the vendor card
+    const card = event.target.closest('.vendor-payment-card');
+    
+    // Update UI
+    card.querySelector('.badge').textContent = 'Paid';
+    card.querySelector('.badge').classList.remove('bg-warning');
+    card.querySelector('.badge').classList.add('bg-success');
+    card.querySelector('.btn-outline-success').disabled = true;
+    card.querySelector('.btn-outline-success').innerHTML = '<i class="fas fa-check me-2"></i>Payment Confirmed';
+    
+    // Update progress
+    paidVendors++;
+    const progressBar = document.querySelector('.progress-bar');
+    const progress = (paidVendors / totalVendors) * 100;
+    progressBar.style.width = progress + '%';
+    progressBar.setAttribute('aria-valuenow', progress);
+    
+    // Send confirmation to server
+    fetch(`/payments/confirm-pochi-payment/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            action: 'confirm'
+        })
+    });
+    
+    // Check if all vendors are paid
+    if (paidVendors === totalVendors) {
+        alert('All payments completed! Thank you for your purchase.');
+        setTimeout(() => {
+            window.location.href = "{% url 'products:product_list' %}";
+        }, 2000);
+    }
+}
+</script>
+
+<style>
+.vendor-payment-card {
+    transition: all 0.3s ease;
+}
+
+.vendor-payment-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+.payment-instructions {
+    background: #f8f9fa;
+    border-left: 4px solid #28a745;
+}
+</style>
+{% endblock %}

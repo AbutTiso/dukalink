@@ -1,0 +1,469 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Review Vendor Documents - {{ vendor.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-preview-large {
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .document-preview-large:hover {
+        border-color: var(--duka-blue);
+        background: rgba(37,99,235,0.05);
+    }
+    
+    .document-image-preview {
+        width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    
+    .document-image-preview:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .verification-options .form-check-input:checked {
+        background-color: var(--duka-blue);
+        border-color: var(--duka-blue);
+    }
+    
+    .btn-duka-green {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .btn-duka-green:hover {
+        background: #059669;
+        color: white;
+    }
+    
+    .sticky-top {
+        z-index: 100;
+    }
+    
+    .modal-document {
+        max-width: 90vw;
+        max-height: 90vh;
+    }
+    
+    .modal-document img {
+        width: 100%;
+        height: auto;
+        max-height: 80vh;
+        object-fit: contain;
+    }
+    
+    @media print {
+        .btn, form, .sticky-top {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:dashboard' %}" style="color: var(--duka-blue);">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admin_dashboard:vendor_documents' %}" style="color: var(--duka-blue);">Document Verification</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Review {{ vendor.name }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Vendor Info & Documents -->
+        <div class="col-lg-8">
+            <!-- Vendor Header Card -->
+            <div class="card-modern p-4 mb-4">
+                <div class="d-flex flex-wrap align-items-start justify-content-between">
+                    <div class="d-flex align-items-center mb-3 mb-md-0">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                             style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                            <span class="fw-bold text-white" style="font-size: 1.8rem;">{{ vendor.name|first|upper }}</span>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-1">{{ vendor.name }}</h3>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user me-1"></i> {{ vendor.owner.get_full_name|default:vendor.owner.username }} • 
+                                <i class="fas fa-calendar me-1 ms-2"></i> Registered {{ vendor.created_at|date:"M d, Y" }} 
+                                <span class="badge bg-light text-dark ms-1">{{ days_pending }} days ago</span>
+                            </p>
+                            <span class="badge me-1" style="background: 
+                                {% if vendor.verification_status == 'pending' %}#f59e0b
+                                {% elif vendor.verification_status == 'under_review' %}#3b82f6
+                                {% elif vendor.verification_status == 'verified' %}#10b981
+                                {% elif vendor.verification_status == 'rejected' %}#ef4444
+                                {% else %}#64748b{% endif %}; 
+                                color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                {{ vendor.get_verification_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Grid -->
+            <div class="row g-4 mb-4">
+                <!-- Business Registration -->
+                <div class="col-md-6">
+                    <div class="card-modern p-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-3 p-2 me-2" style="background: rgba(37,99,235,0.1);">
+                                <i class="fas fa-certificate fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Business Registration</h6>
+                                <small class="text-muted">Certificate of Registration/BRS</small>
+                            </div>
+                        </div>
+                        {% if vendor.business_registration_cert %}
+                            {% with file_ext=vendor.business_registration_cert.url|lower %}
+                                {% if file_ext|slice:'-4:' == '.jpg' or file_ext|slice:'-5:' == '.jpeg' or file_ext|slice:'-4:' == '.png' or file_ext|slice:'-4:' == '.gif' or file_ext|slice:'-5:' == '.webp' %}
+                                    <div class="mb-3 text-center">
+                                        <img src="{{ vendor.business_registration_cert.url }}" 
+                                             alt="Business Registration" 
+                                             class="document-image-preview"
+                                             onclick="openImageModal('{{ vendor.business_registration_cert.url }}', 'Business Registration Certificate')">
+                                    </div>
+                                {% else %}
+                                    <div class="document-preview-container mb-3">
+                                        <a href="{{ vendor.business_registration_cert.url }}" target="_blank" class="text-decoration-none">
+                                            <div class="document-preview-large">
+                                                <i class="fas fa-file-pdf fa-3x mb-2" style="color: #ef4444;"></i>
+                                                <span class="d-block">View PDF Document</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                            <div class="small">
+                                <strong>Reg Number:</strong> {{ vendor.business_registration_number|default:"Not provided" }}<br>
+                                <strong>Uploaded:</strong> {{ vendor.documents_uploaded_at|date:"M d, Y H:i"|default:"N/A" }}
+                            </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-times-circle fa-3x mb-2" style="color: #ef4444;"></i>
+                            <p class="text-danger mb-0">Not uploaded</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- KRA Documents -->
+                <div class="col-md-6">
+                    <div class="card-modern p-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-3 p-2 me-2" style="background: rgba(37,99,235,0.1);">
+                                <i class="fas fa-file-invoice fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">KRA Documents</h6>
+                                <small class="text-muted">PIN & Certificate</small>
+                            </div>
+                        </div>
+                        {% if vendor.kra_certificate %}
+                        <div class="mb-2">
+                            <strong>KRA PIN:</strong> 
+                            <span class="badge bg-light text-dark">{{ vendor.kra_pin|default:"Not provided" }}</span>
+                        </div>
+                            {% with file_ext=vendor.kra_certificate.url|lower %}
+                                {% if file_ext|slice:'-4:' == '.jpg' or file_ext|slice:'-5:' == '.jpeg' or file_ext|slice:'-4:' == '.png' or file_ext|slice:'-4:' == '.gif' or file_ext|slice:'-5:' == '.webp' %}
+                                    <div class="mb-3 text-center">
+                                        <img src="{{ vendor.kra_certificate.url }}" 
+                                             alt="KRA Certificate" 
+                                             class="document-image-preview"
+                                             onclick="openImageModal('{{ vendor.kra_certificate.url }}', 'KRA PIN Certificate')">
+                                    </div>
+                                {% else %}
+                                    <div class="document-preview-container mb-2">
+                                        <a href="{{ vendor.kra_certificate.url }}" target="_blank" class="btn btn-sm" style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye me-1"></i> View Certificate
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-times-circle fa-3x mb-2" style="color: #ef4444;"></i>
+                            <p class="text-danger mb-0">Not uploaded</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- National ID -->
+                <div class="col-md-6">
+                    <div class="card-modern p-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-3 p-2 me-2" style="background: rgba(37,99,235,0.1);">
+                                <i class="fas fa-id-card fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">National ID</h6>
+                                <small class="text-muted">Owner Identification</small>
+                            </div>
+                        </div>
+                        {% if vendor.owner_id_front and vendor.owner_id_back %}
+                        <div class="mb-2">
+                            <strong>ID Number:</strong> {{ vendor.owner_id_number|default:"Not provided" }}
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                {% if vendor.owner_id_front %}
+                                    <img src="{{ vendor.owner_id_front.url }}" 
+                                         alt="ID Front" 
+                                         class="document-image-preview"
+                                         onclick="openImageModal('{{ vendor.owner_id_front.url }}', 'National ID - Front')">
+                                    <small class="text-muted d-block text-center mt-1">Front</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                {% if vendor.owner_id_back %}
+                                    <img src="{{ vendor.owner_id_back.url }}" 
+                                         alt="ID Back" 
+                                         class="document-image-preview"
+                                         onclick="openImageModal('{{ vendor.owner_id_back.url }}', 'National ID - Back')">
+                                    <small class="text-muted d-block text-center mt-1">Back</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-times-circle fa-3x mb-2" style="color: #ef4444;"></i>
+                            <p class="text-danger mb-0">ID documents incomplete</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Business Permit -->
+                <div class="col-md-6">
+                    <div class="card-modern p-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-3 p-2 me-2" style="background: rgba(37,99,235,0.1);">
+                                <i class="fas fa-file-signature fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Business Permit</h6>
+                                <small class="text-muted">Single Business Permit</small>
+                            </div>
+                        </div>
+                        {% if vendor.business_permit %}
+                        <div class="mb-2">
+                            <strong>Expiry Date:</strong> 
+                            <span class="badge {% if vendor.permit_is_valid %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ vendor.permit_expiry_date|date:"M d, Y"|default:"Not set" }}
+                            </span>
+                        </div>
+                            {% with file_ext=vendor.business_permit.url|lower %}
+                                {% if file_ext|slice:'-4:' == '.jpg' or file_ext|slice:'-5:' == '.jpeg' or file_ext|slice:'-4:' == '.png' or file_ext|slice:'-4:' == '.gif' or file_ext|slice:'-5:' == '.webp' %}
+                                    <div class="mb-3 text-center">
+                                        <img src="{{ vendor.business_permit.url }}" 
+                                             alt="Business Permit" 
+                                             class="document-image-preview"
+                                             onclick="openImageModal('{{ vendor.business_permit.url }}', 'Business Permit')">
+                                    </div>
+                                {% else %}
+                                    <div class="document-preview-container">
+                                        <a href="{{ vendor.business_permit.url }}" target="_blank" class="btn btn-sm" style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                            <i class="fas fa-eye me-1"></i> View Permit
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-times-circle fa-3x mb-2" style="color: #ef4444;"></i>
+                            <p class="text-danger mb-0">Not uploaded</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tax Compliance (Optional) -->
+                {% if vendor.tax_compliance_cert %}
+                <div class="col-md-6">
+                    <div class="card-modern p-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-file-invoice-dollar fa-2x me-2" style="color: #10b981;"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Tax Compliance</h6>
+                                <small class="text-muted">Optional Document</small>
+                            </div>
+                        </div>
+                        {% with file_ext=vendor.tax_compliance_cert.url|lower %}
+                            {% if file_ext|slice:'-4:' == '.jpg' or file_ext|slice:'-5:' == '.jpeg' or file_ext|slice:'-4:' == '.png' or file_ext|slice:'-4:' == '.gif' or file_ext|slice:'-5:' == '.webp' %}
+                                <img src="{{ vendor.tax_compliance_cert.url }}" 
+                                     alt="Tax Compliance" 
+                                     class="document-image-preview"
+                                     onclick="openImageModal('{{ vendor.tax_compliance_cert.url }}', 'Tax Compliance Certificate')">
+                            {% else %}
+                                <a href="{{ vendor.tax_compliance_cert.url }}" target="_blank" class="btn btn-sm" style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                    <i class="fas fa-eye me-1"></i> View Certificate
+                                </a>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column - Verification Form -->
+        <div class="col-lg-4">
+            <div class="card-modern p-4 sticky-top" style="top: 20px;">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-check-circle me-2" style="color: var(--duka-green);"></i>
+                    Verification Decision
+                </h5>
+
+                <!-- Documents Summary -->
+                <div class="mb-4 p-3" style="background: #f8fafc; border-radius: 16px;">
+                    <h6 class="fw-bold mb-2">📋 Documents Summary</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Required Documents:</span>
+                        <span class="fw-bold">
+                            {{ uploaded_count|default:"0" }}/6
+                        </span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {% widthratio uploaded_count|default:"0" 6 100 %}%"></div>
+                    </div>
+                    {% if missing_documents %}
+                    <small class="text-danger d-block mt-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i> 
+                        Missing: {{ missing_documents|join:", " }}
+                    </small>
+                    {% else %}
+                    <small class="text-success d-block mt-2">
+                        <i class="fas fa-check-circle me-1"></i> All documents uploaded
+                    </small>
+                    {% endif %}
+                </div>
+
+                <!-- Verification Form -->
+                <form method="POST" id="verificationForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Verification Status</label>
+                        <div class="verification-options p-3" style="background: #f8fafc; border-radius: 16px;">
+                            {% for radio in form.verification_status %}
+                                <div class="form-check mb-2">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label fw-medium" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Verification Notes</label>
+                        {{ form.verification_notes }}
+                        <small class="text-muted">{{ form.verification_notes.help_text }}</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.notify_vendor }}
+                            <label class="form-check-label" for="{{ form.notify_vendor.id_for_label }}">
+                                {{ form.notify_vendor.help_text }}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-duka-green btn-lg">
+                            <i class="fas fa-save me-2"></i> Submit Verification
+                        </button>
+                        <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-light">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Vendor Contact Info -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="fw-bold mb-2">📞 Contact Vendor</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-phone-alt me-2" style="color: var(--duka-blue);"></i>
+                        <span>{{ vendor.phone|default:"Not provided" }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-envelope me-2" style="color: var(--duka-blue);"></i>
+                        <span>{{ vendor.owner.email }}</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-map-marker-alt me-2" style="color: var(--duka-blue);"></i>
+                        <span>{{ vendor.location|default:"Not provided" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-document">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="imageModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img src="" id="modalImage" style="max-width: 100%; max-height: 80vh; border-radius: 0 0 16px 16px;">
+            </div>
+            <div class="modal-footer border-0">
+                <a href="#" id="modalDownloadBtn" class="btn btn-success" download>
+                    <i class="fas fa-download me-2"></i> Download
+                </a>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to open image modal
+    function openImageModal(imageUrl, title) {
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('imageModalTitle').textContent = title;
+        document.getElementById('modalDownloadBtn').href = imageUrl;
+        modal.show();
+    }
+
+    // Initialize Bootstrap modal if not already available
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap JS not loaded');
+        }
+    });
+</script>
+{% endblock %}

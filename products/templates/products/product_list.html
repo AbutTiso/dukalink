@@ -1,0 +1,555 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - DukaLink{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-blue-light: #60a5fa;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+        --duka-yellow-light: #fde047;
+        --duka-soft-bg: #f8fafc;
+        --duka-card-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+        --duka-hover-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Button Styles */
+    .btn-duka-yellow {
+        background: var(--duka-yellow);
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .btn-duka-yellow:hover {
+        background: var(--duka-yellow-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        text-decoration: none;
+    }
+
+    /* Card Styles */
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.03);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-modern:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    .card-modern .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-modern .d-grid {
+        margin-top: auto;
+    }
+
+    /* Filter Button Styles */
+    .filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: var(--duka-blue);
+        border-color: var(--duka-blue);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Product Badge */
+    .product-badge {
+        background: var(--duka-blue);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-badge a {
+        color: white;
+        text-decoration: none;
+    }
+
+    .product-badge a:hover {
+        text-decoration: underline;
+    }
+
+    /* Pagination */
+    .page-link {
+        border: none;
+        padding: 0.75rem 1.25rem;
+        color: var(--duka-blue);
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .page-link:hover {
+        background: var(--duka-blue);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .page-item.active .page-link {
+        background: var(--duka-blue);
+        color: white;
+    }
+
+    /* Toast Animation */
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    .alert-modern {
+        border: none;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        background: white;
+        border-left: 4px solid var(--duka-blue);
+    }
+
+    .alert-success {
+        border-left-color: #10b981;
+    }
+
+    .alert-danger {
+        border-left-color: #ef4444;
+    }
+
+    /* Loading Spinner */
+    .btn-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .card-modern {
+            border-radius: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Header with Search -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold mb-3">
+                <span style="color: var(--duka-blue);">🛍️</span> Browse Products
+            </h1>
+            <p class="lead text-muted">Discover unique products from Kenyan vendors</p>
+        </div>
+        <div class="col-lg-4">
+            <form method="get" class="d-flex">
+                <div class="input-group" style="border-radius: 50px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <input type="text" name="q" class="form-control border-0" placeholder="Search products..." value="{{ request.GET.q }}" style="padding: 0.75rem 1.25rem;">
+                    <button class="btn" type="submit" style="background: var(--duka-blue); color: white; padding: 0.75rem 1.5rem;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Filter Bar -->
+    <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
+        <span class="fw-medium">Filter by:</span>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=all" class="filter-btn {% if not request.GET.sort or request.GET.sort == 'all' %}active{% endif %}">
+            All Products
+        </a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=price_low" class="filter-btn {% if request.GET.sort == 'price_low' %}active{% endif %}">
+            Price: Low to High
+        </a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=price_high" class="filter-btn {% if request.GET.sort == 'price_high' %}active{% endif %}">
+            Price: High to Low
+        </a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=newest" class="filter-btn {% if request.GET.sort == 'newest' %}active{% endif %}">
+            Newest First
+        </a>
+    </div>
+    
+    <!-- Products Grid -->
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4 col-lg-3">
+            <div class="card-modern">
+                <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                    <div class="position-relative">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div style="height: 200px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image fa-4x" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                        </div>
+                        {% endif %}
+                        <span class="position-absolute top-0 start-0 m-3 badge product-badge">
+                            <a href="{% url 'shops:shop_detail' product.business.slug %}" class="text-white text-decoration-none">
+                                {{ product.business.name }}
+                            </a>
+                        </span>
+                    </div>
+                </a>
+                
+                <div class="card-body p-4">
+                    <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                        <h5 class="card-title fw-bold mb-2 text-dark">{{ product.name }}</h5>
+                        <p class="card-text text-muted small mb-3">{{ product.description|truncatewords:10 }}</p>
+                    </a>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="h4 fw-bold mb-0" style="color: var(--duka-blue);">Ksh {{ product.price }}</span>
+                        {% if product.stock > 0 %}
+                        <span class="badge bg-success" style="padding: 0.5rem;">
+                            <i class="fas fa-check-circle me-1"></i> In Stock
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger" style="padding: 0.5rem;">
+                            Out of Stock
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'products:product_detail' product.id %}" class="btn btn-outline-primary" style="border-radius: 50px; border-color: var(--duka-blue); color: var(--duka-blue); padding: 0.75rem;">
+                            <i class="fas fa-eye me-2"></i>View Details
+                        </a>
+                        {% if product.stock > 0 %}
+                        <button onclick="addToCart({{ product.id }}, this)" class="btn-duka-yellow">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-box-open fa-4x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h3 class="fw-bold mb-3">No products found</h3>
+                <p class="text-muted mb-4">Try adjusting your search or filter to find what you're looking for.</p>
+                <a href="{% url 'products:product_list' %}" class="btn-duka-blue">
+                    <i class="fas fa-redo-alt me-2"></i>Clear Filters
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if products.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in products.paginator.page_range %}
+                {% if products.number == num %}
+                <li class="page-item active">
+                    <span class="page-link" style="background: var(--duka-blue); border-color: var(--duka-blue); border-radius: 50px; margin: 0 5px;">{{ num }}</span>
+                </li>
+                {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue); margin: 0 5px;">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Hidden CSRF Token for AJAX requests -->
+{% csrf_token %}
+
+<script>
+    // Get CSRF token from the hidden input
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    // Function to update cart count in navbar
+    function updateCartCount(count) {
+        const cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+        cartCountElements.forEach(element => {
+            if (element) {
+                element.textContent = count;
+                // Make sure it's visible
+                element.style.display = 'inline-block';
+            }
+        });
+    }
+
+    // Function to add product to cart - UPDATED URL to match your existing view
+    function addToCart(productId, buttonElement) {
+        // Show loading state on button
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="btn-spinner me-2"></span>Adding...';
+        buttonElement.disabled = true;
+        
+        const csrfToken = getCsrfToken();
+        
+        // Use the URL pattern that matches your existing cart_add view
+        fetch(`/orders/cart/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({
+                'product_id': productId
+            })
+        })
+        .then(response => {
+            if (response.redirected) {
+                // This is a redirect response - but we want JSON
+                // Let's try to get cart count from session via another call
+                return fetch('/orders/cart/count/').then(res => res.json());
+            }
+            return response.json().catch(() => {
+                // If not JSON, it might be a redirect
+                return fetch('/orders/cart/count/').then(res => res.json());
+            });
+        })
+        .then(data => {
+            // Reset button
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+            
+            // Get cart count - either from data or fetch it
+            let cartCount = data.cart_count || 0;
+            
+            // Update cart count display
+            updateCartCount(cartCount);
+            
+            // Show success message
+            showToast('✅ Product added to cart successfully!', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Reset button
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+            
+            // Try alternative endpoint
+            fetch('/orders/api/cart/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateCartCount(data.cart_count || 0);
+                    showToast('✅ ' + (data.message || 'Product added to cart!'), 'success');
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to add to cart'), 'danger');
+                }
+            })
+            .catch(err => {
+                console.error('Second attempt error:', err);
+                showToast('❌ Error adding product to cart', 'danger');
+            });
+        });
+    }
+
+    // Function to get cart count on page load
+    function fetchCartCount() {
+        fetch('/orders/cart/count/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching cart count:', error);
+            });
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        // Create toast container if it doesn't exist
+        if (!document.getElementById('toast-container')) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+            document.body.appendChild(container);
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-modern d-flex align-items-center`;
+        toast.style.cssText = 'animation: slideIn 0.3s ease; min-width: 300px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);';
+        
+        // Set icon based on type
+        let icon = 'fa-check-circle';
+        if (type === 'danger') icon = 'fa-exclamation-circle';
+        if (type === 'warning') icon = 'fa-exclamation-triangle';
+        if (type === 'info') icon = 'fa-info-circle';
+        
+        toast.innerHTML = `
+            <i class="fas ${icon} me-2" style="font-size: 1.25rem;"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.getElementById('toast-container').appendChild(toast);
+        
+        // Auto-remove toast after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch current cart count
+        fetchCartCount();
+        
+        // Handle filter button active state
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const currentUrl = new URL(window.location.href);
+        const currentSort = currentUrl.searchParams.get('sort') || 'all';
+        
+        filterButtons.forEach(button => {
+            if (button.href.includes(`sort=${currentSort}`)) {
+                button.classList.add('active');
+            }
+        });
+    });
+</script>
+
+{% block extra_js %}
+<script>
+    // Additional JS for cart count if needed
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make sure cart count is updated every time page loads
+        setTimeout(fetchCartCount, 100);
+    });
+</script>
+{% endblock %}
+{% endblock %}

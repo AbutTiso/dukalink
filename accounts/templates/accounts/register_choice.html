@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold mb-3">Join DukaLink</h1>
+                <p class="lead text-muted">Choose how you want to use our platform</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Customer Registration -->
+                <div class="col-md-6">
+                    <div class="card-modern p-5 text-center h-100">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-user fa-3x" style="color: var(--duka-blue);"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">Shop on DukaLink</h3>
+                        <p class="text-muted mb-4">Browse products from multiple vendors, shop securely, and track your orders.</p>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Shop from verified vendors</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Pay with M-Pesa</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Track your orders</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Save favorite products</li>
+                        </ul>
+                        <a href="{% url 'accounts:register_user' %}" class="btn btn-duka-blue btn-lg w-100">
+                            <i class="fas fa-user-plus me-2"></i>Register as Customer
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Vendor Registration -->
+                <div class="col-md-6">
+                    <div class="card-modern p-5 text-center h-100" style="border: 2px solid rgba(234,179,8,0.2);">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(234,179,8,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-store-alt fa-3x" style="color: var(--duka-yellow);"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">Sell on DukaLink</h3>
+                        <p class="text-muted mb-4">Grow your business, reach more customers, and manage your online shop.</p>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Create your online store</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Accept M-Pesa payments</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Manage inventory</li>
+                            <li class="mb-2"><i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Track sales analytics</li>
+                        </ul>
+                        <a href="{% url 'accounts:register_business' %}" class="btn btn-duka-yellow btn-lg w-100">
+                            <i class="fas fa-store me-2"></i>Register as Vendor
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    Already have an account? 
+                    <a href="{% url 'accounts:login' %}" class="text-decoration-none" style="color: var(--duka-blue);">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    
+    .btn-duka-blue {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-blue:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        color: white;
+    }
+    
+    .btn-duka-yellow {
+        background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));
+        color: #0f172a;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-yellow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234,179,8,0.3);
+        color: #0f172a;
+    }
+</style>
+{% endblock %}

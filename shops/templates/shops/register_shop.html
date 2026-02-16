@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register Your Business - DukaLink{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Form Styling */
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-blue-light: #60a5fa;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+        --duka-yellow-light: #fde047;
+        --duka-soft-bg: #f8fafc;
+        --duka-card-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 32px;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .card-modern:hover {
+        box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+    
+    .btn-duka-yellow {
+        background: var(--duka-yellow);
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-duka-yellow:hover {
+        background: var(--duka-yellow-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+    }
+    
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    
+    /* Form Field Styling */
+    .form-control-modern {
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .form-control-modern:focus {
+        border-color: var(--duka-blue);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+    
+    .input-group-modern {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .input-group-modern:focus-within {
+        border-color: var(--duka-blue);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .input-group-text-modern {
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Feature Cards */
+    .feature-card {
+        padding: 1.5rem 1rem;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f8fafc, white);
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        background: linear-gradient(135deg, white, #f8fafc);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    
+    /* Password Strength Indicator */
+    .password-strength {
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .strength-weak { background: #ef4444; width: 33.33%; }
+    .strength-medium { background: #eab308; width: 66.66%; }
+    .strength-strong { background: #10b981; width: 100%; }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease;
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Main Card -->
+            <div class="card-modern p-4 p-lg-5 animate-fadeInUp">
+                
+                <!-- Progress Steps -->
+                <div class="d-flex justify-content-between mb-5 position-relative">
+                    <div class="text-center" style="flex: 1;">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px; background: var(--duka-blue) !important;">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <small class="fw-bold d-none d-md-block">Business Info</small>
+                    </div>
+                    <div class="text-center" style="flex: 1;">
+                        <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                            2
+                        </div>
+                        <small class="text-muted d-none d-md-block">Products</small>
+                    </div>
+                    <div class="text-center" style="flex: 1;">
+                        <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                            3
+                        </div>
+                        <small class="text-muted d-none d-md-block">Start Selling</small>
+                    </div>
+                    <div class="position-absolute top-50 start-0 translate-middle-y bg-light" style="height: 2px; width: 100%; z-index: -1;"></div>
+                    <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 2px; width: 33.33%; background: var(--duka-blue) !important; z-index: -1;"></div>
+                </div>
+                
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-store-alt fa-4x text-white"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-3" style="color: #0f172a;">Start Selling on DukaLink</h2>
+                    <p class="lead text-muted">Join 500+ Kenyan vendors and grow your business with WhatsApp & M-Pesa</p>
+                </div>
+                
+                <!-- Features -->
+                <div class="row g-3 mb-5">
+                    <div class="col-md-4">
+                        <div class="feature-card text-center h-100">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fab fa-whatsapp fa-2x" style="color: #25D366;"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">WhatsApp Orders</h6>
+                            <small class="text-muted">Auto-generated order messages</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card text-center h-100">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-mobile-alt fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">M-Pesa Payments</h6>
+                            <small class="text-muted">Instant payment confirmation</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card text-center h-100">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-chart-line fa-2x" style="color: #10b981;"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Grow Sales</h6>
+                            <small class="text-muted">Reach more customers</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Registration Form -->
+                <form method="POST" class="needs-validation" novalidate id="registerForm">
+                    {% csrf_token %}
+                    
+                    <!-- Non-field Errors -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-modern d-flex align-items-center mb-4" role="alert">
+                        <i class="fas fa-exclamation-circle me-2" style="font-size: 1.25rem;"></i>
+                        <div class="flex-grow-1">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row g-4">
+                        <!-- Business Name -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-store me-1" style="color: var(--duka-blue);"></i>
+                                Business Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-store" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.name }}
+                            </div>
+                            {% if form.name.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.name.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">This will be your public store name</small>
+                        </div>
+                        
+                        <!-- Phone Number -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-phone-alt me-1" style="color: var(--duka-blue);"></i>
+                                Phone Number <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">+254</span>
+                                {{ form.phone }}
+                            </div>
+                            {% if form.phone.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.phone.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Used for WhatsApp order notifications</small>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-map-marker-alt me-1" style="color: var(--duka-yellow);"></i>
+                                Location <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--duka-yellow);"></i>
+                                </span>
+                                {{ form.location }}
+                            </div>
+                            {% if form.location.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.location.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email Address -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-envelope me-1" style="color: var(--duka-blue);"></i>
+                                Email Address <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-envelope" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.email.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-lock me-1" style="color: var(--duka-blue);"></i>
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password1 }}
+                            </div>
+                            <div class="password-strength mt-2" id="passwordStrength"></div>
+                            {% if form.password1.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.password1.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Min. 8 characters with letters & numbers</small>
+                        </div>
+                        
+                        <!-- Password Confirmation -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-lock me-1" style="color: var(--duka-blue);"></i>
+                                Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password2 }}
+                            </div>
+                            {% if form.password2.errors %}
+                            <div class="text-danger small mt-2">
+                                {% for error in form.password2.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Business Category (Optional) -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-tag me-1" style="color: var(--duka-blue);"></i>
+                                Business Category
+                            </label>
+                            <div class="input-group-modern d-flex">
+                                <span class="input-group-text-modern">
+                                    <i class="fas fa-tag" style="color: var(--duka-blue);"></i>
+                                </span>
+                                <select name="category" class="form-control-modern border-0 bg-light">
+                                    <option value="">Select category</option>
+                                    <option value="fresh">Fresh Produce</option>
+                                    <option value="fashion">Fashion & Accessories</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="home">Home & Living</option>
+                                    <option value="beauty">Beauty & Health</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Business Description (Optional) -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-align-left me-1" style="color: var(--duka-blue);"></i>
+                                Business Description
+                            </label>
+                            {{ form.description }}
+                            <small class="text-muted">Tell customers about your business (optional)</small>
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="agree_terms" id="agreeTerms" required style="border-radius: 4px; border: 2px solid #e2e8f0;">
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the <a href="#" class="text-decoration-none" style="color: var(--duka-blue); font-weight: 600;">Terms of Service</a> and <a href="#" class="text-decoration-none" style="color: var(--duka-blue); font-weight: 600;">Privacy Policy</a> <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                            {% if form.agree_terms.errors %}
+                            <div class="text-danger small mt-2">
+                                {{ form.agree_terms.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn-duka-yellow btn-lg" id="submitBtn">
+                            <span class="spinner d-none" id="loadingSpinner"></span>
+                            <span id="btnText">
+                                <i class="fas fa-store-alt me-2"></i>Create Your Shop
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <!-- Login Link -->
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-medium" style="color: var(--duka-blue);">
+                                Login here <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </p>
+                    </div>
+                </form>
+                
+                <!-- Trust Badges -->
+                <div class="d-flex justify-content-center gap-4 mt-5 pt-4 border-top">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-alt me-2" style="color: var(--duka-blue);"></i>
+                        <small class="text-muted">SSL Secure</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-lock me-2" style="color: var(--duka-blue);"></i>
+                        <small class="text-muted">Data Protected</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clock me-2" style="color: var(--duka-blue);"></i>
+                        <small class="text-muted">24/7 Support</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="card-modern p-4 mt-4 text-center" style="background: linear-gradient(135deg, #f8fafc, white);">
+                <div class="d-flex align-items-center justify-content-center">
+                    <i class="fas fa-question-circle fa-2x me-3" style="color: var(--duka-yellow);"></i>
+                    <div class="text-start">
+                        <h6 class="fw-bold mb-1">Need help registering?</h6>
+                        <p class="text-muted small mb-0">
+                            Call us at <a href="tel:+254700000000" class="text-decoration-none" style="color: var(--duka-blue);">+254 700 000000</a> or 
+                            <a href="#" class="text-decoration-none" style="color: var(--duka-blue);">chat with support</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation and enhancement
+(function() {
+    'use strict';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add modern classes to form fields
+        const formFields = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="password"], select, textarea');
+        formFields.forEach(function(field) {
+            field.classList.add('form-control-modern');
+            field.classList.add('border-0');
+            field.classList.add('bg-light');
+        });
+        
+        // Add placeholder for phone
+        const phoneField = document.querySelector('input[name="phone"]');
+        if (phoneField) {
+            phoneField.placeholder = '712345678';
+        }
+        
+        // Password strength indicator
+        const passwordField = document.querySelector('input[name="password1"]');
+        const strengthIndicator = document.getElementById('passwordStrength');
+        
+        if (passwordField && strengthIndicator) {
+            passwordField.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 0;
+                
+                if (password.length >= 8) strength += 1;
+                if (password.match(/[a-z]+/)) strength += 1;
+                if (password.match(/[A-Z]+/)) strength += 1;
+                if (password.match(/[0-9]+/)) strength += 1;
+                if (password.match(/[$@#&!]+/)) strength += 1;
+                
+                strengthIndicator.className = 'password-strength';
+                
+                if (password.length === 0) {
+                    strengthIndicator.style.width = '0';
+                } else if (strength < 3) {
+                    strengthIndicator.classList.add('strength-weak');
+                } else if (strength < 5) {
+                    strengthIndicator.classList.add('strength-medium');
+                } else {
+                    strengthIndicator.classList.add('strength-strong');
+                }
+            });
+        }
+        
+        // Form submit loading state
+        const form = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        const btnText = document.getElementById('btnText');
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (form.checkValidity() === false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                } else {
+                    // Show loading state
+                    spinner.classList.remove('d-none');
+                    btnText.classList.add('d-none');
+                    submitBtn.disabled = true;
+                }
+                
+                form.classList.add('was-validated');
+            });
+        }
+        
+        // Auto-format phone number
+        if (phoneField) {
+            phoneField.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+        
+        // Smooth scroll to errors
+        if (window.location.hash === '#errors') {
+            const errors = document.querySelector('.alert-danger');
+            if (errors) {
+                errors.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DukaLink - WhatsApp Ordering + M-Pesa SaaS{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <style>
+        :root {
+            --duka-blue: #2563eb;
+            --duka-blue-dark: #1e40af;
+            --duka-blue-light: #60a5fa;
+            --duka-yellow: #eab308;
+            --duka-yellow-dark: #ca8a04;
+            --duka-yellow-light: #fde047;
+            --duka-soft-bg: #f8fafc;
+            --duka-card-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+            --duka-hover-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--duka-soft-bg);
+            color: #0f172a;
+            padding-top: 76px;
+        }
+        
+        /* Modern Navigation - FIXED */
+        .navbar-duka {
+            background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%);
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+        
+        .navbar-duka .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-duka .navbar-brand i {
+            color: var(--duka-yellow);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .navbar-duka .nav-link {
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-duka .nav-link:hover,
+        .navbar-duka .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .navbar-duka .btn-sell {
+            background: var(--duka-yellow);
+            color: #0f172a;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-duka .btn-sell:hover {
+            background: var(--duka-yellow-dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(234, 179, 8, 0.4);
+        }
+        
+        .cart-badge {
+            background: var(--duka-yellow);
+            color: #0f172a;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        /* Search Bar Styles */
+        .search-form {
+            flex: 0 1 500px;
+            margin: 0 2rem;
+        }
+        
+        .search-input {
+            background: rgba(255,255,255,0.15) !important;
+            border: none !important;
+            color: white !important;
+            backdrop-filter: blur(10px);
+            padding: 0.6rem 1.2rem !important;
+            border-radius: 50px 0 0 50px !important;
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.7) !important;
+        }
+        
+        .search-input:focus {
+            background: rgba(255,255,255,0.25) !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        
+        .search-btn {
+            background: var(--duka-yellow) !important;
+            color: #0f172a !important;
+            border: none !important;
+            border-radius: 0 50px 50px 0 !important;
+            padding: 0.6rem 1.2rem !important;
+        }
+        
+        .search-btn:hover {
+            background: var(--duka-yellow-dark) !important;
+            color: white !important;
+        }
+        
+        /* Responsive search */
+        @media (max-width: 991.98px) {
+            .search-form {
+                margin: 1rem 0;
+                width: 100%;
+            }
+            
+            .navbar-nav {
+                margin-top: 1rem;
+            }
+        }
+        
+        /* Notification Toast */
+        .notification-toast {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .notification-toast.hide {
+            animation: slideOutRight 0.3s ease-out forwards;
+        }
+        
+        /* Modern Footer */
+        .footer-duka {
+            background: linear-gradient(135deg, #0c65f5 0%, #0f172a 100%);
+            color: white;
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-duka h5 {
+            color: var(--duka-yellow);
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+        
+        .footer-duka a {
+            color: #ebeff5;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            padding: 0.25rem 0;
+        }
+        
+        .footer-duka a:hover {
+            color: var(--duka-yellow);
+            transform: translateX(5px);
+        }
+        
+        .footer-divider {
+            border-color: rgba(255,255,255,0.1);
+            margin: 2rem 0;
+        }
+        
+        /* Modern Alerts */
+        .alert-modern {
+            border: none;
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        /* Buttons */
+        .btn-duka-blue {
+            background: var(--duka-blue);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-duka-blue:hover {
+            background: var(--duka-blue-dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-duka-yellow {
+            background: var(--duka-yellow);
+            color: #0f172a;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-duka-yellow:hover {
+            background: var(--duka-yellow-dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+        }
+        
+        /* Cards */
+        .card-modern {
+            border: none;
+            border-radius: 24px;
+            box-shadow: var(--duka-card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card-modern:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--duka-hover-shadow);
+        }
+    
+        .hover-yellow:hover {
+            color: var(--duka-yellow) !important;
+            transition: color 0.2s ease;
+        }
+        
+        .hover-whatsapp:hover {
+            color: #25D366 !important;
+            transition: color 0.2s ease;
+        }
+        
+        /* Loading spinner */
+        .spinner-small {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Modern Navigation Bar - FIXED with improved registration flow -->
+    <nav class="navbar navbar-expand-lg navbar-duka">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store"></i>
+                DukaLink
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- SEARCH FORM - Added here for global search -->
+                <form class="d-flex search-form mx-auto" role="search" method="GET" action="{% url 'products:product_search' %}">
+                    <div class="input-group">
+                        <input class="form-control search-input" type="search" name="q" placeholder="Search products, shops, categories..." aria-label="Search" required>
+                        <button class="btn search-btn" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if user.is_authenticated %}
+                        <!-- ADMIN LINK -->
+                        {% if user.is_staff or user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'admin-panel' in request.path %}active{% endif %}" 
+                               href="{% url 'admin_dashboard:dashboard' %}">
+                                <i class="fas fa-shield-alt me-1"></i> Admin Panel
+                                {% if user.is_superuser %}
+                                <span class="badge bg-warning text-dark ms-1">Super</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}" href="{% url 'dashboard:vendor_dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %}" href="{% url 'orders:cart_detail' %}" id="cart-nav-link">
+                                <i class="fas fa-shopping-cart me-1"></i> Cart
+                                <span class="cart-badge ms-1" id="cart-count">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="rounded-circle me-1" width="32" height="32" style="object-fit: cover; border: 2px solid var(--duka-yellow);">
+                                {% else %}
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--duka-yellow); display: flex; align-items: center; justify-content: center; margin-right: 0.5rem;">
+                                        <span style="color: #0f172a; font-weight: 600;">{{ user.username|make_list|first|upper }}</span>
+                                    </div>
+                                {% endif %}
+                                {{ user.get_short_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: 16px; padding: 0.5rem;">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                        <i class="fas fa-id-card fa-fw" style="color: var(--duka-blue);"></i> Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:my_orders' %}">
+                                        <i class="fas fa-shopping-bag fa-fw" style="color: var(--duka-blue);"></i> My Orders
+                                    </a>
+                                </li>
+                                {% if user.is_staff or user.is_vendor %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                        <i class="fas fa-cog fa-fw" style="color: var(--duka-blue);"></i> Admin
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                        <i class="fas fa-sign-out-alt fa-fw"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- FIXED: Non-authenticated users - Clear registration flow -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:register_choice' %}">
+                                <i class="fas fa-user-plus me-1"></i> Register
+                            </a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-sell" href="{% url 'accounts:register_business' %}">
+                                <i class="fas fa-store-alt me-1"></i> Sell With Us
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Notification Container for AJAX messages -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Messages/Alerts -->
+    {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+                <div class="alert alert-modern alert-{{ message.tags }} d-flex align-items-center" role="alert">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2" style="font-size: 1.25rem;"></i>
+                    <div class="flex-grow-1">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Modern Footer -->
+    <footer class="footer-duka">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-store fa-2x" style="color: var(--duka-yellow);"></i>
+                        <h4 class="ms-2 mb-0 fw-bold text-white">DukaLink</h4>
+                    </div>
+                    <p class="text-muted mb-3" style="color: #3e8af4 !important;">
+                        Empowering Kenyan small businesses with WhatsApp ordering and M-Pesa integration.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-whatsapp fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="{% url 'shops:shop_list' %}">Shops</a></li>
+                        <li><a href="{% url 'accounts:register_business' %}">Start Selling</a></li>
+                        <li><a href="{% url 'about' %}">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'pages:faqs' %}" class="text-white-50 text-decoration-none">FAQs</a></li>
+                        <li><a href="{% url 'pages:privacy_policy' %}" class="text-white-50 text-decoration-none">Privacy Policy</a></li>
+                        <li><a href="{% url 'pages:terms_of_service' %}" class="text-white-50 text-decoration-none">Terms of Service</a></li>
+                        <li><a href="{% url 'pages:contact_us' %}" class="text-white-50 text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="fw-bold mb-3">Contact</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-envelope me-2" style="color: var(--duka-yellow);"></i>
+                            <a href="mailto:support@dukalink.com" class="text-muted text-decoration-none hover-yellow">
+                                support@dukalink.com
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-phone me-2" style="color: var(--duka-yellow);"></i>
+                            <a href="tel:+254700000000" class="text-muted text-decoration-none hover-yellow">
+                                +254 700 000000
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fab fa-whatsapp me-2" style="color: #25D366;"></i>
+                            <a href="https://wa.me/254700000000" class="text-muted text-decoration-none hover-whatsapp" target="_blank">
+                                +254 700 000000
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2" style="color: var(--duka-yellow);"></i>
+                            <a href="https://maps.google.com/?q=iHub+Nairobi+Kenya" target="_blank" 
+                               class="text-muted text-decoration-none hover-yellow">
+                                iHub, Nairobi, Kenya
+                            </a>
+                        </li>
+                        <li class="mt-3 small text-muted">
+                            <i class="fas fa-clock me-1"></i> Mon - Fri: 8:00 AM - 5:00 PM
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="footer-divider">
+            <div class="text-center text-muted">
+                &copy; {% now "Y" %} DukaLink. Made with <i class="fas fa-heart" style="color: var(--duka-yellow);"></i> for Kenyan businesses
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Cart Manager JavaScript -->
+    <script>
+        // Cart Manager for real-time updates
+        class CartManager {
+            constructor() {
+                this.initEventListeners();
+                this.updateCartCount();
+            }
+
+            initEventListeners() {
+                // Listen for add to cart buttons
+                document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const productId = btn.dataset.productId;
+                        const quantity = btn.dataset.quantity || 1;
+                        this.addToCart(productId, quantity, btn);
+                    });
+                });
+
+                // Listen for quantity updates on cart page
+                document.querySelectorAll('.cart-quantity-input').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const productId = input.dataset.productId;
+                        const quantity = parseInt(input.value);
+                        this.updateCartItem(productId, quantity);
+                    });
+                });
+
+                // Listen for remove buttons
+                document.querySelectorAll('.remove-from-cart-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const productId = btn.dataset.productId;
+                        this.removeFromCart(productId, btn);
+                    });
+                });
+            }
+
+            addToCart(productId, quantity = 1, button = null) {
+                // Show loading state on button
+                if (button) {
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<span class="spinner-small me-1"></span> Adding...';
+                    button.disabled = true;
+                }
+
+                fetch('/orders/ajax/cart/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Restore button
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-cart-plus me-1"></i> Add to Cart';
+                        button.disabled = false;
+                    }
+
+                    if (data.success) {
+                        this.showNotification(data.message, 'success');
+                        this.updateCartCount(data.cart_count);
+                        
+                        // Animate cart icon
+                        this.animateCartIcon();
+                        
+                        // Trigger custom event
+                        document.dispatchEvent(new CustomEvent('cartUpdated', { 
+                            detail: data 
+                        }));
+                    } else {
+                        this.showNotification(data.error || 'Failed to add item', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-cart-plus me-1"></i> Add to Cart';
+                        button.disabled = false;
+                    }
+                    this.showNotification('Failed to add item to cart', 'error');
+                });
+            }
+
+            removeFromCart(productId, button = null) {
+                if (button) {
+                    button.innerHTML = '<span class="spinner-small me-1"></span> Removing...';
+                    button.disabled = true;
+                }
+
+                fetch('/orders/ajax/cart/remove/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.showNotification(data.message, 'success');
+                        this.updateCartCount(data.cart_count);
+                        
+                        // Remove item row if on cart page
+                        const itemRow = document.querySelector(`.cart-item-${productId}`);
+                        if (itemRow) {
+                            itemRow.style.animation = 'slideOutRight 0.3s ease-out forwards';
+                            setTimeout(() => itemRow.remove(), 300);
+                        }
+                        
+                        this.animateCartIcon();
+                        
+                        document.dispatchEvent(new CustomEvent('cartUpdated', { 
+                            detail: data 
+                        }));
+                    } else {
+                        this.showNotification(data.error, 'error');
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-trash me-1"></i> Remove';
+                            button.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-trash me-1"></i> Remove';
+                        button.disabled = false;
+                    }
+                    this.showNotification('Failed to remove item', 'error');
+                });
+            }
+
+            updateCartItem(productId, quantity) {
+                fetch('/orders/ajax/cart/update/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.updateCartCount(data.cart_count);
+                        
+                        // Update item total on cart page
+                        const itemTotal = document.querySelector(`.item-total-${productId}`);
+                        if (itemTotal) {
+                            itemTotal.textContent = `KSh ${data.item_total.toFixed(2)}`;
+                        }
+                        
+                        // Update cart total
+                        const cartTotal = document.querySelector('.cart-total-amount');
+                        if (cartTotal) {
+                            cartTotal.textContent = `KSh ${data.cart_total.toFixed(2)}`;
+                        }
+                        
+                        document.dispatchEvent(new CustomEvent('cartUpdated', { 
+                            detail: data 
+                        }));
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            updateCartCount(count) {
+                const cartBadge = document.getElementById('cart-count');
+                if (cartBadge) {
+                    cartBadge.textContent = count;
+                    cartBadge.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        cartBadge.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            }
+
+            animateCartIcon() {
+                const cartIcon = document.querySelector('.fa-shopping-cart');
+                if (cartIcon) {
+                    cartIcon.style.transform = 'scale(1.2)';
+                    cartIcon.style.transition = 'transform 0.2s ease';
+                    setTimeout(() => {
+                        cartIcon.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                const container = document.getElementById('notification-container');
+                if (!container) return;
+
+                const notification = document.createElement('div');
+                notification.className = `notification-toast alert alert-${type} alert-modern d-flex align-items-center`;
+                notification.setAttribute('role', 'alert');
+                
+                const icon = type === 'success' ? 'fa-check-circle' : 
+                            type === 'error' ? 'fa-exclamation-circle' : 
+                            'fa-info-circle';
+                
+                notification.innerHTML = `
+                    <i class="fas ${icon} me-2" style="font-size: 1.25rem;"></i>
+                    <div class="flex-grow-1">${message}</div>
+                    <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
+                `;
+                
+                container.appendChild(notification);
+                
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    notification.classList.add('hide');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+            getCSRFToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            }
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Cart Manager
+            window.cartManager = new CartManager();
+            
+            // Auto-dismiss Django messages
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    if (alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                });
+            }, 5000);
+            
+            // Initial cart count update
+            fetch('/orders/ajax/cart/count/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('cart-count').textContent = data.cart_count;
+                    }
+                })
+                .catch(error => console.error('Error fetching cart count:', error));
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+</body>
+</html>

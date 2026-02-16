@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                </span> 
+                My Orders
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
+                Track and manage your orders from multiple vendors
+            </p>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date</th>
+                                    <th>Vendor</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold">#{{ order.id }}</span>
+                                    </td>
+                                    <td>
+                                        <div>{{ order.created_at|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ order.created_at|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium">{{ order.vendor.business_name|default:order.vendor.username }}</span>
+                                    </td>
+                                    <td>
+                                        {% for item in order.order_items.all %}
+                                        <div class="small mb-1">
+                                            {{ item.product.name }} x {{ item.quantity }}
+                                        </div>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold" style="color: var(--duka-blue);">
+                                            KES {{ order.total_amount|floatformat:0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">
+                                            <i class="fas fa-clock me-1"></i> Pending
+                                        </span>
+                                        {% elif order.status == 'processing' %}
+                                        <span class="badge" style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                            <i class="fas fa-cog fa-spin me-1"></i> Processing
+                                        </span>
+                                        {% elif order.status == 'completed' %}
+                                        <span class="badge" style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                            <i class="fas fa-check-circle me-1"></i> Completed
+                                        </span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge" style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                            <i class="fas fa-times-circle me-1"></i> Cancelled
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'dashboard:order_detail' order.id %}" 
+                                               class="btn btn-sm"
+                                               style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            {% if order.status == 'pending' %}
+                                            <button type="button" 
+                                                    class="btn btn-sm cancel-order"
+                                                    data-order-id="{{ order.id }}"
+                                                    style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 0.5rem 1rem;">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if orders.has_other_pages %}
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if orders.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ orders.previous_page_number }}" 
+                                   style="color: var(--duka-blue); border-radius: 50px 0 0 50px;">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for i in orders.paginator.page_range %}
+                                {% if orders.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link" style="background: var(--duka-blue); border-color: var(--duka-blue);">
+                                        {{ i }}
+                                    </span>
+                                </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}" style="color: var(--duka-blue);">
+                                        {{ i }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if orders.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ orders.next_page_number }}" 
+                                   style="color: var(--duka-blue); border-radius: 0 50px 50px 0;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-shopping-bag fa-3x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">No orders yet</h4>
+                        <p class="text-muted mb-4">Looks like you haven't placed any orders yet.</p>
+                        <a href="{% url 'shops:home' %}" class="btn btn-duka-yellow btn-lg">
+                            <i class="fas fa-store me-2"></i>Start Shopping
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CSRF Token
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // Cancel order functionality
+    document.querySelectorAll('.cancel-order').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const orderId = this.dataset.orderId;
+            const row = this.closest('tr');
+            
+            if (confirm('Are you sure you want to cancel this order?')) {
+                cancelOrder(orderId, row, this);
+            }
+        });
+    });
+
+    function cancelOrder(orderId, row, button) {
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Cancelling...';
+        button.disabled = true;
+        
+        fetch(`/orders/${orderId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update status badge
+                const statusCell = row.querySelector('td:nth-child(6) .badge');
+                statusCell.className = 'badge';
+                statusCell.style.background = '#ef4444';
+                statusCell.style.color = 'white';
+                statusCell.innerHTML = '<i class="fas fa-times-circle me-1"></i> Cancelled';
+                
+                // Remove cancel button
+                button.remove();
+                
+                // Show success message
+                showToast('Order cancelled successfully!', 'success');
+            } else {
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast(data.error || 'Failed to cancel order', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showToast('An error occurred. Please try again.', 'error');
+        });
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} d-flex align-items-center`;
+        toast.style.cssText = `
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            min-width: 300px;
+        `;
+        
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        toast.innerHTML = `
+            <i class="fas ${icon} me-2" style="font-size: 1.1rem;"></i>
+            <span style="flex: 1;">${message}</span>
+            <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0%); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #475569;
+        border-bottom-width: 1px;
+        padding: 1rem 0.5rem;
+    }
+    
+    .table td {
+        padding: 1rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+    }
+    
+    .page-link {
+        border: none;
+        padding: 0.5rem 1rem;
+        margin: 0 0.25rem;
+        border-radius: 50px !important;
+        color: var(--duka-blue);
+    }
+    
+    .page-item.active .page-link {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .page-item.disabled .page-link {
+        color: #94a3b8;
+        pointer-events: none;
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register Your Business - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern p-5">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-store-alt fa-4x text-white"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-3">Start Selling on DukaLink</h2>
+                    <p class="lead text-muted">Join hundreds of Kenyan vendors and grow your business</p>
+                </div>
+                
+                <!-- Features -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-whatsapp fa-2x" style="color: #25D366;"></i>
+                            </div>
+                            <h6 class="fw-bold">WhatsApp Orders</h6>
+                            <small class="text-muted">Receive orders directly on WhatsApp</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-mobile-alt fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <h6 class="fw-bold">M-Pesa Payments</h6>
+                            <small class="text-muted">Accept payments automatically</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-chart-line fa-2x" style="color: #10b981;"></i>
+                            </div>
+                            <h6 class="fw-bold">Grow Sales</h6>
+                            <small class="text-muted">Reach more customers online</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Messages Display -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Registration Form -->
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <!-- Display non-field errors -->
+                        {% if form.non_field_errors %}
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                <strong>Error:</strong>
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Business Name -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Business Name</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-store" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.business_name }}
+                            </div>
+                            {% if form.business_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.business_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Phone Number -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phone Number</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">+254</span>
+                                {{ form.phone }}
+                            </div>
+                            <small class="text-muted">Will be used for WhatsApp orders</small>
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Location</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--duka-yellow);"></i>
+                                </span>
+                                {{ form.location }}
+                            </div>
+                            {% if form.location.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.location.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Username -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Username</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-user" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.username }}
+                            </div>
+                            <small class="text-muted">This will be your login username</small>
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email Address -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email Address</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-envelope" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Password</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password1 }}
+                            </div>
+                            {% if form.password1.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password1.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Use at least 8 characters with letters and numbers</small>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Confirm Password</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password2 }}
+                            </div>
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password2.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-decoration-none" style="color: var(--duka-blue);">Terms of Service</a> and <a href="#" class="text-decoration-none" style="color: var(--duka-blue);">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn-duka-yellow btn-lg">
+                            <i class="fas fa-store-alt me-2"></i>Create Your Shop
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-medium" style="color: var(--duka-blue);">Login</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Your existing styles... */
+</style>
+
+<script>
+/* Your existing script... */
+</script>
+{% endblock %}

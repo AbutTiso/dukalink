@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold mb-4 mt-4">
+                <span style="color: var(--duka-blue);">🛒</span> Shopping Cart
+                {% if cart.cart %}
+                <span class="fs-4 text-muted ms-2">({{ cart|length }} items)</span>
+                {% endif %}
+            </h1>
+            
+            {% if cart.cart %}
+            <!-- Cart Items -->
+            <div class="card-modern p-4">
+                {% for item in cart %}
+                <div class="row align-items-center {% if not forloop.last %}mb-4 pb-4 border-bottom{% endif %}">
+                    <div class="col-md-2">
+                        {% if item.product and item.product.image %}
+                            <img src="{{ item.product.image.url }}" 
+                                 alt="{{ item.name }}" 
+                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px;">
+                        {% elif item.image_url %}
+                            <img src="{{ item.image_url }}" 
+                                 alt="{{ item.name }}" 
+                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px;">
+                        {% else %}
+                            <div style="width: 80px; height: 80px; border-radius: 12px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-image fa-2x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold mb-1">{{ item.name }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-store me-1"></i>{{ item.vendor }}
+                        </small>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="input-group" style="border-radius: 50px; overflow: hidden; width: 120px;">
+                            <a href="{% url 'orders:cart_decrement' item.product.id %}" 
+                               class="btn btn-outline-secondary btn-sm"
+                               style="border: 1px solid #e2e8f0;">
+                                <i class="fas fa-minus"></i>
+                            </a>
+                            <input type="text" 
+                                   class="form-control text-center" 
+                                   value="{{ item.quantity }}" 
+                                   readonly 
+                                   style="width: 40px; border: 1px solid #e2e8f0; border-left: none; border-right: none;">
+                            <a href="{% url 'orders:cart_add' item.product.id %}" 
+                               class="btn btn-outline-secondary btn-sm"
+                               style="border: 1px solid #e2e8f0;">
+                                <i class="fas fa-plus"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="fw-bold" style="color: var(--duka-blue);">
+                            Ksh {{ item.price|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <div class="fw-bold mb-1">
+                            Ksh {{ item.total_price|floatformat:2 }}
+                        </div>
+                        <a href="{% url 'orders:cart_remove' item.product.id %}" 
+                           class="btn btn-link text-danger btn-sm p-0"
+                           onclick="return confirm('Remove this item from your cart?')">
+                            <i class="fas fa-trash-alt me-1"></i>Remove
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty Cart -->
+            <div class="card-modern p-5 text-center">
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-shopping-cart fa-4x" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                </div>
+                <h3 class="fw-bold mb-3">Your cart is empty</h3>
+                <p class="text-muted mb-4">Looks like you haven't added any products yet.</p>
+                <a href="{% url 'products:product_list' %}" class="btn-duka-blue btn-lg">
+                    <i class="fas fa-store me-2"></i>Start Shopping
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Order Summary -->
+        {% if cart.cart %}
+        <div class="col-lg-4">
+            <div class="card-modern p-4" style="position: sticky; top: 100px;">
+                <h4 class="fw-bold mb-4">Order Summary</h4>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal</span>
+                    <span class="fw-medium">Ksh {{ cart.get_total|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Shipping</span>
+                    <span class="fw-medium text-success">Free</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="h5 fw-bold">Total</span>
+                    <span class="h4 fw-bold mb-0" style="color: var(--duka-blue);">
+                        Ksh {{ cart.get_total|floatformat:2 }}
+                    </span>
+                </div>
+                
+                <a href="{% url 'payments:checkout' %}" class="btn-duka-yellow btn-lg w-100 mb-3">
+                    <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                </a>
+                
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary w-100" style="border-radius: 50px;">
+                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Simple cart count updater for navbar -->
+<script>
+    function updateCartCount() {
+        fetch('/orders/api/cart/count/')
+            .then(response => response.json())
+            .then(data => {
+                const cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                cartCountElements.forEach(el => {
+                    if (el) el.textContent = data.cart_count || 0;
+                });
+            });
+    }
+    
+    document.addEventListener('DOMContentLoaded', updateCartCount);
+</script>
+
+{% endblock %}

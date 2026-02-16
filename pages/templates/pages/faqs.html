@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Frequently Asked Questions - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold mb-3">
+            <span style="color: var(--duka-blue);">
+                <i class="fas fa-question-circle me-2"></i>
+            </span>
+            Frequently Asked Questions
+        </h1>
+        <p class="lead text-muted">Find answers to common questions about DukaLink</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="input-group" style="border-radius: 50px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                <span class="input-group-text bg-white border-0">
+                    <i class="fas fa-search" style="color: var(--duka-blue);"></i>
+                </span>
+                <input type="text" class="form-control border-0" id="faqSearch" placeholder="Search FAQs..." 
+                       style="padding: 1rem;">
+                <button class="btn btn-duka-yellow" type="button">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Categories -->
+    <div class="row g-4">
+        {% for category in faq_categories %}
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                        <i class="fas {{ category.icon }} fa-2x" style="color: var(--duka-blue);"></i>
+                    </div>
+                    <h3 class="fw-bold mb-0">{{ category.title }}</h3>
+                </div>
+                
+                <div class="accordion" id="accordion{{ forloop.counter }}">
+                    {% for faq in category.faqs %}
+                    <div class="accordion-item border-0 mb-2" style="background: #f8fafc; border-radius: 12px !important;">
+                        <h2 class="accordion-header" id="heading{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                            <button class="accordion-button collapsed" type="button" 
+                                    style="background: #f8fafc; border-radius: 12px; box-shadow: none;"
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                                <span class="fw-medium">{{ faq.question }}</span>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ forloop.parentloop.counter }}{{ forloop.counter }}" 
+                             class="accordion-collapse collapse">
+                            <div class="accordion-body pt-0" style="background: #f8fafc; border-radius: 0 0 12px 12px;">
+                                <p class="mb-0 text-muted">{{ faq.answer }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Still Need Help -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card-modern p-5 text-center" style="background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                <h3 class="fw-bold text-white mb-3">Still Need Help?</h3>
+                <p class="text-white-50 mb-4">Can't find what you're looking for? Our support team is here to help.</p>
+                <a href="{% url 'pages:contact_us' %}" class="btn btn-light btn-lg" style="border-radius: 50px; padding: 0.75rem 2rem;">
+                    <i class="fas fa-envelope me-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple search functionality
+    document.getElementById('faqSearch')?.addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const accordionItems = document.querySelectorAll('.accordion-item');
+        
+        accordionItems.forEach(item => {
+            const question = item.querySelector('.accordion-button span')?.textContent.toLowerCase() || '';
+            if (question.includes(searchValue)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<style>
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background: #e6f0ff !important;
+        color: var(--duka-blue) !important;
+    }
+    
+    .accordion-button:focus {
+        border-color: transparent;
+        box-shadow: none;
+    }
+    
+    .btn-duka-yellow {
+        background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-yellow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+        color: #0f172a;
+    }
+</style>
+{% endblock %}

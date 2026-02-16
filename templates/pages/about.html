@@ -1,0 +1,980 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - DukaLink | WhatsApp Ordering & M-Pesa SaaS{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-blue-light: #60a5fa;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+        --duka-yellow-light: #fde047;
+        --duka-soft-bg: #f8fafc;
+        --duka-card-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+        --duka-hover-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Button Styles - FIXED */
+    .btn-duka-yellow {
+        background: var(--duka-yellow);
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-duka-yellow:hover {
+        background: var(--duka-yellow-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-lg {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+
+    /* Hero Section */
+    .about-hero {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e6f0ff 100%);
+        padding: 5rem 0;
+        margin-bottom: 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 80%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(37,99,235,0.03) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .about-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        left: -10%;
+        width: 80%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(234,179,8,0.03) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        color: #0f172a;
+    }
+
+    .hero-highlight {
+        color: var(--duka-blue);
+        position: relative;
+        display: inline-block;
+    }
+
+    .hero-highlight::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 100%;
+        height: 10px;
+        background: rgba(234, 179, 8, 0.3);
+        z-index: -1;
+    }
+
+    /* Stats Section */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 30px;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--duka-blue);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.875rem;
+    }
+
+    /* Mission & Vision Cards */
+    .mission-card, .vision-card {
+        background: white;
+        border-radius: 40px;
+        padding: 3rem;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .mission-card:hover, .vision-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    .mission-card::before {
+        content: '🎯';
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        font-size: 120px;
+        opacity: 0.05;
+        transform: rotate(15deg);
+    }
+
+    .vision-card::before {
+        content: '👁️';
+        position: absolute;
+        bottom: -20px;
+        left: -20px;
+        font-size: 120px;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding: 2rem 0;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--duka-blue), var(--duka-yellow));
+        border-radius: 2px;
+    }
+
+    .timeline-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .timeline-item:nth-child(even) {
+        flex-direction: row-reverse;
+    }
+
+    .timeline-content {
+        width: 45%;
+        background: white;
+        padding: 2rem;
+        border-radius: 24px;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .timeline-content:hover {
+        transform: scale(1.05);
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    .timeline-year {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        border-radius: 50px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .timeline-dot {
+        width: 60px;
+        height: 60px;
+        background: white;
+        border: 4px solid var(--duka-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--duka-blue);
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+    }
+
+    /* Team Section */
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .team-card {
+        background: white;
+        border-radius: 30px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .team-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    .team-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--duka-blue), var(--duka-yellow));
+    }
+
+    .team-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid var(--duka-yellow);
+    }
+
+    .team-avatar span {
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .team-social {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .team-social a {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        transition: all 0.3s ease;
+    }
+
+    .team-social a:hover {
+        background: var(--duka-blue);
+        color: white;
+        transform: translateY(-3px);
+    }
+
+    /* Values Section */
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .value-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .value-card:hover {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        transform: translateY(-5px);
+    }
+
+    .value-card:hover * {
+        color: white !important;
+    }
+
+    .value-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: rgba(37,99,235,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: var(--duka-blue);
+        transition: all 0.3s ease;
+    }
+
+    .value-card:hover .value-icon {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+    /* Card Modern - for testimonial */
+    .card-modern {
+        background: white;
+        border-radius: 32px;
+        box-shadow: var(--duka-card-shadow);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+        padding: 2rem;
+    }
+
+    .card-modern:hover {
+        box-shadow: var(--duka-hover-shadow);
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%);
+        border-radius: 60px;
+        padding: 4rem;
+        margin: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '🚀';
+        position: absolute;
+        bottom: -20px;
+        right: 20px;
+        font-size: 180px;
+        opacity: 0.1;
+        transform: rotate(-10deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .timeline::before {
+            left: 30px;
+        }
+        
+        .timeline-item,
+        .timeline-item:nth-child(even) {
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 60px;
+        }
+        
+        .timeline-content {
+            width: 100%;
+        }
+        
+        .timeline-dot {
+            left: 30px;
+            transform: translateX(-50%);
+        }
+        
+        .cta-section {
+            padding: 3rem 2rem;
+            border-radius: 30px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+    }
+
+    /* Animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .float-animation {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .pulse-animation {
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    /* Section Titles */
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: #0f172a;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--duka-blue), var(--duka-yellow));
+        border-radius: 2px;
+    }
+
+    .section-subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 3rem;
+    }
+
+    /* Utility Classes */
+    .text-white-50 {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .bg-white {
+        background: white;
+    }
+
+    .rounded-4 {
+        border-radius: 20px;
+    }
+
+    .shadow-lg {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="mb-4">
+                    <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
+                        <i class="fas fa-store me-2"></i> Since 2026
+                    </span>
+                </div>
+                <h1 class="hero-title">
+                    Empowering 
+                    <span class="hero-highlight">Kenyan</span><br>
+                    Businesses Digitally
+                </h1>
+                <p class="lead mb-4 text-muted" style="font-size: 1.25rem;">
+                    DukaLink is Kenya's first integrated WhatsApp ordering and M-Pesa checkout SaaS platform, 
+                    built specifically for small and medium businesses.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'accounts:register_business' %}" class="btn-duka-yellow btn-lg">
+                        <i class="fas fa-store-alt me-2"></i>Start Selling
+                    </a>
+                    <a href="#story" class="btn btn-outline-primary btn-lg" style="border-radius: 50px; padding: 0.75rem 2rem; border: 2px solid var(--duka-blue); color: var(--duka-blue);">
+                        <i class="fas fa-play-circle me-2"></i>Our Story
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative text-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp" style="width: 80px; position: absolute; top: 20px; left: 50px; animation: float 6s ease-in-out infinite;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1969/1969264.png" alt="M-Pesa" style="width: 80px; position: absolute; bottom: 50px; right: 50px; animation: float 7s ease-in-out infinite;">
+                    <div class="bg-white p-4 rounded-4 shadow-lg" style="border-radius: 40px !important; max-width: 400px; margin: 0 auto;">
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-store text-white fa-2x"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="fw-bold mb-1">1,000+ Vendors</h5>
+                                <span class="badge" style="background: var(--duka-yellow); color: #0f172a;">Trusted by Kenyan businesses</span>
+                            </div>
+                        </div>
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between text-muted small mb-2">
+                                <span><i class="fas fa-check-circle" style="color: var(--duka-blue);"></i> 50K+ Orders</span>
+                                <span><i class="fas fa-check-circle" style="color: var(--duka-blue);"></i> KES 15M+ Processed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">1,000+</div>
+            <div class="stat-label">Active Vendors</div>
+            <small class="text-success d-block mt-2">
+                <i class="fas fa-arrow-up"></i> +45% this year
+            </small>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">50K+</div>
+            <div class="stat-label">Orders Processed</div>
+            <small class="text-success d-block mt-2">
+                <i class="fas fa-arrow-up"></i> +60% this year
+            </small>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">KES 15M+</div>
+            <div class="stat-label">Revenue Generated</div>
+            <small class="text-success d-block mt-2">
+                <i class="fas fa-arrow-up"></i> +80% this year
+            </small>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Customer Support</div>
+            <small class="text-success d-block mt-2">
+                <i class="fas fa-clock"></i> Always here
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Mission & Vision -->
+<div class="container" id="story">
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="mission-card">
+                <h3 class="display-6 fw-bold mb-4" style="color: var(--duka-blue);">Our Mission</h3>
+                <p class="lead mb-4" style="font-size: 1.25rem; line-height: 1.6;">
+                    To democratize e-commerce for Kenyan small businesses by providing affordable, 
+                    easy-to-use digital tools that work with existing platforms like WhatsApp and M-Pesa.
+                </p>
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-quote-left fa-2x me-3" style="color: var(--duka-yellow); opacity: 0.5;"></i>
+                    <span class="fst-italic">No business should be left behind in the digital age.</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="vision-card">
+                <h3 class="display-6 fw-bold mb-4" style="color: var(--duka-blue);">Our Vision</h3>
+                <p class="lead mb-4" style="font-size: 1.25rem; line-height: 1.6;">
+                    To become Africa's leading digital commerce enabler, empowering over 1 million 
+                    small businesses across the continent with accessible e-commerce solutions.
+                </p>
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-globe-africa fa-2x me-3" style="color: var(--duka-yellow); opacity: 0.5;"></i>
+                    <span class="fst-italic">From Kenya to the continent, one shop at a time.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Our Story Timeline -->
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="section-title">Our Journey</h2>
+        <p class="section-subtitle">From an idea to empowering thousands of businesses</p>
+    </div>
+    
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-dot">1</div>
+            <div class="timeline-content">
+                <span class="timeline-year">2026</span>
+                <h4 class="fw-bold mb-3">The Beginning</h4>
+                <p class="text-muted">DukaLink was founded in Nairobi, Kenya with a simple idea: help mama mboga and small shops accept orders online without complicated websites.</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-dot">2</div>
+            <div class="timeline-content">
+                <span class="timeline-year">2026</span>
+                <h4 class="fw-bold mb-3">WhatsApp Integration</h4>
+                <p class="text-muted">Launched WhatsApp ordering feature - customers could now browse products and order directly via WhatsApp with auto-generated messages.</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-dot">3</div>
+            <div class="timeline-content">
+                <span class="timeline-year">2026</span>
+                <h4 class="fw-bold mb-3">M-Pesa Integration</h4>
+                <p class="text-muted">Integrated Daraja API for seamless M-Pesa payments. Vendors started receiving instant payment confirmations.</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-dot">4</div>
+            <div class="timeline-content">
+                <span class="timeline-year">2026</span>
+                <h4 class="fw-bold mb-3">1,000 Vendors Milestone</h4>
+                <p class="text-muted">Reached 1,000 active vendors and processed over 50,000 orders. Expanded beyond Nairobi to other counties.</p>
+            </div>
+        </div>
+        
+        <div class="timeline-item">
+            <div class="timeline-dot">5</div>
+            <div class="timeline-content">
+                <span class="timeline-year">2026</span>
+                <h4 class="fw-bold mb-3">The Future</h4>
+                <p class="text-muted">Planning to launch in Uganda and Tanzania, bringing DukaLink's solutions to more African entrepreneurs.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Our Values -->
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="section-title">What We Stand For</h2>
+        <p class="section-subtitle">Our core values guide everything we do</p>
+    </div>
+    
+    <div class="values-grid">
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-heart"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Customer First</h4>
+            <p class="text-muted mb-0">Every decision we make starts with our vendors and their customers.</p>
+        </div>
+        
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Innovation</h4>
+            <p class="text-muted mb-0">We build simple solutions for complex problems using existing technology.</p>
+        </div>
+        
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Community</h4>
+            <p class="text-muted mb-0">We grow when our vendors grow. Their success is our success.</p>
+        </div>
+        
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Trust</h4>
+            <p class="text-muted mb-0">We handle payments and data with the highest security standards.</p>
+        </div>
+        
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Simplicity</h4>
+            <p class="text-muted mb-0">If it's not simple, it's not DukaLink. No technical skills needed.</p>
+        </div>
+        
+        <div class="value-card">
+            <div class="value-icon">
+                <i class="fas fa-africa"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Made in Kenya</h4>
+            <p class="text-muted mb-0">Proudly built by Kenyans, for Kenyan businesses first.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Team Section -->
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="section-title">Meet Our Team</h2>
+        <p class="section-subtitle">The people behind DukaLink</p>
+    </div>
+    
+    <div class="team-grid">
+        <div class="team-card">
+            <div class="team-avatar">
+                <span>JM</span>
+            </div>
+            <h4 class="fw-bold mb-1">James Mwangi</h4>
+            <p class="text-primary mb-2">Founder & CEO</p>
+            <p class="text-muted small">Former e-commerce manager who saw the gap in serving small Kenyan businesses.</p>
+            <div class="team-social">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+        
+        <div class="team-card">
+            <div class="team-avatar">
+                <span>SA</span>
+            </div>
+            <h4 class="fw-bold mb-1">Sarah Adhiambo</h4>
+            <p class="text-primary mb-2">CTO</p>
+            <p class="text-muted small">Full-stack developer passionate about creating accessible tech solutions.</p>
+            <div class="team-social">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+        
+        <div class="team-card">
+            <div class="team-avatar">
+                <span>DO</span>
+            </div>
+            <h4 class="fw-bold mb-1">David Omondi</h4>
+            <p class="text-primary mb-2">Head of Partnerships</p>
+            <p class="text-muted small">Building relationships with vendors and payment providers.</p>
+            <div class="team-social">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-whatsapp"></i></a>
+                <a href="#"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+        
+        <div class="team-card">
+            <div class="team-avatar">
+                <span>WN</span>
+            </div>
+            <h4 class="fw-bold mb-1">Wanjiku Njeri</h4>
+            <p class="text-primary mb-2">Customer Success</p>
+            <p class="text-muted small">Ensuring every vendor gets the support they need to succeed.</p>
+            <div class="team-social">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-whatsapp"></i></a>
+                <a href="#"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Why Choose DukaLink -->
+<div class="container mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h2 class="section-title mb-4">Why 1,000+ Vendors Choose Us</h2>
+            <div class="d-flex mb-4">
+                <div style="min-width: 50px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-whatsapp" style="color: #25D366;"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-2">Meet Customers Where They Are</h5>
+                    <p class="text-muted">90% of Kenyan businesses already use WhatsApp. We just made it work for orders.</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <div style="min-width: 50px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-mobile-alt" style="color: var(--duka-blue);"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-2">M-Pesa Built-in</h5>
+                    <p class="text-muted">No need for separate payment links. Customers pay directly via M-Pesa.</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <div style="min-width: 50px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-coins" style="color: #eab308;"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-2">No Commission Fees</h5>
+                    <p class="text-muted">Pay only a small monthly subscription. Keep 100% of your sales.</p>
+                </div>
+            </div>
+            <div class="d-flex">
+                <div style="min-width: 50px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-chart-simple" style="color: #10b981;"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-2">Real-time Analytics</h5>
+                    <p class="text-muted">Know what's selling, when, and to whom. Make data-driven decisions.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card-modern p-5 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-quote-right fa-4x" style="color: var(--duka-yellow); opacity: 0.3;"></i>
+                </div>
+                <p class="lead fw-medium mb-4" style="font-size: 1.25rem; line-height: 1.6;">
+                    "Before DukaLink, I was taking orders manually on WhatsApp. It was chaos. Now customers order automatically and pay via M-Pesa. I've doubled my sales!"
+                </p>
+                <div class="d-flex align-items-center justify-content-center">
+                    <div style="width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white fw-bold" style="font-size: 1.5rem;">M</span>
+                    </div>
+                    <div class="ms-3 text-start">
+                        <h6 class="fw-bold mb-1">Mary Wanjiku</h6>
+                        <small class="text-muted">Fresh Produce Vendor, Kangemi</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="container mb-5">
+    <div class="cta-section text-white">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-3">Ready to grow your business?</h2>
+                <p class="lead mb-0 opacity-90" style="font-size: 1.25rem;">
+                    Join 1,000+ Kenyan vendors already using DukaLink to sell more.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <a href="{% url 'accounts:register_business' %}" class="btn" style="background: var(--duka-yellow); color: #0f172a; border-radius: 50px; padding: 1rem 2.5rem; font-weight: 700; font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    Start Free Trial <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                <p class="text-white-50 small mt-2">No credit card required</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Section -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-6 mx-auto text-center">
+            <h2 class="section-title mb-4">Get in Touch</h2>
+            <p class="section-subtitle">Have questions? We'd love to hear from you</p>
+            
+            <div class="d-flex flex-wrap justify-content-center gap-4 mt-5">
+                <a href="mailto:support@dukalink.com" class="text-decoration-none">
+                    <div style="width: 80px; height: 80px; border-radius: 24px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; transition: all 0.3s ease;">
+                        <i class="fas fa-envelope fa-2x" style="color: var(--duka-blue);"></i>
+                    </div>
+                    <small class="text-muted">Email</small>
+                </a>
+                
+                <a href="tel:+254700000000" class="text-decoration-none">
+                    <div style="width: 80px; height: 80px; border-radius: 24px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; transition: all 0.3s ease;">
+                        <i class="fas fa-phone-alt fa-2x" style="color: var(--duka-blue);"></i>
+                    </div>
+                    <small class="text-muted">Call Us</small>
+                </a>
+                
+                <a href="#" class="text-decoration-none">
+                    <div style="width: 80px; height: 80px; border-radius: 24px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; transition: all 0.3s ease;">
+                        <i class="fab fa-whatsapp fa-2x" style="color: #25D366;"></i>
+                    </div>
+                    <small class="text-muted">WhatsApp</small>
+                </a>
+                
+                <a href="#" class="text-decoration-none">
+                    <div style="width: 80px; height: 80px; border-radius: 24px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; transition: all 0.3s ease;">
+                        <i class="fab fa-twitter fa-2x" style="color: #1DA1F2;"></i>
+                    </div>
+                    <small class="text-muted">Twitter</small>
+                </a>
+            </div>
+            
+            <div class="mt-5 pt-4 border-top">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-map-marker-alt me-2" style="color: var(--duka-yellow);"></i>
+                    Nairobi, Kenya • Westlands Business Park, 4th Floor
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

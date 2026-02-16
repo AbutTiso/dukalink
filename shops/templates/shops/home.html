@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}DukaLink - Modern WhatsApp Ordering & M-Pesa Checkout{% endblock %}
+
+{% block content %}
+
+<!-- Stats Section - NOW WITH REAL DATA -->
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_vendors }}</h2>
+                <p class="text-muted">Active Vendors</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_orders }}</h2>
+                <p class="text-muted">Orders Processed</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">KES {{ total_revenue }}</h2>
+                <p class="text-muted">Processed</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="text-center">
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_products }}</h2>
+                <p class="text-muted">Products</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">🔥 Featured Products</h2>
+            <p class="text-muted">Hand-picked items from our vendors</p>
+        </div>
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
+            Browse All <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-image-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    {% endif %}
+                    <span class="product-badge" style="background: var(--duka-yellow); color: #0f172a;">
+                        <i class="fas fa-star"></i> Featured
+                    </span>
+                </div>
+                <div class="product-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <a href="{% url 'shops:shop_detail' product.business.slug %}" class="text-decoration-none">
+                            <span class="badge" style="background: #f1f5f9; color: var(--duka-blue);">
+                                <i class="fas fa-store me-1"></i>{{ product.business.name }}
+                            </span>
+                        </a>
+                    </div>
+                    <h3 class="product-title">{{ product.name|truncatechars:30 }}</h3>
+                    <div class="product-price">KES {{ product.price|floatformat:0 }}</div>
+                    
+                    <div class="product-meta">
+                        <span class="product-stock">
+                            {% if product.stock_quantity and product.stock_quantity > 0 %}
+                                <i class="fas fa-check-circle stock-in"></i>
+                                <span class="stock-in">In Stock</span>
+                            {% else %}
+                                <i class="fas fa-times-circle stock-out"></i>
+                                <span class="stock-out">Out of Stock</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="product-actions mt-3">
+                        <a href="https://wa.me/?text=I'm%20interested%20in%20{{ product.name|urlencode }}%20from%20{{ product.business.name|urlencode }}%20on%20DukaLink:%20{{ request.build_absolute_uri|urlencode }}" 
+                           class="btn-action btn-whatsapp" target="_blank">
+                            <i class="fab fa-whatsapp me-1"></i> Order
+                        </a>
+                        <a href="{% url 'products:product_detail' product.id %}" class="btn-action btn-view">
+                            <i class="fas fa-eye me-1"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center">
+                <i class="fas fa-box-open fa-4x mb-3" style="color: var(--duka-blue);"></i>
+                <h4>No products yet</h4>
+                <p class="text-muted">Vendors are adding products. Check back soon!</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Popular Shops Section -->
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">🛍️ Popular Shops</h2>
+            <p class="text-muted">Discover amazing vendors near you</p>
+        </div>
+        <a href="{% url 'shops:shop_list' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
+            View All Shops <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        {% for business in businesses %}
+        <div class="col-md-4">
+            <a href="{% url 'shops:shop_detail' business.slug %}" class="text-decoration-none">
+                <div class="card-modern h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center;">
+                                <span class="text-white fw-bold" style="font-size: 1.5rem;">{{ business.name|make_list|first|upper }}</span>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="fw-bold mb-1" style="color: #0f172a;">{{ business.name }}</h5>
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="fas fa-map-marker-alt me-1" style="color: var(--duka-yellow);"></i>
+                                    {{ business.location|default:"Nairobi" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="badge" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">
+                                <i class="fas fa-box me-1"></i> {{ business.product_set.count }} Products
+                            </span>
+                            <span class="text-primary fw-bold">
+                                Visit Store <i class="fas fa-arrow-right ms-1"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-store fa-3x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h3 class="fw-bold mb-3">No shops yet</h3>
+                <p class="text-muted mb-4">Be the first to start selling on DukaLink!</p>
+                <a href="{% url 'accounts:register_business' %}" class="btn-duka-yellow">
+                    <i class="fas fa-store-alt me-2"></i>Open Your Shop
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Popular Products Section -->
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">📦 Most Popular</h2>
+            <p class="text-muted">Best-selling products this month</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for product in popular_products %}
+        <div class="col-md-3 col-6">
+            <div class="product-card-mini">
+                <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                    <div class="product-image-mini">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="product-image-placeholder-mini">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-2">
+                        <div class="small text-muted">{{ product.business.name|truncatechars:20 }}</div>
+                        <h6 class="fw-bold mb-1">{{ product.name|truncatechars:25 }}</h6>
+                        <div class="fw-bold" style="color: var(--duka-blue);">KES {{ product.price|floatformat:0 }}</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center">
+                <i class="fas fa-chart-line fa-4x mb-3" style="color: var(--duka-blue);"></i>
+                <h4>No popular products yet</h4>
+                <p class="text-muted">Check back soon for best-selling items!</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="container my-5 py-5">
+    <div class="text-center mb-5">
+        <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
+            Simple Process
+        </span>
+        <h2 class="display-5 fw-bold mt-3">How DukaLink Works</h2>
+        <p class="lead text-muted">Start selling in three simple steps</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">1</span>
+                </div>
+                <h4 class="fw-bold mb-3">Register Your Business</h4>
+                <p class="text-muted">Create your account and set up your shop in less than 2 minutes. No technical skills required.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">2</span>
+                </div>
+                <h4 class="fw-bold mb-3">Add Your Products</h4>
+                <p class="text-muted">Upload product photos, prices, and descriptions. Share your unique shop link with customers.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">3</span>
+                </div>
+                <h4 class="fw-bold mb-3">Start Selling</h4>
+                <p class="text-muted">Receive orders via WhatsApp, accept M-Pesa payments, and grow your business.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="container my-5">
+    <div class="card-modern" style="background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%); padding: 4rem;">
+        <div class="row align-items-center">
+            <div class="col-lg-8 text-white">
+                <h2 class="display-6 fw-bold mb-3">Ready to grow your business?</h2>
+                <p class="mb-0 opacity-75" style="font-size: 1.1rem;">Join hundreds of Kenyan vendors already using DukaLink to sell more.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <a href="{% url 'accounts:register_business' %}" class="btn-duka-yellow btn-lg" style="background: white; color: var(--duka-blue); padding: 1rem 2.5rem;">
+                    Get Started Now <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Your existing styles remain exactly the same -->
+<style>
+    /* Product Card Styles */
+    .product-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(37,99,235,0.1);
+    }
+    
+    .product-image {
+        height: 200px;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-card:hover .product-image img {
+        transform: scale(1.1);
+    }
+    
+    .product-image-placeholder {
+        color: #94a3b8;
+        font-size: 3rem;
+    }
+    
+    .product-body {
+        padding: 1.25rem;
+        flex: 1;
+    }
+    
+    .product-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+    
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--duka-blue);
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+    }
+    
+    .btn-whatsapp {
+        background: #25D366;
+        color: white;
+    }
+    
+    .btn-whatsapp:hover {
+        background: #128C7E;
+        color: white;
+    }
+    
+    .btn-view {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    
+    .btn-view:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+    
+    .product-card-mini {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .product-card-mini:hover {
+        box-shadow: 0 8px 16px rgba(37,99,235,0.1);
+    }
+    
+    .product-image-mini {
+        height: 150px;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .product-image-mini img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 1;
+    }
+    
+    .stock-in {
+        color: #10b981;
+    }
+    
+    .stock-out {
+        color: #ef4444;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .btn-duka-yellow {
+        background: var(--duka-yellow);
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-duka-yellow:hover {
+        background: var(--duka-yellow-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234,179,8,0.3);
+    }
+
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px -15px rgba(37,99,235,0.12);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(37,99,235,0.25);
+    }
+</style>
+
+{% endblock %}

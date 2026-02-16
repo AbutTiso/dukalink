@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Privacy Policy - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-shield-alt fa-3x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h1 class="display-5 fw-bold mb-3">Privacy Policy</h1>
+                <p class="lead text-muted">Last updated: February 12, 2026</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="card-modern p-5">
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">1. Introduction</h4>
+                    <p class="text-muted">DukaLink ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our platform.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">2. Information We Collect</h4>
+                    <p class="text-muted mb-3">We collect information you provide directly to us, such as when you:</p>
+                    <ul class="text-muted">
+                        <li>Create an account or register as a vendor</li>
+                        <li>Make a purchase or sell products</li>
+                        <li>Upload business documents for verification</li>
+                        <li>Contact our customer support</li>
+                        <li>Subscribe to our newsletters</li>
+                    </ul>
+                    <p class="text-muted mt-3">This information may include your name, email address, phone number, business registration details, KRA PIN, and payment information.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">3. How We Use Your Information</h4>
+                    <p class="text-muted mb-3">We use the information we collect to:</p>
+                    <ul class="text-muted">
+                        <li>Process your transactions and manage your account</li>
+                        <li>Verify your business documents and identity</li>
+                        <li>Communicate with you about orders, products, and services</li>
+                        <li>Improve our platform and customer experience</li>
+                        <li>Comply with legal obligations</li>
+                        <li>Prevent fraud and enhance security</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">4. Information Sharing</h4>
+                    <p class="text-muted">We do not sell, trade, or rent your personal information to third parties. We may share your information with:</p>
+                    <ul class="text-muted mt-3">
+                        <li><strong>Vendors:</strong> When you place an order, relevant information is shared with the vendor to fulfill your order</li>
+                        <li><strong>Service Providers:</strong> Third parties who assist in operating our platform (payment processors, delivery services)</li>
+                        <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">5. Data Security</h4>
+                    <p class="text-muted">We implement appropriate technical and organizational security measures to protect your personal information. However, no method of transmission over the Internet is 100% secure.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">6. Your Rights</h4>
+                    <p class="text-muted mb-3">You have the right to:</p>
+                    <ul class="text-muted">
+                        <li>Access and update your personal information</li>
+                        <li>Request deletion of your account</li>
+                        <li>Opt-out of marketing communications</li>
+                        <li>Download your data</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">7. Cookies</h4>
+                    <p class="text-muted">We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. You can control cookies through your browser settings.</p>
+                </div>
+                
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-3">8. Changes to This Policy</h4>
+                    <p class="text-muted">We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page with an updated effective date.</p>
+                </div>
+                
+                <div>
+                    <h4 class="fw-bold mb-3">9. Contact Us</h4>
+                    <p class="text-muted">If you have questions about this Privacy Policy, please contact us at:</p>
+                    <p class="fw-medium mb-1">Email: privacy@dukalink.com</p>
+                    <p class="fw-medium">Phone: +254 700 123 456</p>
+                </div>
+            </div>
+            
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="javascript:history.back()" class="btn btn-light btn-lg" style="border-radius: 50px; padding: 0.75rem 2rem;">
+                    <i class="fas fa-arrow-left me-2"></i>Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    
+    ul li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

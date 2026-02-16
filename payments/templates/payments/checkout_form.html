@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Checkout</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Cart Summary -->
+                    <h5>Your Order</h5>
+                    <table class="table table-sm">
+                        {% for item in cart %}
+                        <tr>
+                            <td>{{ item.name }} x {{ item.quantity }}</td>
+                            <td class="text-end">KES {{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="fw-bold">
+                            <td>Total</td>
+                            <td class="text-end">KES {{ total|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Checkout Form -->
+                    <form method="POST" action="{% url 'payments:checkout' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{% if user.is_authenticated %}{{ user.get_full_name }}{% endif %}" required>
+                        </div>
+                        
+                        <!-- ===== PAYMENT METHOD SELECTION - ADDED ===== -->
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="mpesa_till" value="mpesa_till" required>
+                                <label class="form-check-label" for="mpesa_till">
+                                    <i class="fas fa-building"></i> M-Pesa Till Number
+                                </label>
+                                <div class="form-text text-muted ms-4">Pay via Buy Goods Till</div>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="mpesa_paybill" value="mpesa_paybill" required>
+                                <label class="form-check-label" for="mpesa_paybill">
+                                    <i class="fas fa-file-invoice"></i> M-Pesa Paybill
+                                </label>
+                                <div class="form-text text-muted ms-4">Pay via Paybill Number</div>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="pochi_biashara" value="pochi_biashara" required>
+                                <label class="form-check-label" for="pochi_biashara">
+                                    <i class="fas fa-mobile-alt"></i> Pochi La Biashara
+                                </label>
+                                <div class="form-text text-muted ms-4">Send money directly to vendor's phone</div>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" 
+                                       id="cash_on_delivery" value="cash_on_delivery" required>
+                                <label class="form-check-label" for="cash_on_delivery">
+                                    <i class="fas fa-money-bill"></i> Cash on Delivery
+                                </label>
+                                <div class="form-text text-muted ms-4">Pay when you receive your order</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phone number field - show/hide based on selection could be added with JavaScript -->
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">M-Pesa Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="e.g., 0707317370">
+                            <div class="form-text">Required for M-Pesa payments. Optional for Pochi.</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check-circle"></i> Place Order
+                        </button>
+                    </form>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} mt-3">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optional JavaScript to show/hide phone field based on payment method -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const phoneField = document.getElementById('phone');
+    const phoneLabel = document.querySelector('label[for="phone"]');
+    const phoneHelp = document.querySelector('.form-text');
+    
+    function updatePhoneRequirement() {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (selectedMethod && selectedMethod.value === 'pochi_biashara') {
+            phoneField.required = false;
+            phoneLabel.innerHTML = 'Phone Number (Optional)';
+            phoneHelp.innerHTML = 'Optional for Pochi. You can still enter for contact purposes.';
+        } else {
+            phoneField.required = true;
+            phoneLabel.innerHTML = 'M-Pesa Phone Number <span class="text-danger">*</span>';
+            phoneHelp.innerHTML = 'Required for M-Pesa payments. Enter the phone number registered with M-Pesa.';
+        }
+    }
+    
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', updatePhoneRequirement);
+    });
+    
+    // Set initial state
+    updatePhoneRequirement();
+});
+</script>
+{% endblock %}

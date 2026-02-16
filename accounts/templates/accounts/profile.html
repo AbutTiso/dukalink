@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <!-- Profile Header -->
+        <div class="col-12 mb-4">
+            <div class="card-modern p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-1">
+                            <span style="color: var(--duka-blue);">
+                                <i class="fas fa-user-circle me-2"></i>
+                            </span> 
+                            My Profile
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-store me-2" style="color: var(--duka-yellow);"></i>
+                            {% if is_vendor %}
+                                Vendor Account • {{ business.name }}
+                            {% else %}
+                                Customer Account
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="mt-3 mt-lg-0">
+                        {% if is_vendor %}
+                            <a href="{% url 'dashboard:vendor_dashboard' %}" class="btn btn-light me-2">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Column - Profile Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card-modern p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-edit me-2" style="color: var(--duka-blue);"></i>
+                    Edit Profile Information
+                </h5>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <!-- Username -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Username</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-user" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email Address</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-envelope" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- First Name -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">First Name</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-id-card" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.first_name }}
+                            </div>
+                            {% if form.first_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.first_name.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Last Name -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Last Name</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-id-card" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.last_name }}
+                            </div>
+                            {% if form.last_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.last_name.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-duka-yellow btn-lg">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Right Column - Account Info & Vendor Details -->
+        <div class="col-lg-4 mb-4">
+            <!-- Account Summary -->
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-info-circle me-2" style="color: var(--duka-blue);"></i>
+                    Account Summary
+                </h5>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                         style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                        <span class="fw-bold text-white" style="font-size: 1.5rem;">{{ user.username|first|upper }}</span>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                        <small class="text-muted">{{ user.email }}</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-top">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Member since:</span>
+                        <span class="fw-medium">{{ user.date_joined|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Last login:</span>
+                        <span class="fw-medium">{{ user.last_login|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vendor Information (if vendor) -->
+            {% if is_vendor %}
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-store me-2" style="color: var(--duka-yellow);"></i>
+                    Business Information
+                </h5>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Business Name</small>
+                    <span class="fw-medium">{{ business.name }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Business Type</small>
+                    <span>{{ business.get_business_type_display|default:"Not specified" }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Phone</small>
+                    <span>{{ business.phone|default:"Not provided" }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Location</small>
+                    <span>{{ business.location|default:"Not provided" }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Verification Status</small>
+                    <span class="badge" style="background: 
+                        {% if business.verification_status == 'verified' %}#10b981
+                        {% elif business.verification_status == 'rejected' %}#ef4444
+                        {% elif business.verification_status == 'under_review' %}#3b82f6
+                        {% else %}#f59e0b{% endif %}; 
+                        color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                        {{ business.get_verification_status_display }}
+                    </span>
+                </div>
+                
+                {% if not business.documents_complete %}
+                <div class="mt-3 pt-3 border-top">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Your business verification is incomplete.
+                    </div>
+                    <a href="{% url 'accounts:upload_documents' business.id %}" class="btn btn-sm w-100" style="background: var(--duka-blue); color: white; border-radius: 50px;">
+                        <i class="fas fa-upload me-2"></i>Complete Document Upload
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Recent Orders (for customers) -->
+            {% if not is_vendor and recent_orders %}
+            <div class="card-modern p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-shopping-bag me-2" style="color: var(--duka-blue);"></i>
+                        Recent Orders
+                    </h5>
+                    <a href="{% url 'accounts:my_orders' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                
+                {% for order in recent_orders %}
+                <div class="d-flex align-items-center justify-content-between {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                    <div>
+                        <span class="fw-medium d-block">#{{ order.id }}</span>
+                        <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="fw-bold d-block" style="color: var(--duka-blue);">KES {{ order.total_amount|floatformat:0 }}</span>
+                        <span class="badge {% if order.status == 'completed' %}bg-success{% elif order.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-3 mb-0">No orders yet</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Form field styling */
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"] {
+        padding: 0.75rem;
+        background-color: #f8f9fa;
+        border: none;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .input-group {
+        border: 1px solid transparent;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    input:focus {
+        outline: none;
+        background-color: #fff;
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    
+    .btn-duka-yellow {
+        background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));
+        color: #0f172a;
+        border: none;
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-yellow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3);
+        color: #0f172a;
+    }
+</style>
+
+<script>
+    // Add form-control class to form inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const formInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+        formInputs.forEach(input => {
+            if (!input.classList.contains('form-control')) {
+                input.classList.add('form-control');
+                input.classList.add('border-0');
+                input.classList.add('bg-light');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-money-bill-wave text-success me-2"></i>
+        Pochi Payments Awaiting Confirmation
+    </h2>
+    
+    {% if not pending_payments %}
+    <div class="alert alert-info">
+        No pending payments to confirm
+    </div>
+    {% else %}
+    
+    <div class="row">
+        {% for order in pending_payments %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <strong>Order #{{ order.id }}</strong>
+                    <span class="float-end">KSh {{ order.total_amount|floatformat:2 }}</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                    <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+                    <p><strong>Transaction Code:</strong> {{ order.transaction_code }}</p>
+                    
+                    {% if order.payment_screenshot %}
+                    <div class="mb-3">
+                        <strong>Screenshot:</strong><br>
+                        <a href="{{ order.payment_screenshot.url }}" target="_blank">
+                            <img src="{{ order.payment_screenshot.url }}" alt="Payment screenshot" 
+                                 style="max-width: 100%; max-height: 200px;" class="img-thumbnail">
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{% url 'dashboard:confirm_vendor_payment' order.id %}">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="confirm" 
+                                    class="btn btn-success flex-grow-1">
+                                <i class="fas fa-check"></i> Confirm Payment
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#rejectModal{{ order.id }}">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                        
+                        <!-- Reject Modal -->
+                        <div class="modal fade" id="rejectModal{{ order.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Reject Payment</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <label class="form-label">Reason for rejection:</label>
+                                        <textarea name="rejection_reason" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                            Reject Payment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

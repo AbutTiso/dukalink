@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ business.name }} - DukaLink Store{% endblock %}
+
+{% block content %}
+<!-- Store Hero Section -->
+<!-- Store Hero Section - REDUCED HEIGHT -->
+<section class="position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%); padding: 2.5rem 0;"> <!-- Changed from 5rem to 2.5rem -->
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-3"> <!-- Changed from mb-4 to mb-3 -->
+                    <div style="width: 80px; height: 80px; border-radius: 20px; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"> <!-- Reduced from 100px to 80px -->
+                        <span class="fw-bold" style="font-size: 2.2rem; color: var(--duka-blue);">{{ business.name|make_list|first|upper }}</span> <!-- Reduced from 3rem to 2.2rem -->
+                    </div>
+                    <div class="ms-3"> <!-- Changed from ms-4 to ms-3 -->
+                        <h1 class="fw-bold text-white mb-1" style="font-size: 2.2rem;">{{ business.name }}</h1> <!-- Changed from display-4 to custom size -->
+                        <div class="d-flex align-items-center text-white-50 small">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            <span>{{ business.location|default:"Nairobi, Kenya" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-white-75 mb-3" style="font-size: 1rem;"> <!-- Changed from lead and 1.25rem -->
+                    {{ business.description|default:"Browse our collection of quality products. Order via WhatsApp and pay with M-Pesa." }}
+                </p>
+                
+                <div class="d-flex gap-3 mb-3"> <!-- Changed from mb-4 to mb-3 -->
+                    <a href="https://wa.me/254{{ business.phone|slice:'-9' }}" class="btn-duka-yellow" style="padding: 0.6rem 1.5rem;" target="_blank"> <!-- Removed btn-lg -->
+                        <i class="fab fa-whatsapp me-2"></i>Contact via WhatsApp
+                    </a>
+                    {% if user.is_authenticated and user == business.owner %}
+                    <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-light" style="padding: 0.6rem 1.5rem; border-radius: 50px; font-weight: 600;"> <!-- Removed btn-lg -->
+                        <i class="fas fa-tachometer-alt me-2"></i>Manage Store
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex align-items-center gap-4 text-white-50 small">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-box me-1"></i>
+                        <span>{{ products.count }} Products</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clock me-1"></i>
+                        <span>Member since {{ business.created_at|date:"M Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Store Stats -->
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-boxes fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h3 class="fw-bold mb-2">{{ products.count }}</h3>
+                <p class="text-muted mb-0">Products</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(234,179,8,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-shopping-cart fa-2x" style="color: var(--duka-yellow);"></i>
+                </div>
+                <h3 class="fw-bold mb-2">{{ total_orders|default:"0" }}</h3>
+                <p class="text-muted mb-0">Orders</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-star fa-2x" style="color: #10b981;"></i>
+                </div>
+                <h3 class="fw-bold mb-2">4.8</h3>
+                <p class="text-muted mb-0">Rating</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">📦 {{ business.name }} Products</h2>
+            <p class="text-muted">Browse our collection of quality items</p>
+        </div>
+        
+        <!-- Search & Filter -->
+        <div class="d-flex gap-2">
+            <form method="get" class="d-flex">
+                <div class="input-group" style="border-radius: 50px; overflow: hidden;">
+                    <input type="text" name="q" class="form-control border-0" placeholder="Search products..." value="{{ request.GET.q }}" style="background: #f1f5f9; padding: 0.5rem 1rem;">
+                    <button class="btn" type="submit" style="background: var(--duka-blue); color: white; padding: 0.5rem 1.25rem;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="?sort=all" class="filter-btn {% if not request.GET.sort or request.GET.sort == 'all' %}active{% endif %}">
+            All Products
+        </a>
+        <a href="?sort=price_low" class="filter-btn {% if request.GET.sort == 'price_low' %}active{% endif %}">
+            Price: Low to High
+        </a>
+        <a href="?sort=price_high" class="filter-btn {% if request.GET.sort == 'price_high' %}active{% endif %}">
+            Price: High to Low
+        </a>
+        <a href="?sort=newest" class="filter-btn {% if request.GET.sort == 'newest' %}active{% endif %}">
+            Newest First
+        </a>
+    </div>
+    
+    <!-- Products Grid -->
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="product-card">
+                <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                    <div class="product-image">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="product-image-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        {% endif %}
+                        {% if product.is_featured %}
+                            <span class="product-badge">
+                                <i class="fas fa-star"></i> Featured
+                            </span>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="product-body">
+                    <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                        <h3 class="product-title">{{ product.name|truncatechars:30 }}</h3>
+                    </a>
+                    <div class="product-price">Ksh {{ product.price|floatformat:0 }}</div>
+                    
+                    <div class="product-meta">
+                        {% if product.stock_quantity %}
+                        <span class="product-stock">
+                            {% if product.stock_quantity > 10 %}
+                                <i class="fas fa-check-circle stock-in"></i>
+                                <span class="stock-in">In Stock</span>
+                            {% elif product.stock_quantity > 0 %}
+                                <i class="fas fa-exclamation-circle stock-low"></i>
+                                <span class="stock-low">Low Stock</span>
+                            {% else %}
+                                <i class="fas fa-times-circle stock-out"></i>
+                                <span class="stock-out">Out of Stock</span>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.description %}
+                    <p class="text-muted small mb-3">{{ product.description|truncatechars:50 }}</p>
+                    {% endif %}
+                    
+                    <div class="product-actions">
+                        <a href="https://wa.me/254{{ business.phone|slice:'-9' }}?text=I'm%20interested%20in%20{{ product.name|urlencode }}%20from%20{{ business.name|urlencode }}%20({{ product.price|floatformat:0 }}%20KES)%20-%20{{ request.build_absolute_uri }}" 
+                           class="btn-action btn-whatsapp" target="_blank">
+                            <i class="fab fa-whatsapp"></i> Order
+                        </a>
+                        <a href="{% url 'products:product_detail' product.id %}" class="btn-action btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-modern p-5 text-center">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-box-open fa-4x" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                </div>
+                <h3 class="fw-bold mb-3">No products yet</h3>
+                <p class="text-muted mb-4">This store hasn't added any products yet.</p>
+                {% if user.is_authenticated and user == business.owner %}
+                <a href="{% url 'dashboard:product_add' %}" class="btn-duka-blue btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Add Your First Product
+                </a>
+                {% else %}
+                <a href="{% url 'shops:shop_list' %}" class="btn-duka-blue btn-lg">
+                    <i class="fas fa-store me-2"></i>Browse Other Stores
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if products.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in products.paginator.page_range %}
+                {% if products.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</section>
+
+<!-- Store Info Section -->
+<section class="container my-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card-modern p-4">
+                <h4 class="fw-bold mb-3"><i class="fas fa-store me-2" style="color: var(--duka-blue);"></i> Store Information</h4>
+                <div class="mb-3">
+                    <div class="d-flex mb-2">
+                        <div style="width: 30px;"><i class="fas fa-user text-muted"></i></div>
+                        <div><strong>Owner:</strong> {{ business.owner.get_full_name|default:business.owner.username }}</div>
+                    </div>
+                    <div class="d-flex mb-2">
+                        <div style="width: 30px;"><i class="fas fa-phone text-muted"></i></div>
+                        <div><strong>Phone:</strong> {{ business.phone|default:"Not provided" }}</div>
+                    </div>
+                    <div class="d-flex mb-2">
+                        <div style="width: 30px;"><i class="fas fa-envelope text-muted"></i></div>
+                        <div><strong>Email:</strong> {{ business.email|default:business.owner.email }}</div>
+                    </div>
+                    <div class="d-flex">
+                        <div style="width: 30px;"><i class="fas fa-map-marker-alt text-muted"></i></div>
+                        <div><strong>Location:</strong> {{ business.location|default:"Nairobi, Kenya" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-modern p-4">
+                <h4 class="fw-bold mb-3"><i class="fas fa-share-alt me-2" style="color: var(--duka-blue);"></i> Share This Store</h4>
+                <p class="text-muted mb-3">Share {{ business.name }} with your friends and family</p>
+                <div class="d-flex gap-2">
+                    <a href="https://wa.me/?text=Check%20out%20{{ business.name|urlencode }}%20on%20DukaLink:%20{{ request.build_absolute_uri }}" 
+                       class="btn btn-success" style="border-radius: 50px; padding: 0.75rem 1.5rem;" target="_blank">
+                        <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
+                       class="btn btn-primary" style="border-radius: 50px; padding: 0.75rem 1.5rem;" target="_blank">
+                        <i class="fab fa-facebook me-2"></i>Facebook
+                    </a>
+                    <button class="btn btn-outline-secondary" style="border-radius: 50px; padding: 0.75rem 1.5rem;" 
+                            onclick="copyToClipboard('{{ request.build_absolute_uri }}')">
+                        <i class="fas fa-copy me-2"></i>Copy Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .text-white-50 {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .text-white-75 {
+        color: rgba(255,255,255,0.9);
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: var(--duka-blue);
+        border-color: var(--duka-blue);
+        color: white;
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(37,99,235,0.1);
+    }
+    
+    .product-image {
+        height: 200px;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-card:hover .product-image img {
+        transform: scale(1.1);
+    }
+    
+    .product-image-placeholder {
+        color: #94a3b8;
+        font-size: 3rem;
+    }
+    
+    .product-body {
+        padding: 1.5rem;
+        flex: 1;
+    }
+    
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--duka-blue);
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--duka-yellow);
+        color: #0f172a;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-action {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+    }
+    
+    .btn-whatsapp {
+        background: #25D366;
+        color: white;
+    }
+    
+    .btn-whatsapp:hover {
+        background: #128C7E;
+        color: white;
+    }
+    
+    .btn-view {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    
+    .btn-view:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+    
+    .stock-in {
+        color: #10b981;
+    }
+    
+    .stock-low {
+        color: #eab308;
+    }
+    
+    .stock-out {
+        color: #ef4444;
+    }
+    
+    .page-link {
+        border: none;
+        padding: 0.75rem 1.25rem;
+        color: var(--duka-blue);
+        font-weight: 500;
+        margin: 0 5px;
+        border-radius: 50px !important;
+    }
+    
+    .page-item.active .page-link {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .btn-duka-yellow {
+        background: var(--duka-yellow);
+        color: #0f172a;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-duka-yellow:hover {
+        background: var(--duka-yellow-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(234,179,8,0.3);
+    }
+    
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    }
+    
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px -15px rgba(37,99,235,0.12);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(37,99,235,0.25);
+    }
+</style>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Store link copied to clipboard!');
+        }, function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+</script>
+{% endblock %}

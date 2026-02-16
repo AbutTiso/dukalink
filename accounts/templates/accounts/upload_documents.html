@@ -1,0 +1,667 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Business Documents - DukaLink{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-progress {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step:not(:last-child):after {
+        content: '';
+        position: absolute;
+        top: 25px;
+        right: -50%;
+        width: 100%;
+        height: 3px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+    
+    .step.active .step-circle {
+        background: var(--duka-blue);
+        color: white;
+        border-color: var(--duka-blue);
+    }
+    
+    .step.completed .step-circle {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+    
+    .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+    
+    .document-card {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .document-card:hover {
+        border-color: var(--duka-blue);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.1);
+    }
+    
+    .document-card.uploaded {
+        background: #f0fdf4;
+        border-color: #86efac;
+    }
+    
+    .document-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+    
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+    
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .requirement-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .requirement-required {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .requirement-optional {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    
+    .file-info {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+    
+    .missing-docs-alert {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-1">
+                            <span style="color: var(--duka-blue);">
+                                <i class="fas fa-file-upload me-2"></i>
+                            </span> 
+                            Business Verification
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-store me-2" style="color: var(--duka-yellow);"></i>
+                            {{ business.name }} • Complete your document upload to start selling
+                        </p>
+                    </div>
+                    <div class="mt-3 mt-lg-0">
+                        <span class="verification-badge" style="background: 
+                            {% if business.verification_status == 'pending' %}#fef9c3; color: #854d0e;
+                            {% elif business.verification_status == 'under_review' %}#dbeafe; color: #1e40af;
+                            {% elif business.verification_status == 'verified' %}#dcfce7; color: #166534;
+                            {% elif business.verification_status == 'rejected' %}#fee2e2; color: #991b1b;
+                            {% else %}#f1f5f9; color: #334155;{% endif %}">
+                            <i class="fas 
+                                {% if business.verification_status == 'pending' %}fa-clock
+                                {% elif business.verification_status == 'under_review' %}fa-spinner fa-spin
+                                {% elif business.verification_status == 'verified' %}fa-check-circle
+                                {% elif business.verification_status == 'rejected' %}fa-times-circle
+                                {% else %}fa-info-circle{% endif %} me-2">
+                            </i>
+                            {{ business.get_verification_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Steps -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                <div class="progress-steps">
+                    <div class="step {% if business.verification_status != 'pending' %}completed{% else %}active{% endif %}">
+                        <div class="step-circle">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h6 class="fw-bold mb-0">Register</h6>
+                        <small class="text-muted">Account created</small>
+                    </div>
+                    <div class="step {% if business.documents_uploaded_at %}completed{% elif business.verification_status != 'pending' %}active{% endif %}">
+                        <div class="step-circle">
+                            2
+                        </div>
+                        <h6 class="fw-bold mb-0">Upload Documents</h6>
+                        <small class="text-muted">Submit verification docs</small>
+                    </div>
+                    <div class="step {% if business.verification_status == 'verified' %}completed{% elif business.verification_status == 'under_review' %}active{% endif %}">
+                        <div class="step-circle">
+                            3
+                        </div>
+                        <h6 class="fw-bold mb-0">Verification</h6>
+                        <small class="text-muted">Admin review</small>
+                    </div>
+                    <div class="step {% if business.verification_status == 'verified' %}active{% endif %}">
+                        <div class="step-circle">
+                            4
+                        </div>
+                        <h6 class="fw-bold mb-0">Start Selling</h6>
+                        <small class="text-muted">Access dashboard</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Missing Documents Alert -->
+    {% if missing_documents %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="missing-docs-alert">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3" style="color: #f97316;"></i>
+                    <div>
+                        <h5 class="fw-bold mb-1">Required Documents Missing</h5>
+                        <p class="mb-2">Please upload the following documents to complete your verification:</p>
+                        <ul class="mb-0">
+                            {% for doc in missing_documents %}
+                            <li><strong>{{ doc }}</strong></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Verification Notes -->
+    {% if business.verification_notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" style="border-radius: 16px;">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Admin Feedback:</strong> {{ business.verification_notes }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Upload Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                <form method="POST" enctype="multipart/form-data" id="documentUploadForm">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <!-- Business Type & Description -->
+                        <div class="col-12">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-store-alt me-2" style="color: var(--duka-yellow);"></i>
+                                Business Information
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Business Category</label>
+                            {{ form.business_type }}
+                            {% if form.business_type.errors %}
+                            <div class="invalid-feedback d-block">{{ form.business_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Business Registration Number</label>
+                            {{ form.business_registration_number }}
+                            {% if form.business_registration_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.business_registration_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Business Description</label>
+                            {{ form.business_description }}
+                            {% if form.business_description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.business_description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Document Upload Sections -->
+                        <div class="col-12 mt-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-file-alt me-2" style="color: var(--duka-blue);"></i>
+                                Required Documents
+                            </h5>
+                        </div>
+                        
+                        <!-- Business Registration -->
+                        <div class="col-md-6">
+                            <div class="document-card {% if business.business_registration_cert %}uploaded{% endif %}">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-certificate fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">Business Registration</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">Certificate of Registration/BRS</small>
+                                        {% if business.business_registration_cert %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.business_registration_cert.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.business_registration_cert %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.business_registration_cert }}
+                                        </div>
+                                        <div class="file-info">
+                                            Accepted: PDF, JPG, PNG (Max 5MB)
+                                        </div>
+                                        {% if form.business_registration_cert.errors %}
+                                        <div class="text-danger small mt-1">{{ form.business_registration_cert.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- KRA PIN & Certificate -->
+                        <div class="col-md-6">
+                            <div class="document-card {% if business.kra_certificate %}uploaded{% endif %}">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-file-invoice fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">KRA PIN</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        {{ form.kra_pin }}
+                                        <small class="text-muted d-block mb-2">KRA PIN Certificate</small>
+                                        {% if business.kra_certificate %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.kra_certificate.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.kra_certificate %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.kra_certificate }}
+                                        </div>
+                                        {% if form.kra_pin.errors %}
+                                        <div class="text-danger small mt-1">{{ form.kra_pin.errors }}</div>
+                                        {% endif %}
+                                        {% if form.kra_certificate.errors %}
+                                        <div class="text-danger small mt-1">{{ form.kra_certificate.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Owner ID - Front -->
+                        <div class="col-md-6">
+                            <div class="document-card {% if business.owner_id_front %}uploaded{% endif %}">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-id-card fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">National ID - Front</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        {{ form.owner_id_number }}
+                                        <small class="text-muted d-block mb-2">Clear photo of ID front</small>
+                                        {% if business.owner_id_front %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.owner_id_front.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.owner_id_front %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.owner_id_front }}
+                                        </div>
+                                        {% if form.owner_id_number.errors %}
+                                        <div class="text-danger small mt-1">{{ form.owner_id_number.errors }}</div>
+                                        {% endif %}
+                                        {% if form.owner_id_front.errors %}
+                                        <div class="text-danger small mt-1">{{ form.owner_id_front.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Owner ID - Back -->
+                        <div class="col-md-6">
+                            <div class="document-card {% if business.owner_id_back %}uploaded{% endif %}">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-id-card fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">National ID - Back</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">Clear photo of ID back</small>
+                                        {% if business.owner_id_back %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.owner_id_back.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.owner_id_back %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.owner_id_back }}
+                                        </div>
+                                        {% if form.owner_id_back.errors %}
+                                        <div class="text-danger small mt-1">{{ form.owner_id_back.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Business Permit -->
+                        <div class="col-md-6">
+                            <div class="document-card {% if business.business_permit %}uploaded{% endif %}">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-file-signature fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">Business Permit</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">Single Business Permit (County)</small>
+                                        {% if business.business_permit %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.business_permit.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.business_permit %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.business_permit }}
+                                        </div>
+                                        {% if form.business_permit.errors %}
+                                        <div class="text-danger small mt-1">{{ form.business_permit.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Permit Expiry Date -->
+                        <div class="col-md-6">
+                            <div class="document-card">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-calendar-alt fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">Permit Expiry Date</h6>
+                                            <span class="requirement-badge requirement-required">Required</span>
+                                        </div>
+                                        {{ form.permit_expiry_date }}
+                                        {% if form.permit_expiry_date.errors %}
+                                        <div class="text-danger small mt-1">{{ form.permit_expiry_date.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tax Compliance (Optional) -->
+                        <div class="col-md-6">
+                            <div class="document-card">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-file-invoice-dollar fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">Tax Compliance</h6>
+                                            <span class="requirement-badge requirement-optional">Optional</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">Tax Compliance Certificate</small>
+                                        {% if business.tax_compliance_cert %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.tax_compliance_cert.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.tax_compliance_cert %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.tax_compliance_cert }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Documents -->
+                        <div class="col-md-6">
+                            <div class="document-card">
+                                <div class="d-flex">
+                                    <div class="document-icon">
+                                        <i class="fas fa-folder-open fa-2x" style="color: var(--duka-blue);"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="fw-bold mb-0">Additional Documents</h6>
+                                            <span class="requirement-badge requirement-optional">Optional</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">Any other supporting documents</small>
+                                        {% if business.additional_docs %}
+                                        <div class="mb-2">
+                                            <span class="badge bg-success">✓ Uploaded</span>
+                                            <a href="{{ business.additional_docs.url }}" 
+                                               class="btn btn-sm ms-2" target="_blank"
+                                               style="background: rgba(37,99,235,0.1); color: var(--duka-blue); border-radius: 50px;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        <div class="file-input-wrapper">
+                                            <button type="button" class="btn btn-sm" style="background: #e2e8f0; color: #1e293b; border-radius: 50px;">
+                                                <i class="fas fa-upload me-1"></i> {% if business.additional_docs %}Replace{% else %}Upload{% endif %}
+                                            </button>
+                                            {{ form.additional_docs }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 mt-5">
+                        <button type="submit" class="btn btn-duka-yellow btn-lg flex-grow-1">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>
+                            Submit Documents for Verification
+                        </button>
+                        <a href="{% url 'accounts:document_status' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    
+                    <p class="text-muted small text-center mt-4 mb-0">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Your documents are securely stored and will only be used for verification purposes.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show filename when file is selected
+    document.querySelectorAll('.file-input-wrapper input[type=file]').forEach(input => {
+        input.addEventListener('change', function(e) {
+            const fileName = this.files[0]?.name;
+            const button = this.previousElementSibling;
+            if (fileName) {
+                const originalText = button.innerHTML;
+                button.innerHTML = `<i class="fas fa-check me-1"></i> ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}`;
+                button.style.background = '#10b981';
+                button.style.color = 'white';
+            }
+        });
+    });
+    
+    // Form validation
+    document.getElementById('documentUploadForm').addEventListener('submit', function(e) {
+        const requiredFields = [
+            'id_business_registration_cert',
+            'id_kra_pin',
+            'id_kra_certificate',
+            'id_owner_id_front',
+            'id_owner_id_back',
+            'id_business_permit'
+        ];
+        
+        let missingRequired = false;
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && !field.files.length) {
+                // Check if already uploaded via existing file
+                const card = field.closest('.document-card');
+                if (card && !card.classList.contains('uploaded')) {
+                    missingRequired = true;
+                }
+            }
+        });
+        
+        if (missingRequired) {
+            if (!confirm('Some required documents are missing. Are you sure you want to submit?')) {
+                e.preventDefault();
+            }
+        }
+    });
+</script>
+{% endblock %}

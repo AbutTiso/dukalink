@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register Your Business - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern p-5">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-store-alt fa-4x text-white"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-3">Start Selling on DukaLink</h2>
+                    <p class="lead text-muted">Join hundreds of Kenyan vendors and grow your business</p>
+                </div>
+                
+                <!-- Features -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-whatsapp fa-2x" style="color: #25D366;"></i>
+                            </div>
+                            <h6 class="fw-bold">WhatsApp Orders</h6>
+                            <small class="text-muted">Receive orders directly on WhatsApp</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-mobile-alt fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <h6 class="fw-bold">M-Pesa Payments</h6>
+                            <small class="text-muted">Accept payments automatically</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                <i class="fas fa-chart-line fa-2x" style="color: #10b981;"></i>
+                            </div>
+                            <h6 class="fw-bold">Grow Sales</h6>
+                            <small class="text-muted">Reach more customers online</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Registration Form -->
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        {% if form.non_field_errors %}
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Business Name -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Business Name</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-store" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Phone Number -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phone Number</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">+254</span>
+                                {{ form.phone }}
+                            </div>
+                            <small class="text-muted">Will be used for WhatsApp orders</small>
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Location</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--duka-yellow);"></i>
+                                </span>
+                                {{ form.location }}
+                            </div>
+                            {% if form.location.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.location.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email Address -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email Address</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-envelope" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Password</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password1 }}
+                            </div>
+                            {% if form.password1.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password1.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                            <small class="text-muted">{{ form.password1.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password Confirmation -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Confirm Password</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-lock" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.password2 }}
+                            </div>
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password2.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Business Category (Optional) -->
+                        {% if form.category %}
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Business Category</label>
+                            <div class="input-group" style="border-radius: 12px; overflow: hidden;">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-tag" style="color: var(--duka-blue);"></i>
+                                </span>
+                                {{ form.category }}
+                            </div>
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Business Description (Optional) -->
+                        {% if form.description %}
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Business Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.agree_terms }}
+                                <label class="form-check-label" for="{{ form.agree_terms.id_for_label }}">
+                                    I agree to the <a href="#" class="text-decoration-none" style="color: var(--duka-blue);">Terms of Service</a> and <a href="#" class="text-decoration-none" style="color: var(--duka-blue);">Privacy Policy</a>
+                                </label>
+                                {% if form.agree_terms.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.agree_terms.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn-duka-yellow btn-lg">
+                            <i class="fas fa-store-alt me-2"></i>Create Your Shop
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-medium" style="color: var(--duka-blue);">Login</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Add these styles to ensure form fields match the design */
+input[type="text"], 
+input[type="tel"], 
+input[type="email"], 
+input[type="password"],
+select,
+textarea {
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border: none;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+input[type="text"]:focus, 
+input[type="tel"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    background-color: #fff;
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px;
+    padding-right: 2.5rem;
+}
+
+textarea {
+    border-radius: 12px;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Style Django form errors */
+.has-error .input-group {
+    border: 1px solid #dc3545;
+}
+
+/* Maintain consistent field styling */
+.input-group {
+    border: 1px solid transparent;
+}
+
+.form-check-input {
+    margin-top: 0.3rem;
+}
+
+/* Help text styling */
+.helptext {
+    font-size: 0.875rem;
+    color: #6c757d;
+    display: block;
+    margin-top: 0.25rem;
+}
+</style>
+
+<script>
+// Form validation and enhancement
+(function() {
+    'use strict';
+    
+    // Add Bootstrap classes to form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form-control class to all input fields
+        const formFields = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="password"], select, textarea');
+        formFields.forEach(function(field) {
+            if (!field.classList.contains('form-control')) {
+                field.classList.add('form-control');
+                field.classList.add('border-0');
+                field.classList.add('bg-light');
+            }
+        });
+        
+        // Style checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.classList.add('form-check-input');
+        });
+    });
+})();
+</script>
+{% endblock %}

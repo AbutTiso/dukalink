@@ -1,0 +1,729 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Vendors - DukaLink Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-store me-2"></i>
+                </span> 
+                Manage Vendors
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-users me-2" style="color: var(--duka-yellow);"></i>
+                {{ vendors.count }} total vendors • Manage shop approvals and vendor accounts
+            </p>
+        </div>
+        <div class="mt-3 mt-lg-0">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 50px 0 0 50px;">
+                    <i class="fas fa-search" style="color: var(--duka-blue);"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="vendorSearch" placeholder="Search vendors..." 
+                       style="border-radius: 0 50px 50px 0; border-left: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card-modern p-3">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                        <i class="fas fa-store fa-2x" style="color: var(--duka-blue);"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Vendors</span>
+                        <h3 class="fw-bold mb-0" id="totalVendors">{{ vendors.count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card-modern p-3">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: rgba(234, 179, 8, 0.1);">
+                        <i class="fas fa-clock fa-2x" style="color: var(--duka-yellow);"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Pending Approval</span>
+                        <h3 class="fw-bold mb-0" id="pendingCount">{{ pending_count|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card-modern p-3">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                        <i class="fas fa-box fa-2x" style="color: var(--duka-blue-light);"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Products</span>
+                        <h3 class="fw-bold mb-0">{{ total_products|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card-modern p-3">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 p-3 me-3" style="background: rgba(234, 179, 8, 0.1);">
+                        <i class="fas fa-chart-line fa-2x" style="color: var(--duka-yellow-dark);"></i>
+                    </div>
+                    <div>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Revenue</span>
+                        <h3 class="fw-bold mb-0">KES {{ total_revenue|default:"0" }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Super Admin Section - Only for superusers -->
+    {% include 'admin_dashboard/includes/superadmin_section.html' %}
+
+    <!-- Vendors Table -->
+    <div class="card-modern">
+        <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-store-alt me-2" style="color: var(--duka-yellow);"></i>
+                All Vendors
+            </h5>
+            <div class="d-flex gap-2">
+                <div class="btn-group" role="group" id="statusFilterGroup">
+                    <button type="button" class="btn btn-sm filter-btn active" data-status="all" 
+                            style="background: var(--duka-blue); color: white; border-radius: 50px 0 0 50px;">All</button>
+                    <button type="button" class="btn btn-sm filter-btn" data-status="pending" 
+                            style="background: white; color: var(--duka-blue); border: 1px solid var(--duka-blue); border-radius: 0 50px 50px 0;">Pending</button>
+                    <button type="button" class="btn btn-sm filter-btn" data-status="approved" 
+                            style="background: white; color: var(--duka-blue); border: 1px solid var(--duka-blue); border-radius: 0 50px 50px 0;">Approved</button>
+                    <button type="button" class="btn btn-sm filter-btn" data-status="rejected" 
+                            style="background: white; color: var(--duka-blue); border: 1px solid var(--duka-blue); border-radius: 0 50px 50px 0;">Rejected</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4 pt-2">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="vendorsTable">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Owner</th>
+                            <th>Contact</th>
+                            <th>Products</th>
+                            <th>Orders</th>
+                            <th>Revenue</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in vendors %}
+                        <tr data-vendor-id="{{ vendor.id }}" 
+                            data-status="{% if vendor.is_approved %}approved{% elif vendor.is_rejected %}rejected{% else %}pending{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                        <span class="fw-bold text-white">{{ vendor.name|make_list|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                        <small class="text-muted">{{ vendor.business_type|default:"Retail" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="d-block fw-medium">{{ vendor.owner.username }}</span>
+                                <small class="text-muted">{{ vendor.owner.email|truncatechars:20 }}</small>
+                            </td>
+                            <td>
+                                <span class="d-block">{{ vendor.phone|default:"—" }}</span>
+                                <small class="text-muted">{{ vendor.address|truncatechars:15|default:"—" }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ vendor.product_count|default:"0" }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ vendor.order_count|default:"0" }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold" style="color: var(--duka-blue);">KES {{ vendor.revenue|floatformat:0 }}</span>
+                            </td>
+                            <td>
+                                {% if vendor.is_approved %}
+                                <span class="badge status-badge approved" style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-check-circle me-1"></i> Approved
+                                </span>
+                                {% elif vendor.is_rejected %}
+                                <span class="badge status-badge rejected" style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-ban me-1"></i> Rejected
+                                </span>
+                                {% else %}
+                                <span class="badge status-badge pending" style="background: var(--duka-yellow); color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-clock me-1"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ vendor.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <!-- View Button (always visible) -->
+                                    <button type="button" class="btn btn-sm view-vendor" data-vendor-id="{{ vendor.id }}"
+                                            style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    
+                                    <!-- Approve Button (show if not approved and not rejected) -->
+                                    {% if not vendor.is_approved and not vendor.is_rejected %}
+                                    <button type="button" class="btn btn-sm approve-vendor" data-vendor-id="{{ vendor.id }}"
+                                            style="background: #10b981; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-check-circle"></i> Approve
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Suspend Button (only show if approved) -->
+                                    {% if vendor.is_approved %}
+                                    <button type="button" class="btn btn-sm suspend-vendor" data-vendor-id="{{ vendor.id }}"
+                                            style="background: #f59e0b; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-pause-circle"></i> Suspend
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Reject Button (show if not rejected) -->
+                                    {% if not vendor.is_rejected %}
+                                    <button type="button" class="btn btn-sm reject-vendor" data-vendor-id="{{ vendor.id }}"
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-ban"></i> Reject
+                                    </button>
+                                    {% else %}
+                                    <!-- Disabled Reject button for rejected vendors -->
+                                    <button type="button" class="btn btn-sm" disabled
+                                            style="background: rgba(239, 68, 68, 0.05); color: #94a3b8; border-radius: 50px; padding: 0.5rem 1rem; cursor: not-allowed;">
+                                        <i class="fas fa-ban"></i> Rejected
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-store fa-3x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No vendors yet</h6>
+                                <p class="text-muted mb-3">Vendors will appear here once they register their shops.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor Details Modal -->
+<div class="modal fade" id="vendorDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 24px; border: none;">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-store me-2" style="color: var(--duka-blue);"></i>
+                    Vendor Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4" id="vendorDetailContent">
+                <!-- Dynamic content will be loaded here -->
+                <div class="text-center py-4">
+                    <div class="spinner-border" style="color: var(--duka-blue);" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CSRF Token
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // Live search functionality
+    document.getElementById('vendorSearch').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#vendorsTable tbody tr');
+        
+        tableRows.forEach(row => {
+            const vendorName = row.querySelector('td:first-child .fw-medium')?.textContent.toLowerCase() || '';
+            const ownerName = row.querySelector('td:nth-child(2) .fw-medium')?.textContent.toLowerCase() || '';
+            const email = row.querySelector('td:nth-child(2) small')?.textContent.toLowerCase() || '';
+            const phone = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            
+            if (vendorName.includes(searchValue) || ownerName.includes(searchValue) || email.includes(searchValue) || phone.includes(searchValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Status filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.style.background = 'white';
+                b.style.color = 'var(--duka-blue)';
+                b.style.border = '1px solid var(--duka-blue)';
+            });
+            this.style.background = 'var(--duka-blue)';
+            this.style.color = 'white';
+            this.style.border = '1px solid var(--duka-blue)';
+            
+            const status = this.dataset.status;
+            const tableRows = document.querySelectorAll('#vendorsTable tbody tr');
+            
+            tableRows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Approve vendor functionality
+    document.querySelectorAll('.approve-vendor').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vendorId = this.dataset.vendorId;
+            const row = this.closest('tr');
+            
+            if (confirm('Are you sure you want to approve this vendor? They will be able to start selling immediately.')) {
+                approveVendor(vendorId, row, this);
+            }
+        });
+    });
+
+    // Suspend vendor functionality
+    document.querySelectorAll('.suspend-vendor').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vendorId = this.dataset.vendorId;
+            const row = this.closest('tr');
+            
+            if (confirm('Are you sure you want to suspend this vendor? They will no longer be able to sell on the platform.')) {
+                suspendVendor(vendorId, row, this);
+            }
+        });
+    });
+
+    // Reject vendor functionality
+    document.querySelectorAll('.reject-vendor').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vendorId = this.dataset.vendorId;
+            const row = this.closest('tr');
+            
+            if (confirm('Are you sure you want to reject this vendor? They will not be able to sell on the platform.')) {
+                rejectVendor(vendorId, row, this);
+            }
+        });
+    });
+
+    // View vendor details
+    document.querySelectorAll('.view-vendor').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vendorId = this.dataset.vendorId;
+            viewVendorDetails(vendorId);
+        });
+    });
+
+    // Approve vendor function
+    function approveVendor(vendorId, row, button) {
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Approving...';
+        button.disabled = true;
+        
+        fetch(`/admin-panel/vendors/${vendorId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'approve' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                const statusCell = row.querySelector('td:nth-child(7) .status-badge');
+                statusCell.className = 'badge status-badge approved';
+                statusCell.style.background = '#10b981';
+                statusCell.style.color = 'white';
+                statusCell.innerHTML = '<i class="fas fa-check-circle me-1"></i> Approved';
+                
+                // Update row data-status
+                row.dataset.status = 'approved';
+                
+                // Replace buttons
+                const actionsCell = row.querySelector('td:last-child .d-flex');
+                actionsCell.innerHTML = `
+                    <button type="button" class="btn btn-sm view-vendor" data-vendor-id="${vendorId}"
+                            style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm suspend-vendor" data-vendor-id="${vendorId}"
+                            style="background: #f59e0b; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-pause-circle"></i> Suspend
+                    </button>
+                    <button type="button" class="btn btn-sm reject-vendor" data-vendor-id="${vendorId}"
+                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-ban"></i> Reject
+                    </button>
+                `;
+                
+                // Update pending count
+                updatePendingCount();
+                
+                // Show success message
+                showToast('Vendor approved successfully!', 'success');
+            } else {
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast(data.error || 'Failed to approve vendor', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showToast('An error occurred. Please try again.', 'error');
+        });
+    }
+
+    // Suspend vendor function
+    function suspendVendor(vendorId, row, button) {
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Suspending...';
+        button.disabled = true;
+        
+        fetch(`/admin-panel/vendors/${vendorId}/suspend/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'suspend' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                const statusCell = row.querySelector('td:nth-child(7) .status-badge');
+                statusCell.className = 'badge status-badge pending';
+                statusCell.style.background = 'var(--duka-yellow)';
+                statusCell.style.color = '#0f172a';
+                statusCell.innerHTML = '<i class="fas fa-clock me-1"></i> Pending';
+                
+                // Update row data-status
+                row.dataset.status = 'pending';
+                
+                // Replace buttons
+                const actionsCell = row.querySelector('td:last-child .d-flex');
+                actionsCell.innerHTML = `
+                    <button type="button" class="btn btn-sm view-vendor" data-vendor-id="${vendorId}"
+                            style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm approve-vendor" data-vendor-id="${vendorId}"
+                            style="background: #10b981; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-check-circle"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-sm reject-vendor" data-vendor-id="${vendorId}"
+                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-ban"></i> Reject
+                    </button>
+                `;
+                
+                // Update pending count
+                updatePendingCount();
+                
+                // Show success message
+                showToast('Vendor suspended successfully!', 'success');
+            } else {
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast(data.error || 'Failed to suspend vendor', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showToast('An error occurred. Please try again.', 'error');
+        });
+    }
+
+    // Reject vendor function
+    function rejectVendor(vendorId, row, button) {
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Rejecting...';
+        button.disabled = true;
+        
+        fetch(`/admin-panel/vendors/${vendorId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'reject' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                const statusCell = row.querySelector('td:nth-child(7) .status-badge');
+                statusCell.className = 'badge status-badge rejected';
+                statusCell.style.background = '#ef4444';
+                statusCell.style.color = 'white';
+                statusCell.innerHTML = '<i class="fas fa-ban me-1"></i> Rejected';
+                
+                // Update row data-status
+                row.dataset.status = 'rejected';
+                
+                // Replace buttons
+                const actionsCell = row.querySelector('td:last-child .d-flex');
+                actionsCell.innerHTML = `
+                    <button type="button" class="btn btn-sm view-vendor" data-vendor-id="${vendorId}"
+                            style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm approve-vendor" data-vendor-id="${vendorId}"
+                            style="background: #10b981; color: white; border-radius: 50px; padding: 0.5rem 1rem;">
+                        <i class="fas fa-check-circle"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-sm" disabled
+                            style="background: rgba(239, 68, 68, 0.05); color: #94a3b8; border-radius: 50px; padding: 0.5rem 1rem; cursor: not-allowed;">
+                        <i class="fas fa-ban"></i> Rejected
+                    </button>
+                `;
+                
+                // Update pending count
+                updatePendingCount();
+                
+                // Show success message
+                showToast('Vendor rejected successfully!', 'success');
+            } else {
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                showToast(data.error || 'Failed to reject vendor', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showToast('An error occurred. Please try again.', 'error');
+        });
+    }
+
+    // View vendor details function
+    function viewVendorDetails(vendorId) {
+        const modal = new bootstrap.Modal(document.getElementById('vendorDetailModal'));
+        modal.show();
+        
+        fetch(`/admin-panel/vendors/${vendorId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const content = document.getElementById('vendorDetailContent');
+                    content.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3 mb-md-0">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center mx-auto" 
+                                     style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                    <span class="fw-bold text-white" style="font-size: 2.5rem;">${data.vendor.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <h6 class="fw-bold mt-3 mb-1">${data.vendor.name}</h6>
+                                <span class="badge" style="background: ${data.vendor.is_approved ? '#10b981' : data.vendor.is_rejected ? '#ef4444' : 'var(--duka-yellow)'}; color: ${data.vendor.is_approved || data.vendor.is_rejected ? 'white' : '#0f172a'};">
+                                    ${data.vendor.is_approved ? 'Approved' : data.vendor.is_rejected ? 'Rejected' : 'Pending'}
+                                </span>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Owner</small>
+                                        <span class="fw-medium">${data.vendor.owner.username}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Email</small>
+                                        <span>${data.vendor.owner.email || '—'}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Phone</small>
+                                        <span>${data.vendor.phone || '—'}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Business Type</small>
+                                        <span>${data.vendor.business_type || 'Retail'}</span>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Address</small>
+                                        <span>${data.vendor.address || '—'}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Products</small>
+                                        <span class="fw-bold" style="color: var(--duka-blue);">${data.vendor.product_count}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Orders</small>
+                                        <span class="fw-bold" style="color: var(--duka-blue);">${data.vendor.order_count}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Revenue</small>
+                                        <span class="fw-bold" style="color: var(--duka-blue);">KES ${data.vendor.revenue}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Joined</small>
+                                        <span>${data.vendor.joined_date}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div class="alert alert-danger">Failed to load vendor details.</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('vendorDetailContent').innerHTML = '<div class="alert alert-danger">An error occurred. Please try again.</div>';
+            });
+    }
+
+    // Update pending count in stats card
+    function updatePendingCount() {
+        const pendingRows = document.querySelectorAll('#vendorsTable tbody tr[data-status="pending"]');
+        const pendingCount = pendingRows.length;
+        document.getElementById('pendingCount').textContent = pendingCount;
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = `alert alert-modern alert-${type === 'success' ? 'success' : 'danger'} d-flex align-items-center`;
+        toast.style.cssText = `
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            min-width: 300px;
+        `;
+        
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        toast.innerHTML = `
+            <i class="fas ${icon} me-2" style="font-size: 1.1rem;"></i>
+            <span style="flex: 1;">${message}</span>
+            <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #475569;
+        border-bottom-width: 1px;
+        padding: 1rem 0.5rem;
+    }
+    
+    .table td {
+        padding: 1rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    .btn-group .btn.active {
+        background: var(--duka-blue) !important;
+        color: white !important;
+        border-color: var(--duka-blue) !important;
+    }
+    
+    .btn-group .btn {
+        transition: all 0.2s ease;
+    }
+    
+    .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+</style>
+{% endblock %}

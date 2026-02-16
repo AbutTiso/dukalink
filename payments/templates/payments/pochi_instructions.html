@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">📱 Pay via Pochi La Biashara</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Order Summary -->
+                    <div class="alert alert-info">
+                        <strong>Order #{{ order.id }}</strong><br>
+                        Amount: <strong>KSh {{ amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <!-- Vendor Details -->
+                    <div class="text-center mb-4">
+                        <h5>Send Payment To:</h5>
+                        <div class="display-6 bg-light p-3 rounded">
+                            <i class="fas fa-phone-alt me-2"></i>
+                            <strong>{{ business_phone }}</strong>
+                        </div>
+                        <p class="text-muted mt-2">{{ business_name }}</p>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="payment-steps">
+                        <h5>📋 Step-by-Step Instructions:</h5>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">1</span>
+                            <div>
+                                <strong>Dial *334#</strong>
+                                <p class="text-muted">On your M-Pesa registered phone</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">2</span>
+                            <div>
+                                <strong>Select "Pochi La Biashara"</strong>
+                                <p class="text-muted">From the M-Pesa menu</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">3</span>
+                            <div>
+                                <strong>Enter Business Number</strong>
+                                <p class="text-muted">{{ business_phone }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">4</span>
+                            <div>
+                                <strong>Enter Amount</strong>
+                                <p class="text-muted">KSh {{ amount|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">5</span>
+                            <div>
+                                <strong>Enter Reference (Optional)</strong>
+                                <p class="text-muted">{{ account_reference }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step d-flex mb-3">
+                            <span class="badge bg-success rounded-circle me-3" style="width: 30px; height: 30px;">6</span>
+                            <div>
+                                <strong>Enter Your PIN</strong>
+                                <p class="text-muted">Confirm the payment</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- After Payment -->
+                    <div class="mt-4">
+                        <h5>✅ After Payment:</h5>
+                        <p>You'll receive an M-Pesa confirmation message. Your order will be processed once the vendor confirms payment.</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye me-2"></i>Track Order Status
+                            </a>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-shopping me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

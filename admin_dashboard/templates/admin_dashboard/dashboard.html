@@ -1,0 +1,674 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header with Welcome Message -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-shield-alt me-2"></i>
+                </span> 
+                Admin Dashboard
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-calendar-alt me-2" style="color: var(--duka-yellow);"></i>
+                {{ today|date:"l, F j, Y" }} • Real-time overview
+            </p>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-lg-0">
+            <span class="badge" style="background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); color: white; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500;">
+                <i class="fas fa-store me-2"></i>{{ total_vendors }} Vendors
+            </span>
+            <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500;">
+                <i class="fas fa-shopping-cart me-2"></i>{{ total_orders }} Orders
+            </span>
+        </div>
+    </div>
+
+    <!-- Super Admin Management Section - Full Width 
+    {% if user.is_superuser %}
+    <div class="card-modern mb-4" style="border: 2px solid rgba(234, 179, 8, 0.2);">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));">
+                            <i class="fas fa-crown fa-2x" style="color: #0f172a;"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Super Admin Access</h5>
+                            <p class="text-muted mb-0">You have full system privileges. Manage users, approve vendors, and configure platform settings.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="#superadmin-section" class="btn-duka-yellow" style="display: inline-flex; align-items: center;">
+                        <i class="fas fa-crown me-2"></i>Manage Superadmins
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}-->
+
+    <!-- Key Metrics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Total Revenue Card -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="card-modern h-100" style="background: linear-gradient(135deg, #0f172a, #1e293b);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-3 p-3 me-3" style="background: rgba(234, 179, 8, 0.15);">
+                            <i class="fas fa-chart-line fa-2x" style="color: var(--duka-yellow);"></i>
+                        </div>
+                        <div>
+                            <span class="small text-uppercase fw-semibold" style="color: rgba(255,255,255,0.7);">Total Revenue</span>
+                            <h2 class="display-6 fw-bold text-white mb-0">KES {{ total_revenue }}</h2>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-white-50"><i class="fas fa-calendar me-1"></i> Today: </span>
+                        <span class="fw-bold" style="color: var(--duka-yellow);">KES {{ today_revenue }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders Card -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="card-modern h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                            <i class="fas fa-shopping-bag fa-2x" style="color: var(--duka-blue);"></i>
+                        </div>
+                        <div>
+                            <span class="small text-uppercase fw-semibold text-muted">Total Orders</span>
+                            <h2 class="display-6 fw-bold mb-0">{{ total_orders }}</h2>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-clock me-1"></i> Today: </span>
+                        <span class="fw-bold" style="color: var(--duka-blue);">{{ today_orders }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendors & Buyers Card -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="card-modern h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-3 p-3 me-3" style="background: rgba(234, 179, 8, 0.1);">
+                            <i class="fas fa-store fa-2x" style="color: var(--duka-yellow-dark);"></i>
+                        </div>
+                        <div>
+                            <span class="small text-uppercase fw-semibold text-muted">Vendors</span>
+                            <h2 class="display-6 fw-bold mb-0">{{ total_vendors }}</h2>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-users me-1"></i> Buyers: </span>
+                        <span class="fw-bold" style="color: var(--duka-blue-dark);">{{ total_buyers }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Card -->
+        <div class="col-xl-3 col-lg-6">
+            <div class="card-modern h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                            <i class="fas fa-box fa-2x" style="color: var(--duka-blue-light);"></i>
+                        </div>
+                        <div>
+                            <span class="small text-uppercase fw-semibold text-muted">Products</span>
+                            <h2 class="display-6 fw-bold mb-0">{{ total_products }}</h2>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-chart-line me-1"></i> This week: </span>
+                        <span class="fw-bold" style="color: var(--duka-blue-light);">+{{ weekly_new_products }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============= NEW: Document Verification Alert & Quick Access ============= -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-modern" style="border-left: 6px solid #3b82f6;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-3 p-3 me-3" style="background: rgba(37, 99, 235, 0.1);">
+                                    <i class="fas fa-file-invoice fa-2x" style="color: var(--duka-blue);"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-1">
+                                        <span id="pendingDocumentsCount">{{ pending_documents|default:"0" }}</span> Vendors Pending Document Verification
+                                    </h5>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-shield-alt me-1"></i> 
+                                        Review business documents, KRA PIN, ID cards, and permits to verify vendors.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                            <div class="d-flex gap-2 justify-content-lg-end">
+                                <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn-duka-blue" style="display: inline-flex; align-items: center; padding: 0.75rem 1.5rem;">
+                                    <i class="fas fa-file-invoice me-2"></i>Review Documents
+                                    {% if pending_documents > 0 %}
+                                    <span class="badge bg-white ms-2" style="color: var(--duka-blue);">{{ pending_documents }}</span>
+                                    {% endif %}
+                                </a>
+                                <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-light" style="display: inline-flex; align-items: center; padding: 0.75rem 1.5rem; border-radius: 50px;">
+                                    <i class="fas fa-chart-pie me-2"></i>Verification Stats
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Approvals & Weekly Stats Row (UPDATED with Document Verification) -->
+    <div class="row g-4 mb-4">
+        <!-- Pending Approvals - NOW WITH DOCUMENT VERIFICATION -->
+        <div class="col-lg-6">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
+                        Pending Approvals
+                    </h5>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    <div class="row g-3">
+                        <!-- Vendor Shops Approval -->
+                        <div class="col-6">
+                            <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(37,99,235,0.1));">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-store-alt me-2" style="color: var(--duka-blue);"></i>
+                                    <span class="text-muted small">Vendor Shops</span>
+                                </div>
+                                <h3 class="display-6 fw-bold mb-0">{{ pending_shops }}</h3>
+                                <a href="{% url 'admin_dashboard:vendors' %}" class="stretched-link text-decoration-none small" style="color: var(--duka-blue);">
+                                    Review now <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Verification - NEW -->
+                        <div class="col-6">
+                            <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1));">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-file-invoice me-2" style="color: #3b82f6;"></i>
+                                    <span class="text-muted small">Document Verification</span>
+                                </div>
+                                <h3 class="display-6 fw-bold mb-0" style="color: #3b82f6;">{{ pending_documents|default:"0" }}</h3>
+                                <a href="{% url 'admin_dashboard:vendor_documents' %}" class="stretched-link text-decoration-none small" style="color: #3b82f6;">
+                                    Review documents <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Orders Pending -->
+                        <div class="col-6">
+                            <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(234,179,8,0.05), rgba(234,179,8,0.1));">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-shopping-cart me-2" style="color: var(--duka-yellow-dark);"></i>
+                                    <span class="text-muted small">Orders</span>
+                                </div>
+                                <h3 class="display-6 fw-bold mb-0">{{ pending_orders }}</h3>
+                                <a href="{% url 'admin_dashboard:orders' %}" class="stretched-link text-decoration-none small" style="color: var(--duka-yellow-dark);">
+                                    Process now <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- More Info Needed - NEW -->
+                        <div class="col-6">
+                            <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.05), rgba(249, 115, 22, 0.1));">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-info-circle me-2" style="color: #f97316;"></i>
+                                    <span class="text-muted small">More Info Needed</span>
+                                </div>
+                                <h3 class="display-6 fw-bold mb-0" style="color: #f97316;">{{ info_needed_count|default:"0" }}</h3>
+                                <a href="{% url 'admin_dashboard:vendor_documents' %}" class="stretched-link text-decoration-none small" style="color: #f97316;">
+                                    Respond <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Stats (Existing - Unchanged) -->
+        <div class="col-lg-6">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-bar me-2" style="color: var(--duka-blue);"></i>
+                        This Week
+                    </h5>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="text-center p-3">
+                                <span class="text-muted small d-block mb-1">Orders</span>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue);">{{ weekly_orders }}</h4>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>+12%
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-3">
+                                <span class="text-muted small d-block mb-1">New Vendors</span>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-yellow-dark);">{{ weekly_new_vendors }}</h4>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>+8%
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-3">
+                                <span class="text-muted small d-block mb-1">Products</span>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue-light);">{{ weekly_new_products }}</h4>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>+15%
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NEW: Document Verification Stats -->
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Verified this week</small>
+                                <span class="fw-bold" style="color: #10b981;">{{ verified_this_week|default:"0" }} vendors</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Rejected this week</small>
+                                <span class="fw-bold" style="color: #ef4444;">{{ rejected_this_week|default:"0" }} vendors</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Quick Actions Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-bolt me-2" style="color: var(--duka-yellow);"></i>
+                        Quick Actions
+                    </h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-lg" style="background: #3b82f6; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-file-invoice me-2"></i> Verify Documents
+                        </a>
+                        <a href="{% url 'admin_dashboard:vendors' %}" class="btn btn-lg" style="background: var(--duka-blue); color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-store me-2"></i> Manage Vendors
+                        </a>
+                        <a href="{% url 'admin_dashboard:export_vendors' %}" class="btn btn-lg" style="background: #10b981; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-download me-2"></i> Export Data
+                        </a>
+                        <a href="{% url 'admin_dashboard:analytics' %}" class="btn btn-lg" style="background: #8b5cf6; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
+                            <i class="fas fa-chart-pie me-2"></i> Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers Row (Existing - Unchanged) -->
+    <div class="row g-4 mb-4">
+        <!-- Top Vendors -->
+        <div class="col-lg-6">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-trophy me-2" style="color: var(--duka-yellow);"></i>
+                        Top Vendors
+                    </h5>
+                    <a href="{% url 'admin_dashboard:vendors' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Products</th>
+                                    <th>Orders</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vendor in top_vendors %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                                <span class="fw-bold text-white">{{ vendor.name|make_list|first|upper }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="fw-medium d-block">{{ vendor.name }}</span>
+                                                <small class="text-muted">{{ vendor.owner.username }}</small>
+                                                <!-- NEW: Verification badge -->
+                                                {% if vendor.is_verified %}
+                                                <span class="badge bg-success ms-1" style="font-size: 0.6rem;">✓ Verified</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ vendor.product_count|default:"0" }}</td>
+                                    <td>{{ vendor.order_count|default:"0" }}</td>
+                                    <td><span class="fw-bold" style="color: var(--duka-blue);">KES {{ vendor.revenue|floatformat:0 }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="fas fa-store fa-2x mb-2" style="color: #cbd5e1;"></i>
+                                        <p class="text-muted mb-0">No vendors yet</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products (Existing - Unchanged) -->
+        <div class="col-lg-6">
+            <div class="card-modern">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-fire me-2" style="color: var(--duka-yellow);"></i>
+                        Top Products
+                    </h5>
+                    <a href="{% url 'admin_dashboard:products' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Vendor</th>
+                                    <th>Orders</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                                 style="width: 40px; height: 40px; border-radius: 12px; object-fit: cover; margin-right: 12px;">
+                                            {% else %}
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                                                <i class="fas fa-box" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                                            </div>
+                                            {% endif %}
+                                            <span class="fw-medium">{{ product.name|truncatechars:25 }}</span>
+                                        </div>
+                                    </td>
+                                    <td><small>{{ product.business.name|truncatechars:15 }}</small></td>
+                                    <td>{{ product.order_count|default:"0" }}</td>
+                                    <td><span class="fw-bold" style="color: var(--duka-blue);">KES {{ product.revenue|floatformat:0 }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="fas fa-box fa-2x mb-2" style="color: #cbd5e1;"></i>
+                                        <p class="text-muted mb-0">No products yet</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Row (Updated with Document Verification Activity) -->
+    <div class="row g-4">
+        <!-- Recent Orders (Existing) -->
+        <div class="col-lg-4">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-clock me-2" style="color: var(--duka-blue);"></i>
+                        Recent Orders
+                    </h5>
+                    <a href="{% url 'admin_dashboard:orders' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    {% for order in recent_orders %}
+                    <div class="d-flex align-items-center justify-content-between {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                        <div>
+                            <span class="fw-medium d-block">#{{ order.id|truncatechars:8 }}</span>
+                            <small class="text-muted">{{ order.customer.username }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold d-block" style="color: var(--duka-blue);">KES {{ order.total_amount|floatformat:0 }}</span>
+                            <span class="badge {% if order.status == 'completed' %}bg-success{% elif order.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-cart fa-2x mb-2" style="color: #cbd5e1;"></i>
+                        <p class="text-muted mb-0">No orders yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Shops (Updated with Verification Status) -->
+        <div class="col-lg-4">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-store me-2" style="color: var(--duka-yellow);"></i>
+                        New Shops
+                    </h5>
+                    <a href="{% url 'admin_dashboard:vendors' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    {% for shop in recent_shops %}
+                    <div class="d-flex align-items-center {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                             style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                            <span class="fw-bold text-white">{{ shop.name|make_list|first|upper }}</span>
+                        </div>
+                        <div>
+                            <span class="fw-medium d-block">{{ shop.name|truncatechars:20 }}</span>
+                            <small class="text-muted">{{ shop.owner.username }}</small>
+                        </div>
+                        <div class="ms-auto">
+                            {% if shop.verification_status == 'verified' %}
+                            <span class="badge bg-success">Verified</span>
+                            {% elif shop.verification_status == 'pending' %}
+                            <span class="badge bg-warning">Pending Docs</span>
+                            {% elif shop.verification_status == 'under_review' %}
+                            <span class="badge bg-info">Under Review</span>
+                            {% elif shop.verification_status == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                {% if shop.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-store fa-2x mb-2" style="color: #cbd5e1;"></i>
+                        <p class="text-muted mb-0">No shops yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Recent Document Verifications -->
+        <div class="col-lg-4">
+            <div class="card-modern h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-file-invoice me-2" style="color: #3b82f6;"></i>
+                        Recent Verifications
+                    </h5>
+                    <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all
+                    </a>
+                </div>
+                <div class="card-body p-4 pt-2">
+                    {% for vendor in recent_verifications|default:recent_shops|slice:":5" %}
+                    {% if vendor.verified_at %}
+                    <div class="d-flex align-items-center {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                             style="width: 40px; height: 40px; background: {% if vendor.verification_status == 'verified' %}#10b981{% else %}#ef4444{% endif %};">
+                            <i class="fas fa-{% if vendor.verification_status == 'verified' %}check-circle{% else %}times-circle{% endif %} text-white"></i>
+                        </div>
+                        <div>
+                            <span class="fw-medium d-block">{{ vendor.name|truncatechars:20 }}</span>
+                            <small class="text-muted">
+                                {% if vendor.verified_by %}
+                                Verified by {{ vendor.verified_by.username }}
+                                {% else %}
+                                {{ vendor.verification_status|title }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <small class="text-muted d-block">{{ vendor.verified_at|timesince }} ago</small>
+                            <span class="badge {% if vendor.verification_status == 'verified' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ vendor.get_verification_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-invoice fa-2x mb-2" style="color: #cbd5e1;"></i>
+                        <p class="text-muted mb-0">No recent verifications</p>
+                        <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-sm mt-3" style="color: var(--duka-blue);">
+                            Start verifying <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom scrollbar for tables */
+    .table-responsive::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--duka-blue);
+        border-radius: 10px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: var(--duka-blue-dark);
+    }
+    
+    /* Table hover effects */
+    .table-hover tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+    
+    /* Card hover enhancement */
+    .card-modern {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--duka-hover-shadow);
+    }
+    
+    /* Button styles */
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    // Live counter animation for pending documents
+    document.addEventListener('DOMContentLoaded', function() {
+        const pendingCount = document.getElementById('pendingDocumentsCount');
+        if (pendingCount) {
+            const count = parseInt(pendingCount.innerText);
+            if (count > 0) {
+                // Play notification sound or show alert (optional)
+                console.log(`${count} vendors pending document verification`);
+            }
+        }
+    });
+</script>
+{% endblock %}

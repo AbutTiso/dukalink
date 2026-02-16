@@ -1,0 +1,1274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Dashboard - DukaLink{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --whatsapp-green: #25D366;
+        --whatsapp-dark: #075E54;
+        --mpesa-teal: #00A3A3;
+        --soft-bg: #f0f2f5;
+        --card-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        --hover-shadow: 0 8px 30px rgba(37, 211, 102, 0.15);
+    }
+    
+    body {
+        background-color: var(--soft-bg);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--whatsapp-dark) 0%, #128C7E 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 30px 30px;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--whatsapp-green), var(--mpesa-teal));
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #1e293b;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .orders-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        border: none;
+    }
+    
+    .order-filters {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--whatsapp-green);
+        border-color: var(--whatsapp-green);
+        color: white;
+    }
+    
+    .order-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+    
+    .order-table tbody tr {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+    }
+    
+    .order-table tbody tr:hover {
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.12);
+        transform: scale(1.01);
+    }
+    
+    .order-table td {
+        padding: 1.25rem 0.75rem;
+        vertical-align: middle;
+        border: none;
+    }
+    
+    .order-table td:first-child {
+        border-radius: 16px 0 0 16px;
+        padding-left: 1.25rem;
+    }
+    
+    .order-table td:last-child {
+        border-radius: 0 16px 16px 0;
+        padding-right: 1.25rem;
+    }
+    
+    .customer-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .whatsapp-link {
+        color: var(--whatsapp-green);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .whatsapp-link:hover {
+        color: var(--whatsapp-dark);
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    
+    .status-pending {
+        background: #fff7e6;
+        color: #b76e00;
+        border: 1px solid #ffe0a3;
+    }
+    
+    .status-processing {
+        background: #e6f3ff;
+        color: #0066b3;
+        border: 1px solid #b8d9ff;
+    }
+    
+    .status-completed {
+        background: #e6f9ed;
+        color: #1e7a44;
+        border: 1px solid #a8e6b8;
+    }
+    
+    .status-cancelled {
+        background: #ffe6e6;
+        color: #b33a3a;
+        border: 1px solid #ffb8b8;
+    }
+    
+    .product-badge {
+        background: #f1f5f9;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.813rem;
+        color: #334155;
+        display: inline-block;
+        margin: 0.125rem;
+    }
+    
+    .amount-chip {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+    }
+    
+    .mpesa-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        background: #e6fff2;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        color: #00897b;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: #f1f5f9;
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        background: var(--whatsapp-green);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1.5rem;
+    }
+    
+    .empty-state h3 {
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .empty-state p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-whatsapp {
+        background: var(--whatsapp-green);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-whatsapp:hover {
+        background: var(--whatsapp-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+    }
+    
+    .btn-mpesa {
+        background: var(--mpesa-teal);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Loading Spinner */
+    .spinner-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+    }
+    
+    .spinner-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        text-align: center;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--whatsapp-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    /* Pulse animation for new orders */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+    }
+    
+    .new-order {
+        animation: pulse 2s infinite;
+    }
+    
+    .stat-value {
+        transition: all 0.3s ease;
+    }
+    
+    .stat-updated {
+        background: rgba(37, 211, 102, 0.1);
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- CSRF Token for AJAX -->
+{% csrf_token %}
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="spinner-overlay">
+    <div class="spinner-container">
+        <div class="loading-spinner"></div>
+        <p class="mb-0 fw-medium">Updating dashboard...</p>
+    </div>
+</div>
+
+<!-- Modern Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-store-alt me-2"></i>{{ business.name|default:"Vendor" }} Dashboard
+                </h1>
+                <p class="mb-0 opacity-75">
+                    <i class="fas fa-map-marker-alt me-1"></i> {{ business.location|default:"DukaLink Marketplace" }} • 
+                    <i class="fas fa-clock ms-2 me-1"></i> Last updated: <span id="lastUpdated">{% now "M d, Y H:i:s" %}</span>
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <button onclick="refreshDashboardStats(true)" class="btn btn-light me-2" title="Refresh Dashboard">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <a href="https://wa.me/?text=Check%20out%20{{ business.name|urlencode }}%20products%20on%20DukaLink!%20{{ request.build_absolute_uri|urlencode }}" 
+                   class="btn btn-whatsapp me-2" target="_blank">
+                    <i class="fab fa-whatsapp"></i> Share Store
+                </a>
+                <a href="{% url 'dashboard:product_add' %}" class="btn btn-light">
+                    <i class="fas fa-plus-circle"></i> Add Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card" id="stat-total-orders">
+            <div class="stat-icon" style="background: #e6f9ed; color: #1e7a44;">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-value" id="totalOrdersValue">{{ total_orders|default:"0" }}</div>
+            <div class="stat-label">Total Orders</div>
+            <small class="text-success mt-2 d-block" id="ordersGrowth">
+                <i class="fas fa-arrow-up"></i> +{{ orders_growth|default:"0" }}% from last month
+            </small>
+        </div>
+        
+        <div class="stat-card" id="stat-pending-orders">
+            <div class="stat-icon" style="background: #fff7e6; color: #b76e00;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value" id="pendingOrdersValue">{{ pending_orders|default:"0" }}</div>
+            <div class="stat-label">Pending Orders</div>
+            <small class="text-warning mt-2 d-block">
+                <i class="fas fa-hourglass-half"></i> <span id="pendingCount">{{ pending_orders|default:"0" }}</span> need attention
+            </small>
+        </div>
+        
+        <div class="stat-card" id="stat-processing-orders">
+            <div class="stat-icon" style="background: #e6f3ff; color: #0066b3;">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-value" id="processingOrdersValue">{{ processing_orders|default:"0" }}</div>
+            <div class="stat-label">Processing</div>
+            <small class="text-info mt-2 d-block">
+                <i class="fas fa-box"></i> In fulfillment
+            </small>
+        </div>
+        
+        <div class="stat-card" id="stat-revenue">
+            <div class="stat-icon" style="background: #e6fff2; color: #00897b;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-value" id="revenueValue">Ksh {{ total_revenue|default:"0"|floatformat:0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+            <small class="text-mpesa mt-2 d-block">
+                <i class="fas fa-mobile-alt"></i> M-Pesa payments
+            </small>
+        </div>
+    </div>
+
+    <!-- Main Orders Card -->
+    <div class="orders-card">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+            <div>
+                <h4 class="fw-bold mb-1">
+                    <i class="fas fa-clipboard-list me-2" style="color: var(--whatsapp-green);"></i>
+                    Order Management
+                </h4>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-whatsapp me-1" style="color: var(--whatsapp-green);"></i>
+                    WhatsApp orders • <span id="orderCount">{{ orders.paginator.count|default:"0" }}</span> total orders
+                </p>
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="order-filters">
+                <button class="filter-btn active" data-filter="all">All Orders</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+                <button class="filter-btn" data-filter="processing">Processing</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+                <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+            </div>
+        </div>
+
+        {% if not order_data %}
+        <!-- Modern Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-whatsapp"></i>
+            <h3>No orders yet</h3>
+            <p class="text-muted">Share your store on WhatsApp to start receiving orders!</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="https://wa.me/?text=Check%20out%20{{ business.name|urlencode }}%20products%20on%20DukaLink%3A%20{{ request.build_absolute_uri|urlencode }}" 
+                   class="btn btn-whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                </a>
+                <a href="{% url 'dashboard:product_add' %}" class="btn btn-outline-success">
+                    <i class="fas fa-plus"></i> Add Products
+                </a>
+            </div>
+        </div>
+        {% else %}
+
+        <!-- Orders Table - Modern Card Style -->
+        <div class="table-responsive">
+            <table class="order-table">
+                <thead style="display: none;">
+                    <tr>
+                        <th>Order & Customer</th>
+                        <th>Products</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    {% for order_item in order_data %}
+                    <tr class="order-row" data-order-id="{{ order_item.order.id }}" data-status="{{ order_item.order.status }}">
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar">
+                                    {{ order_item.order.customer_name|make_list|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">#{{ order_item.order.id }}</div>
+                                    <div>{{ order_item.order.customer_name }}</div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone-alt"></i> {{ order_item.order.customer_phone }}
+                                        </small>
+                                        <a href="https://wa.me/254{{ order_item.order.customer_phone|slice:'-9' }}" 
+                                           class="whatsapp-link" target="_blank">
+                                            <i class="fab fa-whatsapp"></i> Chat
+                                        </a>
+                                    </div>
+                                    {% if order_item.order.customer_email %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-envelope"></i> {{ order_item.order.customer_email }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% for item in order_item.vendor_items %}
+                            <div class="mb-2">
+                                <div class="fw-bold">{{ item.product.name }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="product-badge">
+                                        <i class="fas fa-box"></i> Qty: {{ item.quantity }}
+                                    </span>
+                                    <span class="product-badge">
+                                        <i class="fas fa-tag"></i> Ksh {{ item.price }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <span class="amount-chip">
+                                Ksh {{ order_item.total_amount|floatformat:0 }}
+                            </span>
+                            <div class="mpesa-indicator mt-2">
+                                <i class="fas fa-check-circle"></i> {{ order_item.order.payment_method|default:"M-Pesa" }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ order_item.order.status }}">
+                                <i class="fas 
+                                    {% if order_item.order.status == 'completed' %}fa-check-circle
+                                    {% elif order_item.order.status == 'cancelled' %}fa-times-circle
+                                    {% elif order_item.order.status == 'processing' %}fa-spinner fa-spin
+                                    {% else %}fa-clock{% endif %}">
+                                </i>
+                                {{ order_item.order.get_status_display|default:order_item.order.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ order_item.order.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ order_item.order.created_at|date:"H:i" }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="quick-actions">
+                                <button class="action-btn" title="Update Status" 
+                                        onclick="updateOrderStatus({{ order_item.order.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn" title="View Details"
+                                        onclick="viewOrderDetails({{ order_item.order.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn" title="Print Receipt"
+                                        onclick="printReceipt({{ order_item.order.id }})">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <div class="text-muted">
+                Showing <span id="startIndex">{{ orders.start_index }}</span> to <span id="endIndex">{{ orders.end_index }}</span> of <span id="totalOrders">{{ orders.paginator.count }}</span> orders
+            </div>
+            <nav>
+                <ul class="pagination mb-0">
+                    {% if orders.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in orders.paginator.page_range %}
+                        {% if orders.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: var(--whatsapp-green); border-color: var(--whatsapp-green);">
+                                {{ i }}
+                            </span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}" style="color: var(--whatsapp-dark);">
+                                {{ i }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if orders.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Order Status Update Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-truck-fast me-2" style="color: var(--whatsapp-green);"></i>
+                    Update Order Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="statusUpdateForm">
+                    <input type="hidden" id="currentOrderId" value="">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Order Status</label>
+                        <select class="form-select" id="orderStatus" style="border-radius: 12px; padding: 0.75rem;">
+                            <option value="pending">⏳ Pending</option>
+                            <option value="processing">⚙️ Processing</option>
+                            <option value="completed">✅ Completed</option>
+                            <option value="cancelled">❌ Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Add Note (Optional)</label>
+                        <textarea class="form-control" id="statusNote" rows="3" placeholder="Add a note for the customer..."
+                                  style="border-radius: 12px;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Notify Customer via</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifyWhatsApp" checked>
+                                <label class="form-check-label" for="notifyWhatsApp">
+                                    <i class="fab fa-whatsapp" style="color: var(--whatsapp-green);"></i> WhatsApp
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifySMS">
+                                <label class="form-check-label" for="notifySMS">
+                                    <i class="fas fa-sms"></i> SMS
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-whatsapp" onclick="saveStatusUpdate()" id="saveStatusBtn">
+                    <i class="fas fa-check-circle"></i> Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== GLOBAL VARIABLES ====================
+let currentOrderId = null;
+let autoRefreshInterval = null;
+const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initialized');
+    
+    // Setup filter buttons
+    initFilters();
+    
+    // Setup action buttons using event delegation
+    setupActionButtons();
+    
+    // Start real-time updates (every 30 seconds)
+    startRealTimeUpdates();
+    
+    // Check for new orders every 15 seconds
+    startNewOrderCheck();
+    
+    // Initialize tooltips if Bootstrap is available
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+
+// ==================== CSRF TOKEN ====================
+function getCSRFToken() {
+    return CSRF_TOKEN;
+}
+
+// ==================== LOADING STATE ====================
+function showLoading() {
+    document.getElementById('loadingSpinner').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingSpinner').style.display = 'none';
+}
+
+// ==================== FILTER FUNCTIONALITY ====================
+function initFilters() {
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            filterOrders(filter);
+        });
+    });
+}
+
+function filterOrders(status) {
+    const rows = document.querySelectorAll('.order-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update filter stats
+    const filterStats = document.createElement('small');
+    filterStats.className = 'text-muted ms-2';
+    filterStats.id = 'filterStats';
+    
+    // Remove existing stats
+    const existingStats = document.getElementById('filterStats');
+    if (existingStats) existingStats.remove();
+    
+    // Add new stats
+    if (status !== 'all') {
+        filterStats.innerHTML = `Showing ${visibleCount} ${status} orders`;
+        document.querySelector('.order-filters').appendChild(filterStats);
+    }
+}
+
+// ==================== ACTION BUTTONS ====================
+function setupActionButtons() {
+    // Use event delegation for dynamically loaded content
+    document.body.addEventListener('click', function(e) {
+        // Update Status button
+        const updateBtn = e.target.closest('.action-btn[title="Update Status"]');
+        if (updateBtn) {
+            e.preventDefault();
+            const orderRow = updateBtn.closest('.order-row');
+            const orderId = orderRow.dataset.orderId;
+            updateOrderStatus(orderId);
+        }
+        
+        // View Details button
+        const viewBtn = e.target.closest('.action-btn[title="View Details"]');
+        if (viewBtn) {
+            e.preventDefault();
+            const orderRow = viewBtn.closest('.order-row');
+            const orderId = orderRow.dataset.orderId;
+            viewOrderDetails(orderId);
+        }
+        
+        // Print Receipt button
+        const printBtn = e.target.closest('.action-btn[title="Print Receipt"]');
+        if (printBtn) {
+            e.preventDefault();
+            const orderRow = printBtn.closest('.order-row');
+            const orderId = orderRow.dataset.orderId;
+            printReceipt(orderId);
+        }
+    });
+}
+
+// ==================== ORDER MANAGEMENT ====================
+function updateOrderStatus(orderId) {
+    currentOrderId = orderId;
+    document.getElementById('currentOrderId').value = orderId;
+    
+    // Show loading state on the button that was clicked
+    const btn = event?.target?.closest('.action-btn');
+    if (btn) {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+    }
+    
+    // Fetch current order details
+    fetch(`/dashboard/api/order/${orderId}/`, {
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Populate modal with current status
+            const statusSelect = document.getElementById('orderStatus');
+            if (statusSelect && data.order.status) {
+                statusSelect.value = data.order.status;
+            }
+            
+            // Clear note field
+            document.getElementById('statusNote').value = '';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+            modal.show();
+        } else {
+            showToast(data.error || 'Error loading order details', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching order:', error);
+        showToast('Error loading order details. Please try again.', 'danger');
+    })
+    .finally(() => {
+        // Restore button state
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-edit"></i>';
+            btn.disabled = false;
+        }
+    });
+}
+
+function saveStatusUpdate() {
+    const orderId = document.getElementById('currentOrderId').value;
+    const status = document.getElementById('orderStatus').value;
+    const note = document.getElementById('statusNote').value;
+    const notifyWA = document.getElementById('notifyWhatsApp').checked;
+    const notifySMS = document.getElementById('notifySMS').checked;
+    
+    // Validate
+    if (!orderId) {
+        showToast('Order ID is missing', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveStatusBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    saveBtn.disabled = true;
+    
+    // Make AJAX call
+    fetch('/dashboard/api/order/update-status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            order_id: orderId,
+            status: status,
+            note: note,
+            notify_whatsapp: notifyWA,
+            notify_sms: notifySMS
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('updateStatusModal')).hide();
+            
+            // Update the row in the table
+            updateOrderRow(data.order_id, data.new_status, data.status_display);
+            
+            // Show success message
+            showToast(data.message, 'success');
+            
+            // Refresh dashboard stats
+            refreshDashboardStats();
+        } else {
+            showToast(data.error || 'Failed to update order status', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to update order status. Please try again.', 'danger');
+    })
+    .finally(() => {
+        // Restore button
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function updateOrderRow(orderId, newStatus, statusDisplay) {
+    const rows = document.querySelectorAll('.order-row');
+    
+    rows.forEach(row => {
+        if (row.dataset.orderId == orderId) {
+            // Update status badge
+            const statusBadge = row.querySelector('.status-badge');
+            const statusIcon = statusBadge.querySelector('i');
+            
+            // Update status class
+            statusBadge.className = `status-badge status-${newStatus}`;
+            
+            // Update icon
+            let iconClass = 'fa-clock';
+            if (newStatus === 'completed') iconClass = 'fa-check-circle';
+            else if (newStatus === 'cancelled') iconClass = 'fa-times-circle';
+            else if (newStatus === 'processing') iconClass = 'fa-spinner fa-spin';
+            
+            statusIcon.className = `fas ${iconClass}`;
+            
+            // Update text
+            const statusText = statusBadge.childNodes[2] || statusBadge.lastChild;
+            if (statusText) {
+                statusText.nodeValue = ` ${statusDisplay}`;
+            } else {
+                statusBadge.innerHTML = `<i class="fas ${iconClass}"></i> ${statusDisplay}`;
+            }
+            
+            // Update data attribute
+            row.dataset.status = newStatus;
+            
+            // Highlight the updated row
+            row.style.backgroundColor = 'rgba(37, 211, 102, 0.1)';
+            setTimeout(() => {
+                row.style.backgroundColor = '';
+            }, 2000);
+        }
+    });
+}
+
+// ==================== VIEW FUNCTIONS ====================
+function viewOrderDetails(orderId) {
+    window.location.href = `/dashboard/order/${orderId}/`;
+}
+
+function printReceipt(orderId) {
+    window.open(`/dashboard/order/${orderId}/receipt/`, '_blank');
+}
+
+// ==================== DASHBOARD STATISTICS ====================
+function refreshDashboardStats(showLoadingIndicator = false) {
+    if (showLoadingIndicator) {
+        showLoading();
+    }
+    
+    fetch('/dashboard/api/stats/', {
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateStatistics(data.stats);
+            updateLastUpdated(data.timestamp);
+            
+            // Check for new orders
+            if (data.recent_orders) {
+                checkForNewOrders(data.recent_orders);
+            }
+            
+            showToast('Dashboard updated successfully', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing stats:', error);
+        if (showLoadingIndicator) {
+            showToast('Failed to refresh dashboard', 'danger');
+        }
+    })
+    .finally(() => {
+        if (showLoadingIndicator) {
+            setTimeout(hideLoading, 500);
+        }
+    });
+}
+
+function updateStatistics(stats) {
+    // Animate stat updates
+    animateStatUpdate('totalOrdersValue', stats.total_orders);
+    animateStatUpdate('pendingOrdersValue', stats.pending_orders);
+    animateStatUpdate('processingOrdersValue', stats.processing_orders);
+    animateStatUpdate('revenueValue', `Ksh ${stats.total_revenue.toLocaleString()}`);
+    
+    // Update growth percentage
+    const growthElement = document.getElementById('ordersGrowth');
+    if (growthElement) {
+        growthElement.innerHTML = `<i class="fas fa-arrow-up"></i> +${stats.orders_growth}% from last month`;
+    }
+    
+    // Update pending count in text
+    const pendingCount = document.getElementById('pendingCount');
+    if (pendingCount) {
+        pendingCount.textContent = stats.pending_orders;
+    }
+}
+
+function animateStatUpdate(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const oldValue = element.textContent;
+    element.textContent = newValue;
+    
+    // Highlight animation
+    element.classList.add('stat-updated');
+    setTimeout(() => {
+        element.classList.remove('stat-updated');
+    }, 1000);
+}
+
+function updateLastUpdated(timestamp) {
+    const lastUpdated = document.getElementById('lastUpdated');
+    if (lastUpdated && timestamp) {
+        const date = new Date(timestamp);
+        lastUpdated.textContent = date.toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+}
+
+// ==================== REAL-TIME UPDATES ====================
+function startRealTimeUpdates() {
+    // Clear existing interval
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    // Update every 30 seconds
+    autoRefreshInterval = setInterval(() => {
+        refreshDashboardStats(false);
+    }, 30000);
+    
+    console.log('Real-time updates started');
+}
+
+function stopRealTimeUpdates() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        console.log('Real-time updates stopped');
+    }
+}
+
+// ==================== NEW ORDER DETECTION ====================
+function startNewOrderCheck() {
+    // Check for new orders every 15 seconds
+    setInterval(() => {
+        checkForNewOrders();
+    }, 15000);
+}
+
+function checkForNewOrders(recentOrders = null) {
+    if (recentOrders) {
+        // Get existing order IDs
+        const existingOrderIds = Array.from(document.querySelectorAll('.order-row'))
+            .map(row => row.dataset.orderId);
+        
+        recentOrders.forEach(order => {
+            if (!existingOrderIds.includes(String(order.id))) {
+                // New order detected!
+                showNewOrderNotification(order);
+            }
+        });
+    }
+}
+
+function showNewOrderNotification(order) {
+    showToast(`New order #${order.id} received from ${order.customer_name}!`, 'success');
+    
+    // You could also play a sound
+    // playNotificationSound();
+}
+
+// ==================== TOAST NOTIFICATIONS ====================
+function showToast(message, type = 'success') {
+    // Create toast container if not exists
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+        `;
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast show align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.style.cssText = `
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        margin-bottom: 0.5rem;
+        animation: slideIn 0.3s ease;
+        min-width: 300px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        font-weight: 500;
+    `;
+    
+    let icon = 'fa-check-circle';
+    if (type === 'danger') icon = 'fa-exclamation-circle';
+    else if (type === 'warning') icon = 'fa-exclamation-triangle';
+    else if (type === 'info') icon = 'fa-info-circle';
+    
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas ${icon} me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close btn-close-white ms-3" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+    
+    // Add click handler for close button
+    const closeBtn = toast.querySelector('.btn-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        });
+    }
+}
+
+// ==================== PAGE VISIBILITY API ====================
+// Pause real-time updates when page is not visible
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopRealTimeUpdates();
+    } else {
+        startRealTimeUpdates();
+        refreshDashboardStats(false);
+    }
+});
+
+// ==================== EXPORT FUNCTIONS TO GLOBAL SCOPE ====================
+window.updateOrderStatus = updateOrderStatus;
+window.viewOrderDetails = viewOrderDetails;
+window.printReceipt = printReceipt;
+window.saveStatusUpdate = saveStatusUpdate;
+window.refreshDashboardStats = refreshDashboardStats;
+window.filterOrders = filterOrders;
+</script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Bootstrap 5 -->
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}

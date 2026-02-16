@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Orders - DukaLink Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid px-4 py-4">
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1">
+                <span style="color: var(--duka-blue);">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                </span> 
+                Manage Orders
+            </h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
+                <span id="totalOrdersCount">{{ orders.count }}</span> total orders • Track and manage all platform orders
+            </p>
+        </div>
+        <div class="mt-3 mt-lg-0 d-flex gap-3">
+            <div class="input-group" style="max-width: 300px;">
+                <span class="input-group-text bg-white border-end-0" style="border-radius: 50px 0 0 50px;">
+                    <i class="fas fa-search" style="color: var(--duka-blue);"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="orderSearch" placeholder="Search orders..." 
+                       style="border-radius: 0 50px 50px 0; border-left: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Filter Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col">
+            <div class="card-modern p-3 text-center filter-card" style="cursor: pointer; border: 2px solid transparent;" data-status="all" id="filterAll">
+                <span class="d-block fw-bold h4 mb-1" id="allOrdersCount">{{ orders.count }}</span>
+                <small class="text-muted">All Orders</small>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-modern p-3 text-center filter-card" style="cursor: pointer; border: 2px solid #eab308;" data-status="pending">
+                <span class="d-block fw-bold h4 mb-1" id="pendingCount">{{ pending_count|default:"0" }}</span>
+                <small class="text-muted">Pending</small>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-modern p-3 text-center filter-card" style="cursor: pointer; border: 2px solid #3b82f6;" data-status="processing">
+                <span class="d-block fw-bold h4 mb-1" id="processingCount">{{ processing_count|default:"0" }}</span>
+                <small class="text-muted">Processing</small>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-modern p-3 text-center filter-card" style="cursor: pointer; border: 2px solid #10b981;" data-status="completed">
+                <span class="d-block fw-bold h4 mb-1" id="completedCount">{{ completed_count|default:"0" }}</span>
+                <small class="text-muted">Completed</small>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card-modern p-3 text-center filter-card" style="cursor: pointer; border: 2px solid #ef4444;" data-status="cancelled">
+                <span class="d-block fw-bold h4 mb-1" id="cancelledCount">{{ cancelled_count|default:"0" }}</span>
+                <small class="text-muted">Cancelled</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card-modern">
+        <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-list me-2" style="color: var(--duka-yellow);"></i>
+                Order History
+            </h5>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" id="statusFilter" style="border-radius: 50px; width: auto; border: 1px solid #e2e8f0;">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-4 pt-2">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Vendor</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr data-status="{{ order.status }}" data-order-id="{{ order.id }}">
+                            <td>
+                                <span class="fw-medium">#{{ order.id|stringformat:"06d" }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                                        <span class="fw-bold text-white">{{ order.customer.username|make_list|first|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ order.customer.username }}</span>
+                                        <small class="text-muted">{{ order.customer.email|truncatechars:15 }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="d-block fw-medium">{{ order.vendor.business.name|truncatechars:20 }}</span>
+                                <small class="text-muted">{{ order.vendor.username }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ order.order_items.count }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold" style="color: var(--duka-blue);">KES {{ order.total_amount|floatformat:0 }}</span>
+                            </td>
+                            <td>
+                                {% if order.status == 'pending' %}
+                                <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-clock me-1"></i> Pending
+                                </span>
+                                {% elif order.status == 'processing' %}
+                                <span class="badge" style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-spinner me-1"></i> Processing
+                                </span>
+                                {% elif order.status == 'completed' %}
+                                <span class="badge" style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-check-circle me-1"></i> Completed
+                                </span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="badge" style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 50px;">
+                                    <i class="fas fa-times-circle me-1"></i> Cancelled
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ order.created_at|date:"M d, Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'dashboard:order_detail' order.id %}" class="btn btn-sm" style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); border-radius: 50px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm" style="background: rgba(234, 179, 8, 0.1); color: var(--duka-yellow-dark); border-radius: 50px; padding: 0.5rem 1rem;" 
+                                                data-bs-toggle="dropdown">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('{{ order.id }}', 'processing')"><i class="fas fa-spinner me-2 text-primary"></i>Process</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('{{ order.id }}', 'completed')"><i class="fas fa-check-circle me-2 text-success"></i>Complete</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('{{ order.id }}', 'cancelled')"><i class="fas fa-times-circle me-2 text-danger"></i>Cancel</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                    <i class="fas fa-shopping-cart fa-3x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">No orders yet</h6>
+                                <p class="text-muted mb-3">Orders will appear here once customers start shopping.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== GLOBAL VARIABLES ====================
+let refreshInterval;
+let lastOrderCount = {{ orders.count }};
+let searchTimeout;
+let inactiveTimeout;
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+    initializeEventListeners();
+    highlightActiveFilter();
+});
+
+function initializeEventListeners() {
+    // Search input with debounce
+    document.getElementById('orderSearch').addEventListener('keyup', handleSearch);
+    
+    // Status filter dropdown
+    document.getElementById('statusFilter').addEventListener('change', function(e) {
+        filterOrdersByStatus(e.target.value);
+        updateActiveFilterCard(e.target.value);
+    });
+    
+    // Filter cards click handlers
+    document.querySelectorAll('.filter-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const status = this.dataset.status;
+            document.getElementById('statusFilter').value = status;
+            filterOrdersByStatus(status);
+            updateActiveFilterCard(status);
+        });
+    });
+    
+    // Stop auto-refresh on user interaction
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('keypress', handleUserInteraction);
+}
+
+// ==================== AUTO-REFRESH FUNCTIONS ====================
+function startAutoRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(fetchLatestOrders, 30000);
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}
+
+function handleUserInteraction() {
+    stopAutoRefresh();
+    clearTimeout(inactiveTimeout);
+    inactiveTimeout = setTimeout(() => {
+        startAutoRefresh();
+    }, 60000); // Restart after 1 minute of inactivity
+}
+
+// ==================== API FUNCTIONS ====================
+function fetchLatestOrders() {
+    showLoadingIndicator();
+    
+    fetch('/dashboard/api/admin/orders/latest/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            hideLoadingIndicator();
+            if (data.orders_count !== lastOrderCount) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            hideLoadingIndicator();
+            console.error('Error fetching orders:', error);
+        });
+}
+
+function updateOrderStatus(orderId, status) {
+    if (!confirm(`Are you sure you want to mark this order as ${status}?`)) {
+        return;
+    }
+    
+    showLoadingIndicator();
+    
+    fetch(`/admin-panel/orders/${orderId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `status=${status}`
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            throw new Error('Failed to update order status');
+        }
+    })
+    .catch(error => {
+        hideLoadingIndicator();
+        alert('Error updating order status: ' + error.message);
+    });
+}
+
+// ==================== SEARCH FUNCTIONALITY ====================
+function handleSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        filterOrders();
+    }, 300);
+}
+
+function filterOrders() {
+    const searchValue = document.getElementById('orderSearch').value.toLowerCase().trim();
+    const tableRows = document.querySelectorAll('#ordersTable tbody tr');
+    const currentStatus = document.getElementById('statusFilter').value;
+    let visibleCount = 0;
+    
+    tableRows.forEach(row => {
+        if (row.cells.length === 1) return; // Skip "No orders" row
+        
+        const orderId = row.cells[0]?.textContent.toLowerCase() || '';
+        const customer = row.cells[1]?.querySelector('.fw-medium')?.textContent.toLowerCase() || '';
+        const vendor = row.cells[2]?.textContent.toLowerCase() || '';
+        
+        const matchesSearch = searchValue === '' || 
+            orderId.includes(searchValue) || 
+            customer.includes(searchValue) || 
+            vendor.includes(searchValue);
+        
+        const matchesStatus = currentStatus === 'all' || row.dataset.status === currentStatus;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show "no results" message if needed
+    toggleNoResultsMessage(visibleCount === 0);
+}
+
+// ==================== FILTER FUNCTIONS ====================
+function filterOrdersByStatus(status) {
+    const tableRows = document.querySelectorAll('#ordersTable tbody tr');
+    const searchValue = document.getElementById('orderSearch').value.toLowerCase().trim();
+    let visibleCount = 0;
+    
+    tableRows.forEach(row => {
+        if (row.cells.length === 1) return; // Skip "No orders" row
+        
+        const matchesStatus = status === 'all' || row.dataset.status === status;
+        
+        const orderId = row.cells[0]?.textContent.toLowerCase() || '';
+        const customer = row.cells[1]?.querySelector('.fw-medium')?.textContent.toLowerCase() || '';
+        const vendor = row.cells[2]?.textContent.toLowerCase() || '';
+        
+        const matchesSearch = searchValue === '' || 
+            orderId.includes(searchValue) || 
+            customer.includes(searchValue) || 
+            vendor.includes(searchValue);
+        
+        if (matchesStatus && matchesSearch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    toggleNoResultsMessage(visibleCount === 0);
+}
+
+function updateActiveFilterCard(status) {
+    document.querySelectorAll('.filter-card').forEach(card => {
+        if (card.dataset.status === status) {
+            card.style.borderWidth = '3px';
+            card.style.opacity = '1';
+        } else {
+            card.style.borderWidth = '2px';
+            card.style.opacity = '0.8';
+        }
+    });
+}
+
+function highlightActiveFilter() {
+    const currentStatus = document.getElementById('statusFilter').value;
+    updateActiveFilterCard(currentStatus);
+}
+
+function toggleNoResultsMessage(show) {
+    let noResultsRow = document.querySelector('#ordersTable tbody tr.no-results-row');
+    
+    if (show) {
+        if (!noResultsRow) {
+            const tbody = document.querySelector('#ordersTable tbody');
+            const row = document.createElement('tr');
+            row.className = 'no-results-row';
+            row.innerHTML = `
+                <td colspan="8" class="text-center py-5">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-search fa-3x" style="color: var(--duka-blue); opacity: 0.3;"></i>
+                    </div>
+                    <h6 class="fw-bold mb-2">No matching orders found</h6>
+                    <p class="text-muted mb-3">Try adjusting your search or filter criteria.</p>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+    } else if (noResultsRow) {
+        noResultsRow.remove();
+    }
+}
+
+// ==================== UI HELPER FUNCTIONS ====================
+function showLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+}
+
+function hideLoadingIndicator() {
+    document.getElementById('loadingIndicator').style.display = 'none';
+}
+
+// ==================== WEBHOOK/WEBSOCKET SETUP (OPTIONAL) ====================
+/*
+function setupWebSocket() {
+    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsScheme}//${window.location.host}/ws/admin/orders/`);
+    
+    ws.onopen = function() {
+        console.log('WebSocket connected');
+    };
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'order_update' || data.type === 'new_order') {
+            // Simple reload for real-time updates
+            location.reload();
+        }
+    };
+    
+    ws.onerror = function(error) {
+        console.log('WebSocket error: ', error);
+    };
+    
+    ws.onclose = function() {
+        console.log('WebSocket disconnected');
+        // Attempt to reconnect after 5 seconds
+        setTimeout(setupWebSocket, 5000);
+    };
+}
+*/
+
+// ==================== EXPORT FUNCTIONS TO GLOBAL SCOPE ====================
+window.updateOrderStatus = updateOrderStatus;
+window.filterOrders = filterOrders;
+window.filterOrdersByStatus = filterOrdersByStatus;
+</script>
+
+<style>
+/* Additional styles for better UX */
+.filter-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.filter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.filter-card[data-status="all"]:hover {
+    border-color: #64748b !important;
+}
+
+#loadingIndicator {
+    transition: opacity 0.3s ease;
+}
+
+.badge {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+}
+
+.dropdown-item i {
+    width: 1.2rem;
+}
+</style>
+{% endblock %}

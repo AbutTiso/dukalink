@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Product - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card-modern p-5 text-center">
+                <!-- Warning Icon -->
+                <div class="mb-4">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <i class="fas fa-exclamation-triangle fa-4x" style="color: #dc2626;"></i>
+                    </div>
+                </div>
+                
+                <h3 class="fw-bold mb-3">Delete Product?</h3>
+                <p class="text-muted mb-4">
+                    Are you sure you want to delete "<span class="fw-bold text-dark">{{ product.name }}</span>"?<br>
+                    This action cannot be undone.
+                </p>
+                
+                <!-- Product Preview -->
+                <div class="bg-light p-4 rounded-4 mb-4">
+                    <div class="d-flex align-items-center">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover;">
+                        {% else %}
+                        <div style="width: 60px; height: 60px; border-radius: 12px; background: #e2e8f0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="ms-3 text-start">
+                            <h6 class="fw-bold mb-1">{{ product.name }}</h6>
+                            <span class="text-muted small">Ksh {{ product.price }} • Stock: {{ product.stock }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <form method="POST" class="d-flex gap-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background: #dc2626; color: white; border-radius: 50px; padding: 0.75rem 2rem; flex-grow: 1;">
+                        <i class="fas fa-trash-alt me-2"></i>Yes, Delete Product
+                    </button>
+                    <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-outline-secondary" style="border-radius: 50px; padding: 0.75rem 2rem;">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

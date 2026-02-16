@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verification Status - DukaLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern p-5 text-center">
+                {% if business.verification_status == 'verified' %}
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-check-circle fa-4x" style="color: #10b981;"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Verification Complete! 🎉</h2>
+                <p class="lead mb-4">Your business has been verified and approved. You can now start selling on DukaLink!</p>
+                <a href="{% url 'dashboard:vendor_dashboard' %}" class="btn btn-duka-yellow btn-lg">
+                    <i class="fas fa-store me-2"></i>Go to Dashboard
+                </a>
+                
+                {% elif business.verification_status == 'under_review' %}
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #dbeafe; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-spinner fa-spin fa-4x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Under Review 📋</h2>
+                <p class="lead mb-3">Your documents are being reviewed by our admin team.</p>
+                <p class="text-muted mb-4">This usually takes 1-2 business days. We'll notify you once verification is complete.</p>
+                <a href="{% url 'accounts:upload_documents' business.id %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-edit me-2"></i>Update Documents
+                </a>
+                
+                {% elif business.verification_status == 'rejected' %}
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-times-circle fa-4x" style="color: #ef4444;"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Verification Rejected ❌</h2>
+                <div class="alert alert-danger text-start">
+                    <strong>Reason:</strong> {{ business.verification_notes|default:"Documents did not meet requirements." }}
+                </div>
+                <p class="mb-4">Please upload valid documents and try again.</p>
+                <a href="{% url 'accounts:upload_documents' business.id %}" class="btn btn-duka-yellow btn-lg">
+                    <i class="fas fa-upload me-2"></i>Upload New Documents
+                </a>
+                
+                {% elif business.verification_status == 'info_needed' %}
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #fff7ed; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-info-circle fa-4x" style="color: #f97316;"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Additional Information Required ℹ️</h2>
+                <div class="alert alert-warning text-start">
+                    <strong>Message from admin:</strong> {{ business.verification_notes|default:"Please provide additional documents." }}
+                </div>
+                <p class="mb-4">Please check the feedback and update your documents.</p>
+                <a href="{% url 'accounts:upload_documents' business.id %}" class="btn btn-duka-yellow btn-lg">
+                    <i class="fas fa-upload me-2"></i>Update Documents
+                </a>
+                
+                {% else %}
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-clock fa-4x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Pending Verification ⏳</h2>
+                <p class="lead mb-4">Please upload your business documents to complete verification.</p>
+                <a href="{% url 'accounts:upload_documents' business.id %}" class="btn btn-duka-yellow btn-lg">
+                    <i class="fas fa-upload me-2"></i>Upload Documents
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
