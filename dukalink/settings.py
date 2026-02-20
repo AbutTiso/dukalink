@@ -104,15 +104,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'dukalink.wsgi.application'
 
-# Database
+# Database - Use PostgreSQL on Railway, SQLite locally
 import dj_database_url
 
-# Replace the SQLite config with:
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
-    )
-}
+# Check if we're on Railway (has DATABASE_URL environment variable)
+if os.environ.get('DATABASE_URL'):
+    # Production - PostgreSQL on Railway
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # Local development - SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
