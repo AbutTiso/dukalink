@@ -27,6 +27,7 @@ ALLOWED_HOSTS = [
     '.ngrok-free.app',  # Allow all ngrok subdomains
     '3793-197-139-58-10.ngrok-free.app',  # Your specific ngrok URL
     'railway.app',
+    'dukalink-production.up.railway.app',
     
 ]
 
