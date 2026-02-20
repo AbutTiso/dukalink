@@ -26,6 +26,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.ngrok-free.app',  # Allow all ngrok subdomains
     '3793-197-139-58-10.ngrok-free.app',  # Your specific ngrok URL
+    'railway.app',
+    
 ]
 
 # Add any additional hosts from environment variable
@@ -38,6 +40,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://*.ngrok-free.app',
+    'https://*.railway.app',  # Add this
+    'https://*.up.railway.app',  # Add this
     NGROK_URL,
 ]
 
@@ -54,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'whitenoise.runserver_nostatic',  # Add this before Django's staticfiles
+    
 
     # Local apps
     'accounts',
@@ -68,6 +74,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,13 +104,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'dukalink.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+import dj_database_url
 
+# Replace the SQLite config with:
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
+    )
+}
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -130,7 +138,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Create static directory if it doesn't exist (fixes the warning)
 import os
 if not os.path.exists(BASE_DIR / 'static'):
