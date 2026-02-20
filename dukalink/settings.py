@@ -109,7 +109,6 @@ import dj_database_url
 
 # Check if we're on Railway (has DATABASE_URL environment variable)
 if os.environ.get('DATABASE_URL'):
-    # Production - PostgreSQL on Railway
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
