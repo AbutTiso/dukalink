@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'shops',
     'admin_dashboard',
     'pages',
+    'vendors',
 ]
 
 MIDDLEWARE = [
@@ -191,7 +192,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Login URL
 LOGIN_URL = 'accounts:login'
-
+GEOAPIFY_API_KEY = "99991248c2894185b8f4f124a2b2ffa3"
+LOCATIONIQ_API_KEY = os.environ.get('LOCATIONIQ_API_KEY')
 # ============================================
 # M-PESA CONFIGURATION
 # ============================================

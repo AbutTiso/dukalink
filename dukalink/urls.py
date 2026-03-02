@@ -16,6 +16,7 @@ urlpatterns = [
     path('about/', TemplateView.as_view(template_name='pages/about.html'), name='about'),
     path('admin-panel/', include('admin_dashboard.urls')),
     path('pages/', include('pages.urls')),
+    path('vendors/', include('vendors.urls')),
 ]
 
 if settings.DEBUG:

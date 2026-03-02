@@ -1,0 +1,1021 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Find Vendors Near You - DukaLink{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS - Free and Open Source -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+        --success-green: #10b981;
+        --error-red: #ef4444;
+        --warning-orange: #f97316;
+    }
+    
+    .vendor-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .vendor-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(37,99,235,0.1);
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--duka-blue);
+        border-color: var(--duka-blue);
+    }
+    
+    .deliverable-badge {
+        background: var(--success-green);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .not-deliverable-badge {
+        background: var(--error-red);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 0.25rem solid #f1f5f9;
+        border-top-color: var(--duka-blue);
+        border-radius: 50%;
+        animation: spinner 0.8s linear infinite;
+    }
+    
+    @keyframes spinner {
+        to { transform: rotate(360deg); }
+    }
+    
+    .county-filter {
+        background: #f8fafc;
+        border-radius: 50px;
+        padding: 0.5rem;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .county-btn {
+        border: none;
+        background: transparent;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        color: #64748b;
+        transition: all 0.3s ease;
+        display: inline-block;
+        font-size: 0.9rem;
+    }
+    
+    .county-btn:hover {
+        background: #e2e8f0;
+    }
+    
+    .county-btn.active {
+        background: var(--duka-blue);
+        color: white;
+    }
+
+    /* Map container */
+    #mini-map {
+        height: 350px;
+        width: 100%;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        display: none;
+        border: 2px solid #e2e8f0;
+        z-index: 1;
+    }
+    
+    .distance-badge {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .sort-option {
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: #f5f5f5;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .sort-option:hover {
+        background: #e0e0e0;
+    }
+    
+    .sort-option.active {
+        background: var(--duka-blue);
+        color: white;
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .search-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-top: none;
+    }
+
+    .search-suggestion-item {
+        padding: 12px 20px;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s ease;
+    }
+
+    .search-suggestion-item:hover {
+        background: #f8fafc;
+    }
+
+    .search-suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Custom marker popup styles */
+    .custom-popup .leaflet-popup-content {
+        margin: 15px;
+        min-width: 200px;
+    }
+
+    .custom-popup .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+        padding: 0;
+    }
+
+    /* Refresh location button */
+    .refresh-location-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .refresh-location-btn:hover {
+        transform: rotate(180deg);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .county-filter {
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0.5rem;
+        }
+        
+        .county-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        #mini-map {
+            height: 250px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header with Title and Toggle -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="fw-bold mb-2">Find Vendors</h1>
+            <p class="text-muted">Discover trusted shops near you or browse all verified vendors</p>
+        </div>
+        <div class="col-md-6">
+            <div class="card p-3 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-store me-2" style="color: var(--duka-blue);"></i>
+                        <span class="fw-medium">All Vendors</span>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="locationToggle" style="transform: scale(1.2); cursor: pointer;">
+                    </div>
+                    <div>
+                        <span class="fw-bold" style="color: var(--duka-blue);">Near Me</span>
+                        <i class="fas fa-location-dot ms-2" style="color: var(--duka-blue);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <div class="input-group mb-3">
+            <input type="text" 
+                   id="searchInput" 
+                   class="form-control form-control-lg" 
+                   placeholder="Search for shops, products, or categories..."
+                   style="border-radius: 50px 0 0 50px;">
+            <button class="btn btn-primary" type="button" id="searchButton" style="border-radius: 0 50px 50px 0; background: var(--duka-blue); border: none;">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
+    </div>
+
+    <!-- Mini Map -->
+    <div id="mini-map"></div>
+
+    <!-- Sort Options -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <span class="sort-option active" data-sort="distance">📏 Nearest First</span>
+        <span class="sort-option" data-sort="delivery">🚚 Delivery Available</span>
+        <span class="sort-option" data-sort="products">📦 Most Products</span>
+    </div>
+
+    <!-- County Filter -->
+    <div class="county-filter mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <button class="county-btn active" data-county="all">🇰🇪 All Counties</button>
+            <button class="county-btn" data-county="Nairobi">🏙️ Nairobi</button>
+            <button class="county-btn" data-county="Mombasa">🏖️ Mombasa</button>
+            <button class="county-btn" data-county="Kisumu">🎣 Kisumu</button>
+            <button class="county-btn" data-county="Kiambu">🌳 Kiambu</button>
+            <button class="county-btn" data-county="Nakuru">🌋 Nakuru</button>
+            <button class="county-btn" data-county="Uasin Gishu">🌽 Uasin Gishu</button>
+            <button class="county-btn" data-county="Machakos">⛰️ Machakos</button>
+        </div>
+    </div>
+
+    <!-- Location Permission Request -->
+    <div id="locationRequest" class="alert alert-info mb-4" style="display: none;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-map-marker-alt fa-2x me-3"></i>
+            <div class="flex-grow-1">
+                <strong>📍 Share your location</strong> 
+                <p class="mb-0">to see vendors in your neighborhood and check delivery availability.</p>
+            </div>
+            <button id="shareLocationBtn" class="btn btn-primary">
+                <i class="fas fa-share-alt me-2"></i>Share Location
+            </button>
+        </div>
+    </div>
+
+    <!-- IP Location Fallback Option -->
+    <div id="ipLocationOption" class="alert alert-secondary mb-4" style="display: none;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-globe fa-2x me-3"></i>
+            <div class="flex-grow-1">
+                <strong>🌐 Use approximate location?</strong> 
+                <p class="mb-0">We can estimate your location from your IP address (less accurate).</p>
+            </div>
+            <button id="useIpLocationBtn" class="btn btn-outline-secondary">
+                <i class="fas fa-satellite me-2"></i>Use IP Location
+            </button>
+        </div>
+    </div>
+
+    <!-- Radius Control with Refresh Button -->
+    <div id="radiusControl" class="mb-4" style="display: none;">
+        <div class="card p-3">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <label class="fw-bold mb-2 mb-md-0">
+                        <i class="fas fa-ruler me-2"></i>Search Radius:
+                    </label>
+                </div>
+                <div class="col-md-5">
+                    <input type="range" class="form-range" id="radiusRange" min="1" max="50" value="10" step="1">
+                </div>
+                <div class="col-md-2">
+                    <span id="radiusValue" class="badge bg-primary p-2">10 km</span>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button id="refreshLocationBtn" class="btn btn-outline-primary refresh-location-btn" title="Refresh your location">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <small class="text-muted mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Showing vendors within this distance from your location. Distances update in real-time.
+            </small>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="text-center my-5" style="display: none;">
+        <div class="loading-spinner mx-auto mb-3"></div>
+        <p class="text-muted">Finding vendors near you...</p>
+    </div>
+
+    <!-- Vendors Grid Container -->
+    <div id="vendorsContainer">
+        <!-- All Vendors View -->
+        <div id="allVendorsView">
+            <div class="row g-4" id="allVendorsGrid">
+                {% for vendor in all_vendors %}
+                <div class="col-lg-4 col-md-6 vendor-item" data-county="{{ vendor.county|default:'Nairobi' }}">
+                    {% include "vendors/includes/vendor_card.html" %}
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-store fa-4x text-muted mb-3"></i>
+                        <h3>No vendors yet</h3>
+                        <p class="text-muted">Verified vendors will appear here once they join.</p>
+                        <a href="{% url 'accounts:register_business' %}" class="btn btn-outline-primary mt-3">
+                            <i class="fas fa-store-alt me-2"></i>Become a Vendor
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Nearby Vendors View -->
+        <div id="nearbyVendorsView" style="display: none;">
+            <div class="row g-4" id="nearbyVendorsGrid"></div>
+            
+            <!-- Empty state -->
+            <div id="noNearbyVendors" class="text-center py-5" style="display: none;">
+                <div class="mb-4">
+                    <i class="fas fa-store-slash fa-4x text-muted"></i>
+                </div>
+                <h3 class="fw-bold mb-3">No vendors nearby</h3>
+                <p class="text-muted mb-4">Try increasing your search radius or browse all vendors.</p>
+                <button id="showAllVendorsBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-store me-2"></i>Browse All Vendors
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JavaScript - Free and Open Source -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============== DOM ELEMENTS ==============
+    const toggle = document.getElementById('locationToggle');
+    const allVendorsView = document.getElementById('allVendorsView');
+    const nearbyVendorsView = document.getElementById('nearbyVendorsView');
+    const nearbyVendorsGrid = document.getElementById('nearbyVendorsGrid');
+    const radiusControl = document.getElementById('radiusControl');
+    const locationRequest = document.getElementById('locationRequest');
+    const ipLocationOption = document.getElementById('ipLocationOption');
+    const loading = document.getElementById('loading');
+    const radiusRange = document.getElementById('radiusRange');
+    const radiusValue = document.getElementById('radiusValue');
+    const shareBtn = document.getElementById('shareLocationBtn');
+    const useIpBtn = document.getElementById('useIpLocationBtn');
+    const refreshBtn = document.getElementById('refreshLocationBtn');
+    const noNearbyVendors = document.getElementById('noNearbyVendors');
+    const showAllBtn = document.getElementById('showAllVendorsBtn');
+    const countyBtns = document.querySelectorAll('.county-btn');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    
+    // ============== STATE VARIABLES ==============
+    let map = null;
+    let markers = [];
+    let userMarker = null;
+    let userCircle = null;
+    
+    let userLocation = null;
+    let userLocationSaved = false;
+    let currentRadius = 10;
+    let currentSort = 'distance';
+    let allVendors = [];
+    
+    // ============== INITIALIZATION ==============
+    
+    // Check for saved location
+    try {
+        const savedLocation = localStorage.getItem('userLocation');
+        if (savedLocation) {
+            userLocation = JSON.parse(savedLocation);
+            userLocationSaved = true;
+            console.log('📍 Loaded saved location:', userLocation);
+        }
+    } catch (e) {
+        console.error('Error parsing saved location:', e);
+        localStorage.removeItem('userLocation');
+    }
+    
+    // ============== COUNTY FILTERING ==============
+    countyBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            countyBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const county = this.dataset.county;
+            
+            document.querySelectorAll('.vendor-item').forEach(item => {
+                if (county === 'all' || item.dataset.county === county) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // ============== SORT OPTIONS ==============
+    document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            currentSort = this.dataset.sort;
+            
+            if (userLocationSaved && toggle.checked && nearbyVendorsGrid.children.length > 0) {
+                sortVendorsInGrid();
+            }
+        });
+    });
+    
+    function sortVendorsInGrid() {
+        const vendorCards = Array.from(nearbyVendorsGrid.children);
+        
+        vendorCards.sort((a, b) => {
+            const aDistance = parseFloat(a.dataset.distance || 999);
+            const bDistance = parseFloat(b.dataset.distance || 999);
+            const aDeliverable = a.dataset.deliverable === 'true';
+            const bDeliverable = b.dataset.deliverable === 'true';
+            const aProducts = parseInt(a.dataset.products || 0);
+            const bProducts = parseInt(b.dataset.products || 0);
+            
+            if (currentSort === 'distance') {
+                return aDistance - bDistance;
+            } else if (currentSort === 'delivery') {
+                if (aDeliverable && !bDeliverable) return -1;
+                if (!aDeliverable && bDeliverable) return 1;
+                return aDistance - bDistance;
+            } else if (currentSort === 'products') {
+                return bProducts - aProducts;
+            }
+            return 0;
+        });
+        
+        // Reappend in sorted order
+        vendorCards.forEach(card => nearbyVendorsGrid.appendChild(card));
+    }
+    
+    // ============== LOCATION TOGGLE ==============
+    toggle.addEventListener('change', function() {
+        if (this.checked) {
+            // Switch to Near Me
+            allVendorsView.style.display = 'none';
+            
+            if (userLocationSaved) {
+                nearbyVendorsView.style.display = 'block';
+                radiusControl.style.display = 'block';
+                loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius);
+            } else {
+                locationRequest.style.display = 'block';
+                ipLocationOption.style.display = 'block';
+                this.checked = false;
+            }
+        } else {
+            // Switch to All Vendors
+            allVendorsView.style.display = 'block';
+            nearbyVendorsView.style.display = 'none';
+            radiusControl.style.display = 'none';
+            locationRequest.style.display = 'none';
+            ipLocationOption.style.display = 'none';
+            
+            // Hide map
+            if (document.getElementById('mini-map')) {
+                document.getElementById('mini-map').style.display = 'none';
+            }
+            
+            // Clear map markers
+            if (map) {
+                markers.forEach(marker => map.removeLayer(marker));
+                if (userMarker) map.removeLayer(userMarker);
+                if (userCircle) map.removeLayer(userCircle);
+                markers = [];
+                userMarker = null;
+                userCircle = null;
+            }
+        }
+    });
+    
+    // ============== SHARE LOCATION BUTTON ==============
+    shareBtn.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            locationRequest.style.display = 'none';
+            ipLocationOption.style.display = 'none';
+            loading.style.display = 'block';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    // Success - got location
+                    userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    userLocationSaved = true;
+                    
+                    // Save to localStorage
+                    localStorage.setItem('userLocation', JSON.stringify(userLocation));
+                    
+                    // Save to server session
+                    fetch('/vendors/api/save-location/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify(userLocation)
+                    }).catch(error => console.error('Error saving location:', error));
+                    
+                    // Update UI
+                    loading.style.display = 'none';
+                    toggle.checked = true;
+                    allVendorsView.style.display = 'none';
+                    nearbyVendorsView.style.display = 'block';
+                    radiusControl.style.display = 'block';
+                    
+                    // Load vendors with fresh location
+                    loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius);
+                    
+                    // Show success message
+                    showNotification('📍 Location shared successfully! Distances updated.', 'success');
+                },
+                function(error) {
+                    // Error getting location
+                    loading.style.display = 'none';
+                    
+                    let errorMsg = 'Could not get your location. ';
+                    if (error.code === 1) {
+                        errorMsg += 'Please allow location access in your browser settings.';
+                    } else if (error.code === 2) {
+                        errorMsg += 'Location unavailable.';
+                    } else {
+                        errorMsg += 'Please try again.';
+                    }
+                    
+                    showNotification(errorMsg, 'error');
+                    locationRequest.style.display = 'block';
+                    console.error('Geolocation error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            showNotification('Geolocation is not supported by your browser', 'error');
+            ipLocationOption.style.display = 'block';
+        }
+    });
+    
+    // ============== IP LOCATION FALLBACK ==============
+    useIpBtn.addEventListener('click', function() {
+        ipLocationOption.style.display = 'none';
+        loading.style.display = 'block';
+        
+        fetch('/vendors/api/ip-location/')
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    userLocation = {
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        accuracy: 5000, // IP location is less accurate
+                        city: data.city,
+                        region: data.region
+                    };
+                    userLocationSaved = true;
+                    
+                    localStorage.setItem('userLocation', JSON.stringify(userLocation));
+                    
+                    toggle.checked = true;
+                    allVendorsView.style.display = 'none';
+                    nearbyVendorsView.style.display = 'block';
+                    radiusControl.style.display = 'block';
+                    
+                    showNotification(`📍 Using approximate location: ${data.city || 'Unknown'}`, 'info');
+                    
+                    loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius);
+                } else {
+                    locationRequest.style.display = 'block';
+                    showNotification('Could not determine location from IP', 'error');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                locationRequest.style.display = 'block';
+                showNotification('Error getting IP location', 'error');
+                console.error('Error:', error);
+            });
+    });
+    
+    // ============== RADIUS SLIDER ==============
+    radiusRange.addEventListener('input', function() {
+        currentRadius = this.value;
+        radiusValue.textContent = currentRadius + ' km';
+    });
+    
+    radiusRange.addEventListener('change', function() {
+        if (userLocationSaved && toggle.checked) {
+            loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius);
+        }
+    });
+    
+    // ============== REFRESH LOCATION BUTTON ==============
+    refreshBtn.addEventListener('click', function() {
+        if (navigator.geolocation) {
+            loading.style.display = 'block';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    // Update with fresh location
+                    userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    localStorage.setItem('userLocation', JSON.stringify(userLocation));
+                    
+                    // Save to server session
+                    fetch('/vendors/api/save-location/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify(userLocation)
+                    }).catch(error => console.error('Error saving location:', error));
+                    
+                    // Reload vendors with new location
+                    loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius);
+                    
+                    showNotification('📍 Location updated! Distances recalculated.', 'success');
+                    loading.style.display = 'none';
+                },
+                function(error) {
+                    loading.style.display = 'none';
+                    showNotification('Could not refresh location', 'error');
+                    console.error('Refresh error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            showNotification('Geolocation not supported', 'error');
+        }
+    });
+    
+    // ============== SHOW ALL VENDORS BUTTON ==============
+    showAllBtn.addEventListener('click', function() {
+        toggle.checked = false;
+        allVendorsView.style.display = 'block';
+        nearbyVendorsView.style.display = 'none';
+        radiusControl.style.display = 'none';
+        
+        if (document.getElementById('mini-map')) {
+            document.getElementById('mini-map').style.display = 'none';
+        }
+    });
+    
+    // ============== SEARCH FUNCTIONALITY ==============
+    searchInput.addEventListener('input', debounce(function() {
+        const query = this.value.trim();
+        if (query.length < 2) {
+            searchSuggestions.style.display = 'none';
+            return;
+        }
+        
+        if (userLocationSaved && toggle.checked) {
+            fetch(`/vendors/api/nearby-vendors/?latitude=${userLocation.latitude}&longitude=${userLocation.longitude}&radius=${currentRadius}&q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.vendors.length > 0) {
+                        showSearchSuggestions(data.vendors);
+                    } else {
+                        searchSuggestions.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Search error:', error));
+        }
+    }, 300));
+    
+    searchButton.addEventListener('click', function() {
+        const query = searchInput.value.trim();
+        if (query && userLocationSaved && toggle.checked) {
+            loadNearbyVendors(userLocation.latitude, userLocation.longitude, currentRadius, query);
+        } else if (!toggle.checked) {
+            showNotification('Please enable "Near Me" to search', 'info');
+        }
+    });
+    
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchButton.click();
+        }
+    });
+    
+    // ============== LOAD NEARBY VENDORS ==============
+    function loadNearbyVendors(lat, lng, radius, query = '') {
+        loading.style.display = 'block';
+        nearbyVendorsGrid.innerHTML = '';
+        noNearbyVendors.style.display = 'none';
+        
+        let url = `/vendors/api/nearby-vendors/?latitude=${lat}&longitude=${lng}&radius=${radius}`;
+        if (query) {
+            url += `&q=${encodeURIComponent(query)}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success && data.vendors.length > 0) {
+                    displayVendorsWithMap(data.vendors, lat, lng);
+                } else {
+                    noNearbyVendors.style.display = 'block';
+                    document.getElementById('mini-map').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                console.error('Error loading vendors:', error);
+                showNotification('Error loading nearby vendors', 'error');
+                noNearbyVendors.style.display = 'block';
+            });
+    }
+    
+    // ============== DISPLAY VENDORS WITH MAP ==============
+    function displayVendorsWithMap(vendors, centerLat, centerLng) {
+        // Show map
+        const mapElement = document.getElementById('mini-map');
+        mapElement.style.display = 'block';
+        
+        // Initialize map if not already done
+        if (!map) {
+            map = L.map('mini-map').setView([centerLat, centerLng], 13);
+            
+            // Add OpenStreetMap tiles (free)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+        } else {
+            map.setView([centerLat, centerLng], 13);
+        }
+        
+        // Clear existing markers
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+        if (userMarker) map.removeLayer(userMarker);
+        if (userCircle) map.removeLayer(userCircle);
+        
+        // Add user location marker
+        const userIcon = L.divIcon({
+            html: '<div style="background-color: var(--duka-blue); width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+            className: 'user-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        userMarker = L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map)
+            .bindPopup('📍 Your location');
+        markers.push(userMarker);
+        
+        // Add accuracy circle if available
+        if (userLocation && userLocation.accuracy) {
+            userCircle = L.circle([centerLat, centerLng], {
+                color: 'var(--duka-blue)',
+                fillColor: 'var(--duka-blue)',
+                fillOpacity: 0.1,
+                radius: userLocation.accuracy
+            }).addTo(map);
+            markers.push(userCircle);
+        }
+        
+        // Add vendor markers
+        vendors.forEach(vendor => {
+            if (vendor.latitude && vendor.longitude) {
+                // Create custom marker
+                const markerColor = vendor.can_deliver ? '#10b981' : '#ef4444';
+                const markerIcon = L.divIcon({
+                    html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>`,
+                    className: 'vendor-marker',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+                
+                const marker = L.marker([vendor.latitude, vendor.longitude], { icon: markerIcon }).addTo(map);
+                
+                // Create popup content with dynamic distance
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h5 style="margin: 0 0 8px; font-weight: 600;">${vendor.name}</h5>
+                        <p style="margin: 0 0 5px; font-size: 0.9rem;">
+                            <i class="fas fa-location-arrow"></i> ${vendor.distance} km away
+                        </p>
+                        <p style="margin: 0 0 5px; font-size: 0.9rem;">
+                            <i class="far fa-clock"></i> ${vendor.drive_time || Math.round(vendor.distance / 30 * 60)} min drive
+                        </p>
+                        <p style="margin: 0 0 10px;">
+                            ${vendor.can_deliver ? 
+                                '<span style="color: #10b981;">✓ Delivers to you</span>' : 
+                                '<span style="color: #ef4444;">✗ Pickup only</span>'}
+                        </p>
+                        <a href="/shops/${vendor.slug}/" style="color: var(--duka-blue); text-decoration: none; font-weight: 500;">
+                            View Shop → 
+                        </a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            }
+        });
+        
+        // Sort and display vendor cards
+        allVendors = vendors;
+        
+        // Sort based on current sort option
+        if (currentSort === 'distance') {
+            vendors.sort((a, b) => a.distance - b.distance);
+        } else if (currentSort === 'delivery') {
+            vendors.sort((a, b) => (b.can_deliver ? 1 : 0) - (a.can_deliver ? 1 : 0));
+        } else if (currentSort === 'products') {
+            vendors.sort((a, b) => b.product_count - a.product_count);
+        }
+        
+        let html = '';
+        vendors.forEach(v => {
+            const deliverableClass = v.can_deliver ? 'deliverable-badge' : 'not-deliverable-badge';
+            const deliverableText = v.can_deliver ? '🚚 Delivers to you' : '📦 Pickup only';
+            const driveTime = v.drive_time || Math.round(v.distance / 30 * 60);
+            
+            html += `
+                <div class="col-lg-4 col-md-6 vendor-item" 
+                     data-distance="${v.distance}" 
+                     data-deliverable="${v.can_deliver}" 
+                     data-products="${v.product_count}">
+                    <a href="/shops/${v.slug}/" class="text-decoration-none">
+                        <div class="vendor-card h-100">
+                            <div class="p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--duka-blue), #1e40af);">
+                                        <span class="fw-bold fs-4">${v.name.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="fw-bold mb-1" style="color: #0f172a;">${v.name}</h5>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="distance-badge">
+                                                <i class="fas fa-location-arrow me-1"></i>${v.distance} km
+                                            </span>
+                                            <span class="badge bg-light">
+                                                <i class="far fa-clock me-1"></i>${driveTime} min
+                                            </span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="${deliverableClass}">${deliverableText}</span>
+                                            ${v.delivery_fee ? `<span class="badge bg-info ms-2">KES ${v.delivery_fee}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>${v.location || 'Location not specified'}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-light">
+                                        <i class="fas fa-box me-1"></i> ${v.product_count} Products
+                                    </span>
+                                    <span class="text-primary fw-medium">View Shop →</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        });
+        
+        nearbyVendorsGrid.innerHTML = html;
+    }
+    
+    // ============== SHOW SEARCH SUGGESTIONS ==============
+    function showSearchSuggestions(vendors) {
+        let html = '';
+        vendors.slice(0, 5).forEach(v => {
+            html += `
+                <div class="search-suggestion-item" onclick="window.location.href='/shops/${v.slug}/'">
+                    <strong>${v.name}</strong>
+                    <small class="text-muted d-block">${v.location} - ${v.distance} km away</small>
+                </div>
+            `;
+        });
+        searchSuggestions.innerHTML = html;
+        searchSuggestions.style.display = 'block';
+    }
+    
+    // ============== HELPER FUNCTIONS ==============
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func.apply(this, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        notification.style.zIndex = '9999';
+        notification.style.maxWidth = '400px';
+        notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        if (type === 'error') icon = '❌';
+        if (type === 'warning') icon = '⚠️';
+        
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span class="me-2 fs-5">${icon}</span>
+                <span>${message}</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+            searchSuggestions.style.display = 'none';
+        }
+    });
+    
+    // Handle window resize for map
+    window.addEventListener('resize', function() {
+        if (map) {
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+        }
+    });
+});
+</script>
+{% endblock %}

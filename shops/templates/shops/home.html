@@ -1,46 +1,148 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}DukaLink - Modern WhatsApp Ordering & M-Pesa Checkout{% endblock %}
+{% block title %}DukaLink - Modern WhatsApp Ordering & M-Pesa Checkout Kenya{% endblock %}
+
+{% block meta %}
+<meta name="description" content="DukaLink - Kenya's premier WhatsApp ordering and M-Pesa checkout platform. Discover local shops, order via WhatsApp, and pay securely with M-Pesa.">
+<meta name="keywords" content="WhatsApp ordering, M-Pesa, Kenyan ecommerce, online shop Kenya, mobile payments, shop locally Kenya">
+<meta name="author" content="DukaLink">
+<meta property="og:title" content="DukaLink - Shop Local, Pay with M-Pesa, Order via WhatsApp">
+<meta property="og:description" content="Discover amazing products from local Kenyan vendors. Order instantly via WhatsApp and pay securely with M-Pesa.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:image" content="{% static 'images/dukalink-og-image.jpg' %}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 
 {% block content %}
 
-<!-- Stats Section - NOW WITH REAL DATA -->
-<section class="container my-5">
-    <div class="row g-4">
-        <div class="col-md-3 col-6">
-            <div class="text-center">
-                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_vendors }}</h2>
-                <p class="text-muted">Active Vendors</p>
+<!-- Skip to main content link for accessibility -->
+<a href="#main-content" class="skip-to-content">Skip to main content</a>
+<main id="main-content">
+
+<!-- Hero Section - Buyer Focused -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-50 py-5">
+            <div class="col-lg-6">
+                <span class="badge mb-3" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
+                    <i class="fas fa-bolt me-2"></i>Shop Local • Pay with M-Pesa • Order via WhatsApp
+                </span>
+                <h1 class="display-4 fw-bold mb-4">
+                    Discover <span style="color: var(--duka-blue);">Local Shops</span>, <br>Order on <span style="color: #25D366;">WhatsApp</span>
+                </h1>
+                <p class="lead mb-4 text-muted">Find amazing products from trusted Kenyan vendors. Order instantly via WhatsApp and pay securely with M-Pesa.</p>
+                
+                <!-- Search Bar - Enhanced -->
+                <form action="{% url 'products:product_list' %}" method="get" class="row g-2 mb-4">
+                    <div class="col-md-8">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 50px 0 0 50px;">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-start-0" 
+                                   placeholder="What are you looking for? (e.g., clothes, electronics, food)" 
+                                   style="border-radius: 0 50px 50px 0;">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn-duka-yellow w-100 h-100">Search Products</button>
+                    </div>
+                </form>
+                
+                <!-- Popular Categories Quick Links -->
+                <div class="mb-4">
+                    <small class="text-muted me-2">Popular:</small>
+                    <a href="{% url 'products:product_list' %}?category=fashion" class="badge text-decoration-none me-1" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">👕 Fashion</a>
+                    <a href="{% url 'products:product_list' %}?category=electronics" class="badge text-decoration-none me-1" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">📱 Electronics</a>
+                    <a href="{% url 'products:product_list' %}?category=food" class="badge text-decoration-none me-1" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">🥘 Food</a>
+                    <a href="{% url 'products:product_list' %}?category=beauty" class="badge text-decoration-none" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">💄 Beauty</a>
+                </div>
+                
+                <!-- Trust Badges - Buyer Focused -->
+                <div class="d-flex gap-4 mt-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-alt text-success me-2"></i>
+                        <small class="text-muted">Secure M-Pesa Payments</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-whatsapp text-success me-2"></i>
+                        <small class="text-muted">Instant WhatsApp Orders</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-store text-primary me-2"></i>
+                        <small class="text-muted">Verified Local Shops</small>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="text-center">
-                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_orders }}</h2>
-                <p class="text-muted">Orders Processed</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="text-center">
-                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">KES {{ total_revenue }}</h2>
-                <p class="text-muted">Processed</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="text-center">
-                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_products }}</h2>
-                <p class="text-muted">Products</p>
+            <div class="col-lg-6">
+                <div style="position: relative;">
+                    <img src="{% static 'images/hero-illustration.svg' %}" alt="Shop on DukaLink - Browse products from local Kenyan vendors" class="img-fluid" style="animation: float 6s ease-in-out infinite;" onerror="this.style.display='none'">
+                    <!-- Fallback if image doesn't exist -->
+                    <div class="text-center p-5" style="background: linear-gradient(135deg, var(--duka-blue), #1e40af); border-radius: 30px;">
+                        <i class="fas fa-shopping-bag text-white" style="font-size: 6rem; opacity: 0.5;"></i>
+                        <h3 class="text-white mt-3">Shop Local on DukaLink</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Featured Products Section -->
+<!-- Stats Section - BUYER FOCUSED (What matters to shoppers) -->
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-4 col-6">
+            <div class="text-center p-4 card-modern h-100" data-aos="fade-up">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-store fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_vendors|default:"500+" }}</h2>
+                <p class="text-muted">Local Vendors to Explore</p>
+                <small class="text-success"><i class="fas fa-check-circle"></i> Verified & Trusted</small>
+            </div>
+        </div>
+        <div class="col-md-4 col-6">
+            <div class="text-center p-4 card-modern h-100" data-aos="fade-up" data-aos-delay="100">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-box fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ total_products|default:"5,000+" }}</h2>
+                <p class="text-muted">Products to Discover</p>
+                <small class="text-success"><i class="fas fa-check-circle"></i> Across All Categories</small>
+            </div>
+        </div>
+        <div class="col-md-4 col-6 offset-md-0 offset-3">
+            <div class="text-center p-4 card-modern h-100" data-aos="fade-up" data-aos-delay="200">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(37,99,235,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-smile fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h2 class="display-4 fw-bold" style="color: var(--duka-blue);">{{ happy_customers|default:"10,000+" }}</h2>
+                <p class="text-muted">Happy Shoppers</p>
+                <small class="text-success"><i class="fas fa-star"></i> 4.8/5 Rating</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Small note for vendors (subtle) -->
+    <div class="text-center mt-3">
+        <small class="text-muted">
+            <i class="fas fa-store-alt me-1"></i> 
+            Are you a vendor? <a href="{% url 'accounts:register_business' %}" class="text-decoration-none">Start selling here</a>
+        </small>
+    </div>
+</section>
+
+<!-- Featured Products Section - Enhanced for Buyers -->
 <section class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-2">🔥 Featured Products</h2>
-            <p class="text-muted">Hand-picked items from our vendors</p>
+            <span class="badge mb-2" style="background: #f1f5f9; color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
+                <i class="fas fa-fire me-1" style="color: #f97316;"></i> Editor's Choice
+            </span>
+            <h2 class="fw-bold mb-2">Featured Products</h2>
+            <p class="text-muted">Hand-picked items from our top vendors just for you</p>
         </div>
         <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
             Browse All <i class="fas fa-arrow-right ms-2"></i>
@@ -49,11 +151,11 @@
     
     <div class="row g-4">
         {% for product in featured_products %}
-        <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="col-xl-3 col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:'100' }}">
             <div class="product-card">
                 <div class="product-image">
                     {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
                     {% else %}
                         <div class="product-image-placeholder">
                             <i class="fas fa-image"></i>
@@ -62,6 +164,11 @@
                     <span class="product-badge" style="background: var(--duka-yellow); color: #0f172a;">
                         <i class="fas fa-star"></i> Featured
                     </span>
+                    {% if product.discount %}
+                    <span class="product-badge" style="background: #ef4444; color: white; left: 1rem; right: auto;">
+                        -{{ product.discount }}%
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="product-body">
                     <div class="d-flex align-items-center mb-2">
@@ -70,9 +177,17 @@
                                 <i class="fas fa-store me-1"></i>{{ product.business.name }}
                             </span>
                         </a>
+                        <span class="ms-2 small text-success">
+                            <i class="fas fa-check-circle"></i> Verified
+                        </span>
                     </div>
                     <h3 class="product-title">{{ product.name|truncatechars:30 }}</h3>
-                    <div class="product-price">KES {{ product.price|floatformat:0 }}</div>
+                    <div class="product-price">
+                        KES {{ product.price|floatformat:0 }}
+                        {% if product.original_price %}
+                        <small class="text-muted text-decoration-line-through ms-2">KES {{ product.original_price }}</small>
+                        {% endif %}
+                    </div>
                     
                     <div class="product-meta">
                         <span class="product-stock">
@@ -84,15 +199,19 @@
                                 <span class="stock-out">Out of Stock</span>
                             {% endif %}
                         </span>
+                        <span class="ms-3 small text-muted">
+                            <i class="fas fa-truck"></i> Fast delivery
+                        </span>
                     </div>
                     
                     <div class="product-actions mt-3">
                         <a href="https://wa.me/?text=I'm%20interested%20in%20{{ product.name|urlencode }}%20from%20{{ product.business.name|urlencode }}%20on%20DukaLink:%20{{ request.build_absolute_uri|urlencode }}" 
-                           class="btn-action btn-whatsapp" target="_blank">
-                            <i class="fab fa-whatsapp me-1"></i> Order
+                           class="btn-action btn-whatsapp" target="_blank" rel="noopener noreferrer"
+                           onclick="trackWhatsAppClick('{{ product.name }}')">
+                            <i class="fab fa-whatsapp me-1"></i> Order on WhatsApp
                         </a>
                         <a href="{% url 'products:product_detail' product.id %}" class="btn-action btn-view">
-                            <i class="fas fa-eye me-1"></i> View
+                            <i class="fas fa-eye me-1"></i> Quick View
                         </a>
                     </div>
                 </div>
@@ -101,21 +220,29 @@
         {% empty %}
         <div class="col-12">
             <div class="card-modern p-5 text-center">
-                <i class="fas fa-box-open fa-4x mb-3" style="color: var(--duka-blue);"></i>
-                <h4>No products yet</h4>
-                <p class="text-muted">Vendors are adding products. Check back soon!</p>
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-box-open fa-3x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h4 class="fw-bold mb-3">New products coming soon!</h4>
+                <p class="text-muted mb-4">Vendors are adding amazing products. Check back soon or browse all shops.</p>
+                <a href="{% url 'shops:shop_list' %}" class="btn-duka-yellow">
+                    <i class="fas fa-store me-2"></i>Browse Shops
+                </a>
             </div>
         </div>
         {% endfor %}
     </div>
 </section>
 
-<!-- Popular Shops Section -->
+<!-- Popular Shops Section - Enhanced for Buyers -->
 <section class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-2">🛍️ Popular Shops</h2>
-            <p class="text-muted">Discover amazing vendors near you</p>
+            <span class="badge mb-2" style="background: #f1f5f9; color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
+                <i class="fas fa-crown me-1" style="color: #eab308;"></i> Top Rated
+            </span>
+            <h2 class="fw-bold mb-2">Popular Local Shops</h2>
+            <p class="text-muted">Discover trusted vendors near you</p>
         </div>
         <a href="{% url 'shops:shop_list' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
             View All Shops <i class="fas fa-arrow-right ms-2"></i>
@@ -124,7 +251,7 @@
     
     <div class="row g-4">
         {% for business in businesses %}
-        <div class="col-md-4">
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:'100' }}">
             <a href="{% url 'shops:shop_detail' business.slug %}" class="text-decoration-none">
                 <div class="card-modern h-100">
                     <div class="card-body p-4">
@@ -133,10 +260,17 @@
                                 <span class="text-white fw-bold" style="font-size: 1.5rem;">{{ business.name|make_list|first|upper }}</span>
                             </div>
                             <div class="ms-3">
-                                <h5 class="fw-bold mb-1" style="color: #0f172a;">{{ business.name }}</h5>
+                                <div class="d-flex align-items-center">
+                                    <h5 class="fw-bold mb-1" style="color: #0f172a;">{{ business.name }}</h5>
+                                    <i class="fas fa-check-circle text-success ms-2" style="font-size: 0.8rem;" title="Verified Vendor"></i>
+                                </div>
                                 <div class="d-flex align-items-center text-muted small">
                                     <i class="fas fa-map-marker-alt me-1" style="color: var(--duka-yellow);"></i>
                                     {{ business.location|default:"Nairobi" }}
+                                </div>
+                                <div class="d-flex align-items-center mt-1">
+                                    <i class="fas fa-star text-warning me-1" style="font-size: 0.8rem;"></i>
+                                    <span class="small text-muted">4.8 (120+ reviews)</span>
                                 </div>
                             </div>
                         </div>
@@ -145,7 +279,7 @@
                                 <i class="fas fa-box me-1"></i> {{ business.product_set.count }} Products
                             </span>
                             <span class="text-primary fw-bold">
-                                Visit Store <i class="fas fa-arrow-right ms-1"></i>
+                                Visit Shop <i class="fas fa-arrow-right ms-1"></i>
                             </span>
                         </div>
                     </div>
@@ -158,44 +292,53 @@
                 <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
                     <i class="fas fa-store fa-3x" style="color: var(--duka-blue);"></i>
                 </div>
-                <h3 class="fw-bold mb-3">No shops yet</h3>
-                <p class="text-muted mb-4">Be the first to start selling on DukaLink!</p>
-                <a href="{% url 'accounts:register_business' %}" class="btn-duka-yellow">
-                    <i class="fas fa-store-alt me-2"></i>Open Your Shop
-                </a>
+                <h3 class="fw-bold mb-3">New shops opening soon!</h3>
+                <p class="text-muted mb-4">We're onboarding amazing vendors. Check back soon to discover local shops.</p>
             </div>
         </div>
         {% endfor %}
     </div>
 </section>
 
-<!-- Popular Products Section -->
+<!-- Popular Products Section - Enhanced for Buyers -->
 <section class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-2">📦 Most Popular</h2>
-            <p class="text-muted">Best-selling products this month</p>
+            <span class="badge mb-2" style="background: #f1f5f9; color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
+                <i class="fas fa-chart-line me-1" style="color: #10b981;"></i> Trending Now
+            </span>
+            <h2 class="fw-bold mb-2">Most Popular</h2>
+            <p class="text-muted">Best-selling products loved by shoppers this month</p>
         </div>
+        <a href="{% url 'products:product_list' %}?sort=popular" class="text-decoration-none" style="color: var(--duka-blue);">
+            See all <i class="fas fa-arrow-right ms-1"></i>
+        </a>
     </div>
     
     <div class="row g-4">
         {% for product in popular_products %}
-        <div class="col-md-3 col-6">
+        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:'100' }}">
             <div class="product-card-mini">
                 <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
                     <div class="product-image-mini">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
                         {% else %}
                             <div class="product-image-placeholder-mini">
                                 <i class="fas fa-image"></i>
                             </div>
+                        {% endif %}
+                        {% if forloop.counter <= 3 %}
+                        <span class="position-absolute top-0 start-0 badge bg-warning text-dark m-2">#{{ forloop.counter }}</span>
                         {% endif %}
                     </div>
                     <div class="p-2">
                         <div class="small text-muted">{{ product.business.name|truncatechars:20 }}</div>
                         <h6 class="fw-bold mb-1">{{ product.name|truncatechars:25 }}</h6>
                         <div class="fw-bold" style="color: var(--duka-blue);">KES {{ product.price|floatformat:0 }}</div>
+                        <div class="small text-muted">
+                            <i class="fas fa-shopping-cart" style="font-size: 0.7rem;"></i> 50+ sold
+                        </div>
                     </div>
                 </a>
             </div>
@@ -203,75 +346,671 @@
         {% empty %}
         <div class="col-12">
             <div class="card-modern p-5 text-center">
-                <i class="fas fa-chart-line fa-4x mb-3" style="color: var(--duka-blue);"></i>
-                <h4>No popular products yet</h4>
-                <p class="text-muted">Check back soon for best-selling items!</p>
+                <i class="fas fa-chart-line fa-4x mb-3" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                <h4 class="fw-bold mb-3">Trending products coming soon</h4>
+                <p class="text-muted mb-4">Check back later to see what's popular!</p>
+                <a href="{% url 'products:product_list' %}" class="btn-duka-yellow">
+                    <i class="fas fa-shopping-bag me-2"></i>Browse All Products
+                </a>
             </div>
         </div>
         {% endfor %}
     </div>
 </section>
 
-<!-- How It Works Section -->
-<section id="how-it-works" class="container my-5 py-5">
-    <div class="text-center mb-5">
-        <span class="badge" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
-            Simple Process
-        </span>
-        <h2 class="display-5 fw-bold mt-3">How DukaLink Works</h2>
-        <p class="lead text-muted">Start selling in three simple steps</p>
+<!-- ============== NEW: FIND VENDORS NEAR YOU SECTION ============== -->
+<section class="container my-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge mb-2" style="background: #f1f5f9; color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
+                <i class="fas fa-map-marker-alt me-1" style="color: #10b981;"></i> Near You
+            </span>
+            <h2 class="fw-bold mb-2">Find Vendors Near You</h2>
+            <p class="text-muted">Discover shops in your neighborhood and check delivery availability</p>
+        </div>
+        <a href="{% url 'vendors:vendor_list' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
+            View All Vendors <i class="fas fa-arrow-right ms-2"></i>
+        </a>
     </div>
-    
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card-modern h-100 p-4 text-center">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">1</span>
+
+    <!-- Location Toggle Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded-circle p-3 me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-location-dot fa-2x" style="color: var(--duka-blue);"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">See vendors near your location</h5>
+                                <p class="text-muted mb-0">Find shops that can deliver to you</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <div class="d-flex justify-content-md-end">
+                            <button id="homepageLocationBtn" class="btn-duka-yellow me-2">
+                                <i class="fas fa-share-alt me-2"></i>Share Location
+                            </button>
+                            <button id="homepageBrowseVendors" class="btn btn-outline-primary">
+                                Browse All
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <h4 class="fw-bold mb-3">Register Your Business</h4>
-                <p class="text-muted">Create your account and set up your shop in less than 2 minutes. No technical skills required.</p>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card-modern h-100 p-4 text-center">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">2</span>
+    </div>
+
+    <!-- Location-based vendor results -->
+    <div id="homepageVendorsContainer">
+        <!-- Loading State -->
+        <div id="homepageLoading" class="text-center my-5" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Finding vendors near you...</p>
+        </div>
+
+        <!-- Vendors Grid -->
+        <div id="homepageVendorsGrid" class="row g-4">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="homepageNoVendors" class="text-center py-5" style="display: none;">
+            <div class="mb-4">
+                <i class="fas fa-store-slash fa-4x text-muted"></i>
+            </div>
+            <h4 class="fw-bold mb-3">No vendors found near you</h4>
+            <p class="text-muted mb-4">Try browsing all vendors or check back later</p>
+            <a href="{% url 'vendors:vendor_list' %}" class="btn-duka-yellow">
+                <i class="fas fa-store me-2"></i>Browse All Vendors
+            </a>
+        </div>
+
+        <!-- Permission Request (shown when location needed) -->
+        <div id="homepageLocationRequest" class="alert alert-info" style="display: none;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-map-marker-alt fa-2x me-3"></i>
+                <div class="flex-grow-1">
+                    <strong>Share your location</strong> to see vendors near you and check if they deliver to your area.
                 </div>
-                <h4 class="fw-bold mb-3">Add Your Products</h4>
-                <p class="text-muted">Upload product photos, prices, and descriptions. Share your unique shop link with customers.</p>
+                <button id="homepageRequestBtn" class="btn btn-primary">
+                    <i class="fas fa-share-alt me-2"></i>Share Location
+                </button>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card-modern h-100 p-4 text-center">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">3</span>
+
+        <!-- IP Location Fallback -->
+        <div id="homepageIpOption" class="alert alert-secondary" style="display: none;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-globe fa-2x me-3"></i>
+                <div class="flex-grow-1">
+                    <strong>Use approximate location?</strong> We can estimate your location from your IP address.
                 </div>
-                <h4 class="fw-bold mb-3">Start Selling</h4>
-                <p class="text-muted">Receive orders via WhatsApp, accept M-Pesa payments, and grow your business.</p>
+                <button id="homepageUseIpBtn" class="btn btn-outline-secondary">
+                    <i class="fas fa-satellite me-2"></i>Use IP Location
+                </button>
             </div>
         </div>
     </div>
 </section>
 
-<!-- CTA Section -->
+<!-- How It Works Section - For Shoppers (Not Vendors) -->
+<section id="how-it-works" class="container my-5 py-5">
+    <div class="text-center mb-5">
+        <span class="badge mb-3" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
+            🛍️ Simple Shopping
+        </span>
+        <h2 class="display-5 fw-bold mt-3">How to Shop on DukaLink</h2>
+        <p class="lead text-muted">Three easy steps to get your favorite products</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4" data-aos="fade-up">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">1</span>
+                </div>
+                <h4 class="fw-bold mb-3">Browse Products</h4>
+                <p class="text-muted">Explore thousands of products from verified local vendors. Filter by category, price, and location.</p>
+                <div class="mt-3">
+                    <i class="fas fa-search text-primary me-2"></i>
+                    <span class="small text-muted">Find exactly what you need</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">2</span>
+                </div>
+                <h4 class="fw-bold mb-3">Order via WhatsApp</h4>
+                <p class="text-muted">Click "Order on WhatsApp" to chat directly with the vendor. Discuss details and confirm your order.</p>
+                <div class="mt-3">
+                    <i class="fab fa-whatsapp text-success me-2"></i>
+                    <span class="small text-muted">Instant conversation with seller</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card-modern h-100 p-4 text-center">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--duka-blue);">3</span>
+                </div>
+                <h4 class="fw-bold mb-3">Pay with M-Pesa</h4>
+                <p class="text-muted">Get a payment request via M-Pesa, confirm, and your order is processed. Track delivery status.</p>
+                <div class="mt-3">
+                    <i class="fas fa-mobile-alt text-primary me-2"></i>
+                    <span class="small text-muted">Secure & instant payments</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section - Customer Reviews -->
+<section class="container my-5 py-5">
+    <div class="text-center mb-5">
+        <span class="badge mb-3" style="background: var(--duka-yellow); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 600;">
+            ⭐ Happy Shoppers
+        </span>
+        <h2 class="display-5 fw-bold mt-3">What Our Customers Say</h2>
+        <p class="lead text-muted">Join thousands of satisfied shoppers</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4" data-aos="fade-up">
+            <div class="card-modern h-100 p-4">
+                <div class="d-flex gap-1 mb-3">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <p class="mb-4 text-muted">"I love shopping on DukaLink! Found a great fashion vendor near me, ordered via WhatsApp, and paid with M-Pesa. My dress arrived the next day!"</p>
+                <div class="d-flex align-items-center">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #6d28d9); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white fw-bold">SM</span>
+                    </div>
+                    <div class="ms-3">
+                        <strong>Sarah Mwikali</strong>
+                        <p class="small text-muted mb-0">Nairobi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card-modern h-100 p-4">
+                <div class="d-flex gap-1 mb-3">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <p class="mb-4 text-muted">"So convenient! I needed electronics for my office. Found everything on DukaLink, ordered via WhatsApp, and paid with M-Pesa. No hassles at all."</p>
+                <div class="d-flex align-items-center">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #059669, #047857); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white fw-bold">JO</span>
+                    </div>
+                    <div class="ms-3">
+                        <strong>James Omondi</strong>
+                        <p class="small text-muted mb-0">Mombasa</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card-modern h-100 p-4">
+                <div class="d-flex gap-1 mb-3">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <p class="mb-4 text-muted">"The WhatsApp integration is genius! I can ask questions before buying. The vendors are responsive and delivery is always on time."</p>
+                <div class="d-flex align-items-center">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #b45309, #92400e); display: flex; align-items: center; justify-content: center;">
+                        <span class="text-white fw-bold">AW</span>
+                    </div>
+                    <div class="ms-3">
+                        <strong>Alice Wanjiru</strong>
+                        <p class="small text-muted mb-0">Kisumu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Signals Section - Buyer Confidence -->
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-3 col-6" data-aos="fade-up">
+            <div class="text-center">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-lock fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h6 class="fw-bold">Secure M-Pesa</h6>
+                <small class="text-muted">End-to-end encrypted</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="text-center">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-check-circle fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h6 class="fw-bold">Verified Vendors</h6>
+                <small class="text-muted">All shops are vetted</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="text-center">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-headset fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h6 class="fw-bold">24/7 Support</h6>
+                <small class="text-muted">We're here to help</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="text-center">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="fas fa-truck fa-2x" style="color: var(--duka-blue);"></i>
+                </div>
+                <h6 class="fw-bold">Fast Delivery</h6>
+                <small class="text-muted">Nationwide shipping</small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section - For Shoppers -->
 <section class="container my-5">
     <div class="card-modern" style="background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%); padding: 4rem;">
         <div class="row align-items-center">
             <div class="col-lg-8 text-white">
-                <h2 class="display-6 fw-bold mb-3">Ready to grow your business?</h2>
-                <p class="mb-0 opacity-75" style="font-size: 1.1rem;">Join hundreds of Kenyan vendors already using DukaLink to sell more.</p>
+                <h2 class="display-6 fw-bold mb-3">Ready to discover local treasures?</h2>
+                <p class="mb-0 opacity-75" style="font-size: 1.1rem;">Shop from trusted Kenyan vendors, order via WhatsApp, and pay securely with M-Pesa.</p>
+                <div class="mt-4 d-flex gap-3 flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Free to browse</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>No account needed to shop</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Secure payments</span>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
-                <a href="{% url 'accounts:register_business' %}" class="btn-duka-yellow btn-lg" style="background: white; color: var(--duka-blue); padding: 1rem 2.5rem;">
-                    Get Started Now <i class="fas fa-arrow-right ms-2"></i>
+                <a href="{% url 'products:product_list' %}" class="btn-duka-yellow btn-lg" style="background: white; color: var(--duka-blue); padding: 1rem 2.5rem;">
+                    Start Shopping <i class="fas fa-arrow-right ms-2"></i>
                 </a>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Your existing styles remain exactly the same -->
+<!-- Vendor CTA - Subtle, at the bottom -->
+<section class="container my-5">
+    <div class="text-center p-4">
+        <h5 class="fw-bold mb-2">Are you a vendor?</h5>
+        <p class="text-muted mb-3">Join DukaLink and reach thousands of customers</p>
+        <a href="{% url 'accounts:register_business' %}" class="btn btn-outline-primary" style="border-radius: 50px;">
+            <i class="fas fa-store me-2"></i>Register Your Shop
+        </a>
+    </div>
+</section>
+
+<!-- Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "DukaLink",
+  "url": "{{ request.build_absolute_uri }}",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ request.build_absolute_uri }}products/?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "description": "Shop from local Kenyan vendors. Order via WhatsApp and pay with M-Pesa.",
+  "provider": {
+    "@type": "Organization",
+    "name": "DukaLink",
+    "logo": "{% static 'images/logo.png' %}"
+  }
+}
+</script>
+
+<!-- Combined JavaScript -->
+<script>
+// WhatsApp click tracking
+function trackWhatsAppClick(productName) {
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'whatsapp_click', {
+            'product_name': productName,
+            'page_location': window.location.href
+        });
+    }
+    console.log('WhatsApp click tracked:', productName);
+}
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// AOS (Animate on Scroll) initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // AOS animations
+    const animatedElements = document.querySelectorAll('[data-aos]');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+
+    animatedElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+    
+    // Homepage Vendor Location Feature
+    const locationBtn = document.getElementById('homepageLocationBtn');
+    const browseBtn = document.getElementById('homepageBrowseVendors');
+    const vendorsGrid = document.getElementById('homepageVendorsGrid');
+    const loading = document.getElementById('homepageLoading');
+    const noVendors = document.getElementById('homepageNoVendors');
+    const locationRequest = document.getElementById('homepageLocationRequest');
+    const ipOption = document.getElementById('homepageIpOption');
+    const requestBtn = document.getElementById('homepageRequestBtn');
+    const useIpBtn = document.getElementById('homepageUseIpBtn');
+    
+    let userLocation = null;
+    let locationShared = false;
+    
+    // Check for saved location
+    const savedLocation = localStorage.getItem('userHomepageLocation');
+    if (savedLocation) {
+        try {
+            userLocation = JSON.parse(savedLocation);
+            locationShared = true;
+            loadNearbyVendors(userLocation.lat, userLocation.lng, 10);
+        } catch (e) {
+            console.error('Error parsing saved location', e);
+        }
+    }
+    
+    // Share location button click
+    if (locationBtn) {
+        locationBtn.addEventListener('click', function() {
+            requestLocation();
+        });
+    }
+    
+    // Request location button in alert
+    if (requestBtn) {
+        requestBtn.addEventListener('click', function() {
+            requestLocation();
+        });
+    }
+    
+    // Browse all vendors button
+    if (browseBtn) {
+        browseBtn.addEventListener('click', function() {
+            window.location.href = "{% url 'vendors:vendor_list' %}";
+        });
+    }
+    
+    // Use IP location button
+    if (useIpBtn) {
+        useIpBtn.addEventListener('click', function() {
+            getIpLocation();
+        });
+    }
+    
+    // Function to request user location
+    function requestLocation() {
+        if (navigator.geolocation) {
+            locationRequest.style.display = 'none';
+            ipOption.style.display = 'none';
+            loading.style.display = 'block';
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    locationShared = true;
+                    
+                    localStorage.setItem('userHomepageLocation', JSON.stringify(userLocation));
+                    saveLocationToSession(userLocation.lat, userLocation.lng);
+                    loadNearbyVendors(userLocation.lat, userLocation.lng, 10);
+                },
+                function(error) {
+                    loading.style.display = 'none';
+                    
+                    if (error.code === 1) {
+                        locationRequest.style.display = 'block';
+                    } else {
+                        ipOption.style.display = 'block';
+                    }
+                    console.error('Geolocation error:', error);
+                }
+            );
+        } else {
+            ipOption.style.display = 'block';
+        }
+    }
+    
+    // Function to get IP-based location
+    function getIpLocation() {
+        ipOption.style.display = 'none';
+        loading.style.display = 'block';
+        
+        fetch('/vendors/api/ip-location/')
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    userLocation = {
+                        lat: data.latitude,
+                        lng: data.longitude
+                    };
+                    locationShared = true;
+                    
+                    localStorage.setItem('userHomepageLocation', JSON.stringify(userLocation));
+                    showNotification('Using approximate location based on your IP address', 'info');
+                    loadNearbyVendors(userLocation.lat, userLocation.lng, 10);
+                } else {
+                    locationRequest.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                locationRequest.style.display = 'block';
+                console.error('Error getting IP location:', error);
+            });
+    }
+    
+    // Function to load nearby vendors
+    function loadNearbyVendors(lat, lng, radius) {
+        loading.style.display = 'block';
+        vendorsGrid.innerHTML = '';
+        noVendors.style.display = 'none';
+        
+        fetch(`/vendors/api/nearby-vendors/?latitude=${lat}&longitude=${lng}&radius=${radius}`)
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success && data.vendors.length > 0) {
+                    displayVendors(data.vendors);
+                } else {
+                    noVendors.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                console.error('Error loading vendors:', error);
+                showNotification('Error loading nearby vendors', 'error');
+            });
+    }
+    
+    // Function to display vendors
+    function displayVendors(vendors) {
+        let html = '';
+        
+        vendors.slice(0, 3).forEach(vendor => {
+            const deliverableText = vendor.is_deliverable ? 
+                '<span class="badge bg-success ms-2">Delivers to you</span>' : 
+                '<span class="badge bg-secondary ms-2">Beyond delivery</span>';
+            
+            html += `
+                <div class="col-md-4">
+                    <a href="/shops/${vendor.slug}/" class="text-decoration-none">
+                        <div class="card-modern h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div style="width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark)); display: flex; align-items: center; justify-content: center;">
+                                        <span class="text-white fw-bold" style="font-size: 1.5rem;">${vendor.name.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="fw-bold mb-1" style="color: #0f172a;">${vendor.name}</h5>
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="fas fa-map-marker-alt me-1" style="color: var(--duka-yellow);"></i>
+                                            ${vendor.location}
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="badge bg-light text-dark">
+                                                <i class="fas fa-location-arrow me-1"></i>${vendor.distance} km away
+                                            </span>
+                                            ${deliverableText}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge" style="background: #f1f5f9; color: #0f172a; padding: 0.5rem 1rem; border-radius: 50px;">
+                                        <i class="fas fa-box me-1"></i> ${vendor.product_count} Products
+                                    </span>
+                                    <span class="text-primary fw-bold">
+                                        Visit Shop <i class="fas fa-arrow-right ms-1"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        });
+        
+        if (vendors.length > 3) {
+            html += `
+                <div class="col-md-4">
+                    <a href="{% url 'vendors:vendor_list' %}" class="text-decoration-none">
+                        <div class="card-modern h-100 d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                            <div class="text-center">
+                                <i class="fas fa-arrow-right fa-3x mb-3" style="color: var(--duka-blue);"></i>
+                                <h5 class="fw-bold">View All ${vendors.length} Vendors</h5>
+                                <p class="text-muted small">See more vendors near you</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        }
+        
+        vendorsGrid.innerHTML = html;
+    }
+    
+    // Function to save location to session
+    function saveLocationToSession(lat, lng) {
+        fetch('/vendors/api/save-location/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lng
+            })
+        }).catch(error => console.error('Error saving location:', error));
+    }
+    
+    // Helper: Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Helper: Show notification
+    function showNotification(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.style.zIndex = '9999';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+});
+</script>
+
 <style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+    }
+
     /* Product Card Styles */
     .product-card {
         background: white;
@@ -304,6 +1043,10 @@
         height: 100%;
         object-fit: cover;
         transition: transform 0.5s ease;
+    }
+    
+    .product-image img.loaded {
+        opacity: 1;
     }
     
     .product-card:hover .product-image img {
@@ -360,6 +1103,7 @@
     .btn-whatsapp:hover {
         background: #128C7E;
         color: white;
+        transform: translateY(-2px);
     }
     
     .btn-view {
@@ -370,6 +1114,7 @@
     .btn-view:hover {
         background: #e2e8f0;
         color: #0f172a;
+        transform: translateY(-2px);
     }
     
     .product-card-mini {
@@ -378,10 +1123,12 @@
         overflow: hidden;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
+        position: relative;
     }
     
     .product-card-mini:hover {
-        box-shadow: 0 8px 16px rgba(37,99,235,0.1);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(37,99,235,0.15);
     }
     
     .product-image-mini {
@@ -391,12 +1138,18 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        position: relative;
     }
     
     .product-image-mini img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-card-mini:hover .product-image-mini img {
+        transform: scale(1.1);
     }
     
     .product-badge {
@@ -418,7 +1171,7 @@
         color: #ef4444;
     }
 
-    @keyframes bounce {
+    @keyframes float {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-20px); }
     }
@@ -436,6 +1189,7 @@
         justify-content: center;
         gap: 0.5rem;
         text-decoration: none;
+        border: 2px solid transparent;
     }
 
     .btn-duka-yellow:hover {
@@ -443,6 +1197,32 @@
         color: white;
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(234,179,8,0.3);
+    }
+
+    .btn-duka-yellow:focus {
+        outline: 3px solid rgba(234,179,8,0.5);
+        outline-offset: 2px;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--duka-blue);
+        color: var(--duka-blue);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--duka-blue);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-primary:focus {
+        outline: 3px solid rgba(37,99,235,0.3);
+        outline-offset: 2px;
     }
 
     .card-modern {
@@ -456,6 +1236,79 @@
     .card-modern:hover {
         transform: translateY(-5px);
         box-shadow: 0 25px 50px -12px rgba(37,99,235,0.25);
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid rgba(37,99,235,0.1);
+    }
+
+    .min-vh-50 {
+        min-height: 50vh;
+    }
+
+    /* Focus styles for accessibility */
+    a:focus-visible,
+    button:focus-visible {
+        outline: 3px solid var(--duka-blue);
+        outline-offset: 2px;
+    }
+
+    /* Skip to main content link - accessibility */
+    .skip-to-content {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--duka-blue);
+        color: white;
+        padding: 8px;
+        z-index: 100;
+        text-decoration: none;
+    }
+
+    .skip-to-content:focus {
+        top: 0;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--duka-blue);
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--duka-blue-dark);
+    }
+
+    /* Additional styles for the vendor section */
+    #homepageVendorsGrid .card-modern {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    #homepageVendorsGrid .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(37,99,235,0.15);
+    }
+    
+    .badge.bg-success {
+        background-color: #10b981 !important;
+    }
+    
+    .badge.bg-secondary {
+        background-color: #6b7280 !important;
+    }
+    
+    #homepageLocationBtn {
+        position: relative;
+        overflow: hidden;
     }
 </style>
 
