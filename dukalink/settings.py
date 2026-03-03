@@ -196,6 +196,7 @@ GEOAPIFY_API_KEY = "99991248c2894185b8f4f124a2b2ffa3"
 LOCATIONIQ_API_KEY = os.environ.get('LOCATIONIQ_API_KEY')
 # ============================================
 # M-PESA CONFIGURATION
+###############################################
 # ============================================
 
 MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
