@@ -3,9 +3,247 @@
 
 {% block title %}Analytics - DukaLink Admin{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1d4ed8;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+        --duka-success: #10b981;
+        --duka-success-dark: #059669;
+        --duka-purple: #8b5cf6;
+        --duka-pink: #ec4899;
+        --duka-orange: #f59e0b;
+        --duka-teal: #14b8a6;
+        --duka-indigo: #6366f1;
+    }
+
+    /* Critical fixes for display */
+    .chart-container {
+        position: relative;
+        min-height: 300px;
+        width: 100%;
+        background: #f8fafc;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 300px;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+        background: #f8fafc;
+        border-radius: 12px;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .card-modern {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0,0,0,0.03);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+    
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+    
+    .metric-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+    
+    .card-modern:hover .metric-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        margin-right: 8px;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .loading-spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .loading-spinner.active {
+        display: flex;
+    }
+    
+    .spinner-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #64748b;
+        border-bottom-width: 1px;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        color: #334155;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(37, 99, 235, 0.02);
+    }
+    
+    .btn-duka-blue {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-duka-blue:hover {
+        background: var(--duka-blue-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    
+    .btn-duka-blue:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 1.8rem;
+        }
+        .card-modern {
+            border-radius: 16px;
+        }
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+        }
+        .metric-icon i {
+            font-size: 1.5rem;
+        }
+        .btn-duka-blue {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        .chart-container {
+            min-height: 250px;
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* Real-time indicator */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 50px;
+        color: #059669;
+        font-size: 0.875rem;
+    }
+    
+    .live-indicator .dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    /* Period indicator badge */
+    .period-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        background: #f1f5f9;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Loading Spinner -->
+<div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner-content">
+        <i class="fas fa-spinner fa-spin fa-3x mb-3" style="color: var(--duka-blue);"></i>
+        <h5>Loading Analytics...</h5>
+        <p class="text-muted mb-0">Please wait while we crunch the numbers</p>
+    </div>
+</div>
+
 <div class="container-fluid px-4 py-4">
-    <!-- Header -->
+    <!-- Header with Real-time Indicator -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
         <div>
             <h1 class="display-5 fw-bold mb-1">
@@ -14,15 +252,37 @@
                 </span> 
                 Analytics Dashboard
             </h1>
-            <p class="text-muted mb-0">
-                <i class="fas fa-calendar-alt me-2" style="color: var(--duka-yellow);"></i>
-                Last 6 months performance • Real-time platform insights
-                <span class="ms-3 badge bg-success">{{ total_orders }} total orders</span>
-                <span class="ms-2 badge bg-primary">KES {{ total_revenue|floatformat:0 }} total revenue</span>
-            </p>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-calendar-alt me-2" style="color: var(--duka-yellow);"></i>
+                    <span id="dateRangeText">{{ range_text|default:'All time' }}</span>
+                </p>
+                <div class="live-indicator" id="liveIndicator">
+                    <span class="dot"></span>
+                    <span>Live</span>
+                    <span class="ms-1 small" id="lastUpdateTime"></span>
+                </div>
+            </div>
         </div>
-        <div class="mt-3 mt-lg-0">
-            <button class="btn-duka-blue" onclick="exportData()">
+        <div class="d-flex gap-2 align-items-center mt-3 mt-lg-0">
+            <!-- Date Range Picker -->
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>{{ range_text|default:'All time' }}</span>
+                    <i class="fas fa-chevron-down ms-1"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item {% if range_text == 'Last 30 days' %}active{% endif %}" href="?range=30">Last 30 days</a></li>
+                    <li><a class="dropdown-item {% if range_text == 'Last 3 months' %}active{% endif %}" href="?range=90">Last 3 months</a></li>
+                    <li><a class="dropdown-item {% if range_text == 'Last 6 months' %}active{% endif %}" href="?range=180">Last 6 months</a></li>
+                    <li><a class="dropdown-item {% if range_text == 'Last year' %}active{% endif %}" href="?range=365">Last year</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item {% if range_text == 'All time' %}active{% endif %}" href="?range=0">All time</a></li>
+                </ul>
+            </div>
+            
+            <button class="btn-duka-blue" onclick="exportData()" id="exportBtn" {% if not months or months == '[]' %}disabled{% endif %}>
                 <i class="fas fa-download me-2"></i>Export Report
             </button>
         </div>
@@ -35,26 +295,33 @@
                 <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-chart-line me-2" style="color: var(--duka-blue);"></i>
-                        Revenue Trend (6 Months)
+                        Revenue Trend
+                        <span class="period-badge">{{ range_text|default:'All time' }}</span>
                     </h5>
                     <div class="d-flex gap-2">
                         <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--duka-blue); padding: 0.5rem 1rem; border-radius: 50px;">
                             <i class="fas fa-circle me-1" style="color: var(--duka-blue); font-size: 0.5rem;"></i>
                             Revenue
                         </span>
-                        <span class="badge bg-success">+{{ revenue_growth }}% growth</span>
+                        {% if revenue_growth %}
+                        <span class="badge {% if revenue_growth > 0 %}bg-success{% elif revenue_growth < 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+                            {% if revenue_growth > 0 %}+{% endif %}{{ revenue_growth }}% growth
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    {% if revenue_data != '[]' %}
-                        <canvas id="revenueChart" style="width: 100%; height: 300px;"></canvas>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-line fa-4x mb-3" style="color: #cbd5e1;"></i>
-                            <h5 class="text-muted">No revenue data yet</h5>
-                            <p class="text-muted small">Revenue data will appear once orders start coming in</p>
-                        </div>
-                    {% endif %}
+                    <div class="chart-container" id="revenueChartContainer">
+                        {% if revenue_data and revenue_data != '[]' %}
+                            <canvas id="revenueChart" aria-label="Revenue trend chart" role="img"></canvas>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-chart-line"></i>
+                                <h5 class="text-muted">No revenue data for this period</h5>
+                                <p class="text-muted small mb-0">Try selecting a different date range</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -68,40 +335,53 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <canvas id="statusChart" style="width: 100%; height: 200px;"></canvas>
-                    
-                    <div class="mt-4">
-                        {% for status, count in order_status.items %}
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center">
-                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 4px; 
-                                           background: {% if status == 'pending' %}var(--duka-yellow){% elif status == 'processing' %}#3b82f6{% elif status == 'completed' %}#10b981{% else %}#ef4444{% endif %}; 
-                                           margin-right: 8px;"></span>
-                                <span class="text-capitalize">{{ status }}</span>
+                    <div class="chart-container" id="statusChartContainer" style="min-height: 250px;">
+                        {% if order_status and order_status.items %}
+                            <canvas id="statusChart" aria-label="Order status distribution chart" role="img" style="height: 200px;"></canvas>
+                            
+                            <div class="mt-4" id="statusList">
+                                {% for status, count in order_status.items %}
+                                {% if count > 0 %}
+                                <div class="d-flex align-items-center justify-content-between mb-2 status-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge" style="background: {% if status == 'pending' %}var(--duka-yellow){% elif status == 'processing' %}#3b82f6{% elif status == 'completed' %}#10b981{% else %}#ef4444{% endif %};"></span>
+                                        <span class="text-capitalize">{{ status }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold">{{ count }}</span>
+                                        {% if total_orders %}
+                                        <span class="text-muted ms-2 small">({{ count|divisibleby:total_orders|floatformat:1 }}%)</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
                             </div>
-                            <span class="fw-bold">{{ count }}</span>
-                        </div>
-                        {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-chart-pie"></i>
+                                <h5 class="text-muted">No order data yet</h5>
+                                <p class="text-muted small mb-0">Orders will appear here once placed</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Key Metrics Cards -->
+    <!-- Key Metrics Cards - Now with consistent ALL TIME revenue -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));">
                         <i class="fas fa-users fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Total Users</span>
-                        <h3 class="fw-bold mb-0">{{ total_users }}</h3>
-                        <small class="text-success">
-                            <i class="fas fa-arrow-up me-1"></i>Active accounts
-                        </small>
+                        <h3 class="fw-bold mb-0" id="totalUsers">{{ total_users|default:'0' }}</h3>
+                        <small class="text-muted" id="totalBuyers">{{ total_buyers|default:'0' }} buyers</small>
                     </div>
                 </div>
             </div>
@@ -109,15 +389,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));">
                         <i class="fas fa-store fa-2x" style="color: #0f172a;"></i>
                     </div>
                     <div>
-                        <span class="small text-uppercase fw-semibold text-muted">Active Vendors</span>
-                        <h3 class="fw-bold mb-0">{{ total_vendors }}</h3>
-                        <small class="text-success">
-                            <i class="fas fa-store me-1"></i>{{ top_vendors|length }} top performers
-                        </small>
+                        <span class="small text-uppercase fw-semibold text-muted">Total Vendors</span>
+                        <h3 class="fw-bold mb-0" id="totalVendors">{{ total_vendors|default:'0' }}</h3>
+                        <small class="text-success" id="verifiedVendors">{{ verified_vendors|default:'0' }} verified</small>
                     </div>
                 </div>
             </div>
@@ -125,15 +403,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #10b981, #059669);">
                         <i class="fas fa-shopping-cart fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Total Orders</span>
-                        <h3 class="fw-bold mb-0">{{ total_orders }}</h3>
-                        <small class="text-muted">
-                            <i class="fas fa-check-circle me-1 text-success"></i>{{ completion_rate }}% completed
-                        </small>
+                        <h3 class="fw-bold mb-0" id="totalOrders">{{ total_orders|default:'0' }}</h3>
+                        <small class="text-muted" id="completionRate">{{ completion_rate|default:'0' }}% completed</small>
                     </div>
                 </div>
             </div>
@@ -141,15 +417,23 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
                         <i class="fas fa-wallet fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Total Revenue</span>
-                        <h3 class="fw-bold mb-0">KES {{ total_revenue|floatformat:0 }}</h3>
-                        <small class="text-success">
-                            <i class="fas fa-arrow-up me-1"></i>KES {{ monthly_revenue|floatformat:0 }} this month
-                        </small>
+                        <h3 class="fw-bold mb-0" id="totalRevenue">KES {{ all_time_revenue|default:'0'|floatformat:0 }}</h3>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <small class="text-success" id="monthlyRevenue">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                KES {{ monthly_revenue|floatformat:0|default:'0' }} this month
+                            </small>
+                            {% if range_text != 'All time' %}
+                            <span class="badge bg-info text-white" style="font-size: 0.6rem;">
+                                {{ range_text }}: KES {{ filtered_revenue|default:'0'|floatformat:0 }}
+                            </span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -161,13 +445,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #ec4899, #db2777);">
                         <i class="fas fa-box fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Total Products</span>
-                        <h3 class="fw-bold mb-0">{{ total_products }}</h3>
-                        <small class="text-muted">Across all vendors</small>
+                        <h3 class="fw-bold mb-0" id="totalProducts">{{ total_products|default:'0' }}</h3>
+                        <small class="text-danger" id="outOfStock">{{ out_of_stock|default:'0' }} out of stock</small>
                     </div>
                 </div>
             </div>
@@ -175,12 +459,12 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                         <i class="fas fa-chart-line fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Avg Order Value</span>
-                        <h3 class="fw-bold mb-0">KES {{ avg_order_value|floatformat:0 }}</h3>
+                        <h3 class="fw-bold mb-0" id="avgOrderValue">KES {{ avg_order_value|floatformat:0|default:'0' }}</h3>
                         <small class="text-muted">Per transaction</small>
                     </div>
                 </div>
@@ -189,13 +473,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
                         <i class="fas fa-clock fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">Avg Processing</span>
-                        <h3 class="fw-bold mb-0">{{ avg_processing_time }}h</h3>
-                        <small class="text-muted">From order to completion</small>
+                        <h3 class="fw-bold mb-0" id="avgProcessingTime">{{ avg_processing_time|default:'0' }}h</h3>
+                        <small class="text-muted">Order to completion</small>
                     </div>
                 </div>
             </div>
@@ -203,13 +487,13 @@
         <div class="col-xl-3 col-md-6">
             <div class="card-modern p-4">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                    <div class="metric-icon me-3" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
                         <i class="fas fa-phone-alt fa-2x" style="color: white;"></i>
                     </div>
                     <div>
                         <span class="small text-uppercase fw-semibold text-muted">M-Pesa Orders</span>
-                        <h3 class="fw-bold mb-0">{{ mpesa_orders }}</h3>
-                        <small class="text-success">{{ cash_orders }} cash orders</small>
+                        <h3 class="fw-bold mb-0" id="mpesaOrders">{{ mpesa_orders|default:'0' }}</h3>
+                        <small class="text-success" id="cashOrders">{{ cash_orders|default:'0' }} cash</small>
                     </div>
                 </div>
             </div>
@@ -220,47 +504,78 @@
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="card-modern">
-                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-trophy me-2" style="color: var(--duka-yellow);"></i>
                         Top Performing Vendors
+                        <span class="period-badge">{{ range_text|default:'All time' }}</span>
                     </h5>
+                    <a href="{% url 'admin_dashboard:vendors' %}" class="btn btn-sm" style="color: var(--duka-blue);">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
                 <div class="card-body p-4">
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>Rank</th>
                                     <th>Vendor</th>
                                     <th>Sales</th>
                                     <th>Revenue</th>
+                                    <th>Growth</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for vendor in top_vendors %}
                                 <tr>
                                     <td>
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, 
+                                            {% if forloop.counter == 1 %}gold, #b8860b
+                                            {% elif forloop.counter == 2 %}silver, #808080
+                                            {% elif forloop.counter == 3 %}#cd7f32, #8b4513
+                                            {% else %}var(--duka-blue), var(--duka-blue-dark){% endif %});
+                                            display: flex; align-items: center; justify-content: center;">
+                                            <span class="text-white fw-bold">{{ forloop.counter }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
                                         <div class="d-flex align-items-center">
-                                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--duka-blue); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
-                                                <span class="text-white fw-bold">{{ forloop.counter }}</span>
+                                            {% if vendor.logo %}
+                                            <img src="{{ vendor.logo }}" alt="{{ vendor.name }}" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover; margin-right: 10px;" onerror="this.style.display='none'">
+                                            {% endif %}
+                                            {% if not vendor.logo %}
+                                            <div style="width: 32px; height: 32px; border-radius: 8px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                                <i class="fas fa-store text-muted"></i>
                                             </div>
+                                            {% endif %}
                                             {{ vendor.name }}
                                         </div>
                                     </td>
-                                    <td>{{ vendor.sales }} items</td>
-                                    <td>KES {{ vendor.revenue|floatformat:0 }}</td>
+                                    <td class="fw-bold">{{ vendor.sales|default:'0' }} items</td>
+                                    <td class="fw-bold">KES {{ vendor.revenue|floatformat:0|default:'0' }}</td>
+                                    <td>
+                                        {% if vendor.growth %}
+                                        <span class="badge bg-success">+{{ vendor.growth }}%</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">New</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="3" class="text-center py-4">No vendor data yet</td>
+                                    <td colspan="5" class="text-center py-5">
+                                        <i class="fas fa-store fa-3x mb-3" style="color: #cbd5e1;"></i>
+                                        <h5 class="text-muted">No vendor data yet</h5>
+                                        <p class="text-muted small">Top vendors will appear once they start selling</p>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                            <tfoot>
+                            <tfoot class="table-light">
                                 <tr class="fw-bold">
-                                    <td>Total</td>
-                                    <td></td>
-                                    <td>KES {{ total_vendor_revenue|floatformat:0 }}</td>
+                                    <td colspan="3" class="text-end">Total Revenue:</td>
+                                    <td colspan="2">KES {{ total_vendor_revenue|floatformat:0|default:'0' }}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -285,6 +600,7 @@
                                 <tr>
                                     <th>Order #</th>
                                     <th>Customer</th>
+                                    <th>Items</th>
                                     <th>Amount</th>
                                     <th>Time</th>
                                 </tr>
@@ -292,14 +608,24 @@
                             <tbody>
                                 {% for activity in recent_activity %}
                                 <tr>
-                                    <td>#{{ activity.order_id }}</td>
-                                    <td>{{ activity.customer }}</td>
-                                    <td>KES {{ activity.amount|floatformat:0 }}</td>
-                                    <td><small>{{ activity.time|timesince }} ago</small></td>
+                                    <td><span class="badge bg-light text-dark">#{{ activity.order_id }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle me-2" style="color: var(--duka-blue);"></i>
+                                            {{ activity.customer }}
+                                        </div>
+                                    </td>
+                                    <td>{{ activity.items|default:'1' }}</td>
+                                    <td class="fw-bold">KES {{ activity.amount|floatformat:0|default:'0' }}</td>
+                                    <td><small class="text-muted" title="{{ activity.time|date:'Y-m-d H:i' }}">{{ activity.time|timesince }} ago</small></td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-4">No recent orders</td>
+                                    <td colspan="5" class="text-center py-5">
+                                        <i class="fas fa-shopping-cart fa-3x mb-3" style="color: #cbd5e1;"></i>
+                                        <h5 class="text-muted">No recent orders</h5>
+                                        <p class="text-muted small">Recent orders will appear here once customers shop</p>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -310,25 +636,28 @@
         </div>
     </div>
 
-    <!-- Additional Charts Row -->
+    <!-- Additional Charts -->
     <div class="row g-4">
         <div class="col-lg-4">
             <div class="card-modern">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-tag me-2" style="color: var(--duka-blue);"></i>
-                        Top Categories
+                        Categories by Business Type
+                        <span class="period-badge">{{ range_text|default:'All time' }}</span>
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    {% if category_names != '[]' %}
-                        <canvas id="categoriesChart" style="width: 100%; height: 250px;"></canvas>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-tag fa-4x mb-3" style="color: #cbd5e1;"></i>
-                            <p class="text-muted">No category data yet</p>
-                        </div>
-                    {% endif %}
+                    <div class="chart-container" id="categoriesChartContainer">
+                        {% if category_names and category_names != '[]' %}
+                            <canvas id="categoriesChart" aria-label="Categories chart" role="img"></canvas>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-tag"></i>
+                                <p class="text-muted mb-0">No category data yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -338,10 +667,20 @@
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-clock me-2" style="color: var(--duka-yellow);"></i>
                         Orders by Hour
+                        <span class="period-badge">{{ range_text|default:'All time' }}</span>
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <canvas id="hourlyChart" style="width: 100%; height: 250px;"></canvas>
+                    <div class="chart-container" id="hourlyChartContainer">
+                        {% if hours and hours != '[]' %}
+                            <canvas id="hourlyChart" aria-label="Hourly orders chart" role="img"></canvas>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-clock"></i>
+                                <p class="text-muted mb-0">No hourly data yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -354,7 +693,16 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <canvas id="dailyChart" style="width: 100%; height: 250px;"></canvas>
+                    <div class="chart-container" id="dailyChartContainer">
+                        {% if days and days != '[]' %}
+                            <canvas id="dailyChart" aria-label="Daily orders chart" role="img"></canvas>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-week"></i>
+                                <p class="text-muted mb-0">No daily data yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -365,229 +713,334 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // Revenue Chart
-    {% if revenue_data != '[]' %}
-    const ctx1 = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx1, {
-        type: 'line',
-        data: {
-            labels: {{ months|safe }},
-            datasets: [{
-                label: 'Revenue (KES)',
-                data: {{ revenue_data|safe }},
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                borderWidth: 3,
-                pointBackgroundColor: '#eab308',
-                pointBorderColor: 'white',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 8,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'KES ' + context.parsed.y.toLocaleString();
-                        }
-                    }
+    // Global variables from Django
+    const djangoData = {
+        months: {% if months %}{{ months|safe }}{% else %}[]{% endif %},
+        revenueData: {% if revenue_data %}{{ revenue_data|safe }}{% else %}[]{% endif %},
+        orderStatus: {% if order_status %}{{ order_status|safe }}{% else %}{}{% endif %},
+        categoryNames: {% if category_names %}{{ category_names|safe }}{% else %}[]{% endif %},
+        categorySales: {% if category_sales %}{{ category_sales|safe }}{% else %}[]{% endif %},
+        hours: {% if hours %}{{ hours|safe }}{% else %}[]{% endif %},
+        hourlyCounts: {% if hourly_counts %}{{ hourly_counts|safe }}{% else %}[]{% endif %},
+        days: {% if days %}{{ days|safe }}{% else %}[]{% endif %},
+        orderCounts: {% if order_counts %}{{ order_counts|safe }}{% else %}[]{% endif %},
+        totalOrders: {{ total_orders|default:'0' }},
+        allTimeRevenue: {{ all_time_revenue|default:'0' }},
+        completionRate: {{ completion_rate|default:'0' }}
+    };
+
+    let charts = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCharts();
+        startRealTimeUpdates();
+        updateLastUpdateTime();
+    });
+
+    function initializeCharts() {
+        showLoading();
+        
+        setTimeout(function() {
+            try {
+                if (djangoData.months.length && djangoData.revenueData.length) {
+                    initializeRevenueChart();
                 }
+                if (Object.keys(djangoData.orderStatus).length) {
+                    initializeStatusChart();
+                }
+                if (djangoData.categoryNames.length && djangoData.categorySales.length) {
+                    initializeCategoriesChart();
+                }
+                if (djangoData.hours.length && djangoData.hourlyCounts.length) {
+                    initializeHourlyChart();
+                }
+                if (djangoData.days.length && djangoData.orderCounts.length) {
+                    initializeDailyChart();
+                }
+            } catch (error) {
+                console.error('Chart error:', error);
+            } finally {
+                hideLoading();
+            }
+        }, 100);
+    }
+
+    function initializeRevenueChart() {
+        const canvas = document.getElementById('revenueChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (charts.revenue) charts.revenue.destroy();
+
+        charts.revenue = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: djangoData.months,
+                datasets: [{
+                    label: 'Revenue (KES)',
+                    data: djangoData.revenueData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#eab308',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: {
-                        callback: function(value) {
-                            return 'KES ' + value.toLocaleString();
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => 'KES ' + context.parsed.y.toLocaleString()
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => 'KES ' + value.toLocaleString()
                         }
                     }
                 }
             }
-        }
-    });
-    {% endif %}
+        });
+    }
 
-    // Status Chart
-    const ctx2 = document.getElementById('statusChart').getContext('2d');
-    new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: [{% for status in order_status.keys %}'{{ status|title }}',{% endfor %}],
-            datasets: [{
-                data: [{% for count in order_status.values %}{{ count }},{% endfor %}],
-                backgroundColor: ['#eab308', '#3b82f6', '#10b981', '#ef4444'],
-                borderWidth: 0,
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
-            cutout: '70%'
-        }
-    });
+    function initializeStatusChart() {
+        const canvas = document.getElementById('statusChart');
+        if (!canvas) return;
 
-    // Categories Chart
-    {% if category_names != '[]' %}
-    const ctx3 = document.getElementById('categoriesChart').getContext('2d');
-    new Chart(ctx3, {
-        type: 'bar',
-        data: {
-            labels: {{ category_names|safe }},
-            datasets: [{
-                label: 'Items Sold',
-                data: {{ category_sales|safe }},
-                backgroundColor: 'rgba(37, 99, 235, 0.8)',
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' }
-                }
-            }
-        }
-    });
-    {% endif %}
+        const ctx = canvas.getContext('2d');
+        if (charts.status) charts.status.destroy();
 
-    // Hourly Chart
-    const ctx4 = document.getElementById('hourlyChart').getContext('2d');
-    new Chart(ctx4, {
-        type: 'line',
-        data: {
-            labels: {{ hours|safe }},
-            datasets: [{
-                label: 'Orders',
-                data: {{ hourly_counts|safe }},
-                borderColor: '#eab308',
-                backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+        const labels = Object.keys(djangoData.orderStatus);
+        const data = Object.values(djangoData.orderStatus);
+        const colors = {
+            'pending': '#eab308',
+            'processing': '#3b82f6',
+            'completed': '#10b981',
+            'cancelled': '#ef4444'
+        };
+
+        charts.status = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                datasets: [{
+                    data: data,
+                    backgroundColor: labels.map(l => colors[l] || '#94a3b8'),
+                    borderWidth: 0,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.raw} (${percentage}%)`;
+                            }
+                        }
+                    }
                 },
-                x: {
-                    title: { display: true, text: 'Hour of Day' }
+                cutout: '70%'
+            }
+        });
+    }
+
+    function initializeCategoriesChart() {
+        const canvas = document.getElementById('categoriesChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (charts.categories) charts.categories.destroy();
+
+        charts.categories = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: djangoData.categoryNames,
+                datasets: [{
+                    label: 'Items Sold',
+                    data: djangoData.categorySales,
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // Daily Chart
-    const ctx5 = document.getElementById('dailyChart').getContext('2d');
-    new Chart(ctx5, {
-        type: 'bar',
-        data: {
-            labels: {{ days|safe }},
-            datasets: [{
-                label: 'Orders',
-                data: {{ order_counts|safe }},
-                backgroundColor: '#10b981',
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+    function initializeHourlyChart() {
+        const canvas = document.getElementById('hourlyChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (charts.hourly) charts.hourly.destroy();
+
+        charts.hourly = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: djangoData.hours.map(h => h + ':00'),
+                datasets: [{
+                    label: 'Orders',
+                    data: djangoData.hourlyCounts,
+                    borderColor: '#eab308',
+                    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // Export function
+    function initializeDailyChart() {
+        const canvas = document.getElementById('dailyChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (charts.daily) charts.daily.destroy();
+
+        charts.daily = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: djangoData.days,
+                datasets: [{
+                    label: 'Orders',
+                    data: djangoData.orderCounts,
+                    backgroundColor: '#10b981',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    function startRealTimeUpdates() {
+        // Poll for updates every 30 seconds
+        setInterval(fetchLatestData, 30000);
+    }
+
+    function fetchLatestData() {
+        fetch('/admin-panel/analytics/live/')
+            .then(response => response.json())
+            .then(data => {
+                updateMetrics(data);
+                updateLastUpdateTime();
+            })
+            .catch(error => console.log('Real-time update failed:', error));
+    }
+
+    function updateMetrics(data) {
+        if (data.new_orders) {
+            const totalOrders = document.getElementById('totalOrders');
+            if (totalOrders) {
+                const current = parseInt(totalOrders.textContent) || 0;
+                totalOrders.textContent = current + data.new_orders;
+                highlightElement(totalOrders);
+            }
+        }
+        if (data.new_revenue) {
+            const totalRevenue = document.getElementById('totalRevenue');
+            if (totalRevenue) {
+                const current = parseFloat(totalRevenue.textContent.replace('KES ', '').replace(',', '')) || 0;
+                totalRevenue.textContent = 'KES ' + (current + data.new_revenue).toLocaleString();
+                highlightElement(totalRevenue);
+            }
+        }
+    }
+
+    function highlightElement(element) {
+        element.classList.add('pulse');
+        setTimeout(() => element.classList.remove('pulse'), 1000);
+    }
+
+    function updateLastUpdateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        const el = document.getElementById('lastUpdateTime');
+        if (el) el.textContent = `Updated ${timeStr}`;
+    }
+
     function exportData() {
-        let csv = 'Month,Revenue (KES)\n';
-        const months = {{ months|safe }};
-        const revenue = {{ revenue_data|safe }};
-        
-        for (let i = 0; i < months.length; i++) {
-            csv += months[i] + ',' + revenue[i] + '\n';
+        if (!djangoData.months.length) {
+            alert('No data to export');
+            return;
         }
-        
+
+        let csv = 'Month,Revenue (KES)\n';
+        for (let i = 0; i < djangoData.months.length; i++) {
+            csv += djangoData.months[i] + ',' + djangoData.revenueData[i] + '\n';
+        }
+
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'dukalink-analytics-{{ today|date:"Y-m-d" }}.csv';
+        a.download = `dukalink-analytics-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
-        
-        alert('Analytics report downloaded successfully!');
     }
+
+    function showLoading() {
+        document.getElementById('loadingSpinner').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingSpinner').classList.remove('active');
+    }
+
+    // Expose functions globally
+    window.exportData = exportData;
 </script>
 
-<style>
-    .btn-duka-blue {
-        background: var(--duka-blue);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .btn-duka-blue:hover {
-        background: var(--duka-blue-dark);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-    }
-    
-    .card-modern {
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(0,0,0,0.03);
-        height: 100%;
-    }
-    
-    .card-modern:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
-    }
-    
-    .table th {
-        font-weight: 600;
-        color: #64748b;
-        border-bottom-width: 1px;
-    }
-    
-    .table td {
-        vertical-align: middle;
-        color: #334155;
-    }
-</style>
+<noscript>
+    <div class="alert alert-warning text-center m-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        JavaScript is required for interactive charts. Please enable JavaScript to view analytics.
+    </div>
+</noscript>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Vendor Dashboard - DukaLink{% endblock %}
+{% block title %}{{ business.name|default:"Vendor" }} Dashboard - DukaLink{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -77,6 +77,7 @@
         font-weight: 700;
         margin-bottom: 0.25rem;
         color: #1e293b;
+        transition: all 0.3s ease;
     }
     
     .stat-label {
@@ -85,6 +86,11 @@
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+    
+    .stat-updated {
+        background: rgba(37, 211, 102, 0.1);
+        transform: scale(1.05);
     }
     
     .orders-card {
@@ -111,6 +117,7 @@
         font-weight: 500;
         font-size: 0.875rem;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
     
     .filter-btn:hover, .filter-btn.active {
@@ -270,12 +277,18 @@
         background: #f1f5f9;
         color: #475569;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
     
     .action-btn:hover {
         background: var(--whatsapp-green);
         color: white;
         transform: scale(1.1);
+    }
+    
+    .action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     
     .empty-state {
@@ -311,6 +324,7 @@
         align-items: center;
         gap: 0.5rem;
         transition: all 0.3s ease;
+        text-decoration: none;
     }
     
     .btn-whatsapp:hover {
@@ -330,6 +344,77 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    /* Analytics Card Styles */
+    .analytics-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .analytics-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .analytics-stats {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .analytics-stat-item {
+        color: white;
+    }
+    
+    .analytics-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    
+    .analytics-stat-label {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-analytics {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-analytics:hover {
+        background: #f8f9fa;
+        color: #764ba2;
+        transform: translateX(5px);
     }
 
     /* Loading Spinner */
@@ -402,13 +487,24 @@
         animation: pulse 2s infinite;
     }
     
-    .stat-value {
-        transition: all 0.3s ease;
+    /* Verification banner */
+    .verification-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     
-    .stat-updated {
-        background: rgba(37, 211, 102, 0.1);
-        transform: scale(1.05);
+    .verification-banner.warning {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    
+    .verification-banner.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
 </style>
 {% endblock %}
@@ -425,17 +521,44 @@
     </div>
 </div>
 
+<!-- Verification Status Banner (if not fully verified) -->
+{% if verification_status != 'verified' %}
+<div class="container mt-3">
+    <div class="verification-banner {% if verification_status == 'pending' or verification_status == 'info_needed' %}warning{% elif verification_status == 'under_review' %}info{% else %}success{% endif %}">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-shield-alt fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">{{ verification_badge|default:"Account Verification" }}</h5>
+                <p class="mb-0 small opacity-75">
+                    {% if verification_status == 'pending' %}
+                        Your documents are pending review. You'll be notified once verified.
+                    {% elif verification_status == 'under_review' %}
+                        Your documents are under review. This usually takes 1-2 business days.
+                    {% elif verification_status == 'info_needed' %}
+                        Additional information required. Please check your documents.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'accounts:document_status' %}" class="btn btn-light">Check Status <i class="fas fa-arrow-right ms-2"></i></a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Modern Dashboard Header -->
 <div class="dashboard-header">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-6">
                 <h1 class="display-6 fw-bold mb-2">
-                    <i class="fas fa-store-alt me-2"></i>{{ business.name|default:"Vendor" }} Dashboard
+                    <i class="fas fa-store-alt me-2"></i>{{ business.name|default:"My Store" }} Dashboard
                 </h1>
                 <p class="mb-0 opacity-75">
                     <i class="fas fa-map-marker-alt me-1"></i> {{ business.location|default:"DukaLink Marketplace" }} • 
                     <i class="fas fa-clock ms-2 me-1"></i> Last updated: <span id="lastUpdated">{% now "M d, Y H:i:s" %}</span>
+                    {% if days_on_platform %}
+                    • <i class="fas fa-calendar-alt ms-2 me-1"></i> {{ days_on_platform }} days on platform
+                    {% endif %}
                 </p>
             </div>
             <div class="col-md-6 text-md-end">
@@ -502,6 +625,65 @@
         </div>
     </div>
 
+    <!-- PROMINENT ANALYTICS CARD - NEW SECTION -->
+    <div class="analytics-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="analytics-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white mb-2 fw-bold">Grow Your Business with Analytics</h4>
+                        <p class="text-white opacity-75 mb-0">
+                            Track your sales performance, revenue trends, and best-selling products. 
+                            Make data-driven decisions to boost your sales.
+                        </p>
+                        
+                        <!-- Quick Stats Preview -->
+                        <div class="analytics-stats mt-3">
+                            <div class="analytics-stat-item">
+                                <div class="analytics-stat-value">{{ total_orders|default:"0" }}</div>
+                                <div class="analytics-stat-label">Total Orders</div>
+                            </div>
+                            <div class="analytics-stat-item">
+                                <div class="analytics-stat-value">Ksh {{ total_revenue|default:"0"|floatformat:0 }}</div>
+                                <div class="analytics-stat-label">Revenue</div>
+                            </div>
+                            <div class="analytics-stat-item">
+                                <div class="analytics-stat-value">{{ orders_growth|default:"0" }}%</div>
+                                <div class="analytics-stat-label">Growth</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+               <!-- In dashboard/vendor_dashboard.html, update the analytics button -->
+<a href="{% url 'vendors:vendor_analytics' %}" class="btn-analytics">
+    <i class="fas fa-chart-line me-2"></i>View Full Analytics
+    <i class="fas fa-arrow-right ms-2"></i>
+</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if low_stock_products %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px;">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+                <strong>Low Stock Alert!</strong> You have {{ low_stock_products|length }} products with low stock.
+                {% for product in low_stock_products %}
+                <span class="badge bg-warning text-dark me-1">{{ product.name }} ({{ product.stock }} left)</span>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <!-- Main Orders Card -->
     <div class="orders-card">
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
@@ -511,7 +693,7 @@
                     Order Management
                 </h4>
                 <p class="text-muted mb-0">
-                    <i class="fas fa-whatsapp me-1" style="color: var(--whatsapp-green);"></i>
+                    <i class="fab fa-whatsapp me-1" style="color: var(--whatsapp-green);"></i>
                     WhatsApp orders • <span id="orderCount">{{ orders.paginator.count|default:"0" }}</span> total orders
                 </p>
             </div>
@@ -577,11 +759,6 @@
                                             <i class="fab fa-whatsapp"></i> Chat
                                         </a>
                                     </div>
-                                    {% if order_item.order.customer_email %}
-                                    <small class="text-muted">
-                                        <i class="fas fa-envelope"></i> {{ order_item.order.customer_email }}
-                                    </small>
-                                    {% endif %}
                                 </div>
                             </div>
                         </td>
@@ -594,7 +771,7 @@
                                         <i class="fas fa-box"></i> Qty: {{ item.quantity }}
                                     </span>
                                     <span class="product-badge">
-                                        <i class="fas fa-tag"></i> Ksh {{ item.price }}
+                                        <i class="fas fa-tag"></i> Ksh {{ item.price|floatformat:0 }}
                                     </span>
                                 </div>
                             </div>
@@ -628,7 +805,7 @@
                         <td>
                             <div class="quick-actions">
                                 <button class="action-btn" title="Update Status" 
-                                        onclick="updateOrderStatus({{ order_item.order.id }})">
+                                        onclick="updateOrderStatus({{ order_item.order.id }}, event)">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="action-btn" title="View Details"
@@ -707,6 +884,7 @@
             </div>
             <div class="modal-body">
                 <form id="statusUpdateForm">
+                    {% csrf_token %}
                     <input type="hidden" id="currentOrderId" value="">
                     <div class="mb-3">
                         <label class="form-label fw-medium">Order Status</label>
@@ -755,7 +933,11 @@
 // ==================== GLOBAL VARIABLES ====================
 let currentOrderId = null;
 let autoRefreshInterval = null;
-const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
@@ -764,28 +946,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup filter buttons
     initFilters();
     
-    // Setup action buttons using event delegation
-    setupActionButtons();
-    
     // Start real-time updates (every 30 seconds)
     startRealTimeUpdates();
     
     // Check for new orders every 15 seconds
     startNewOrderCheck();
-    
-    // Initialize tooltips if Bootstrap is available
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    }
 });
-
-// ==================== CSRF TOKEN ====================
-function getCSRFToken() {
-    return CSRF_TOKEN;
-}
 
 // ==================== LOADING STATE ====================
 function showLoading() {
@@ -839,50 +1005,16 @@ function filterOrders(status) {
     }
 }
 
-// ==================== ACTION BUTTONS ====================
-function setupActionButtons() {
-    // Use event delegation for dynamically loaded content
-    document.body.addEventListener('click', function(e) {
-        // Update Status button
-        const updateBtn = e.target.closest('.action-btn[title="Update Status"]');
-        if (updateBtn) {
-            e.preventDefault();
-            const orderRow = updateBtn.closest('.order-row');
-            const orderId = orderRow.dataset.orderId;
-            updateOrderStatus(orderId);
-        }
-        
-        // View Details button
-        const viewBtn = e.target.closest('.action-btn[title="View Details"]');
-        if (viewBtn) {
-            e.preventDefault();
-            const orderRow = viewBtn.closest('.order-row');
-            const orderId = orderRow.dataset.orderId;
-            viewOrderDetails(orderId);
-        }
-        
-        // Print Receipt button
-        const printBtn = e.target.closest('.action-btn[title="Print Receipt"]');
-        if (printBtn) {
-            e.preventDefault();
-            const orderRow = printBtn.closest('.order-row');
-            const orderId = orderRow.dataset.orderId;
-            printReceipt(orderId);
-        }
-    });
-}
-
 // ==================== ORDER MANAGEMENT ====================
-function updateOrderStatus(orderId) {
-    currentOrderId = orderId;
-    document.getElementById('currentOrderId').value = orderId;
-    
-    // Show loading state on the button that was clicked
+function updateOrderStatus(orderId, event) {
     const btn = event?.target?.closest('.action-btn');
     if (btn) {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
     }
+    
+    currentOrderId = orderId;
+    document.getElementById('currentOrderId').value = orderId;
     
     // Fetch current order details
     fetch(`/dashboard/api/order/${orderId}/`, {
@@ -975,7 +1107,7 @@ function saveStatusUpdate() {
             showToast(data.message, 'success');
             
             // Refresh dashboard stats
-            refreshDashboardStats();
+            refreshDashboardStats(false);
         } else {
             showToast(data.error || 'Failed to update order status', 'danger');
         }
@@ -1068,7 +1200,9 @@ function refreshDashboardStats(showLoadingIndicator = false) {
                 checkForNewOrders(data.recent_orders);
             }
             
-            showToast('Dashboard updated successfully', 'success');
+            if (showLoadingIndicator) {
+                showToast('Dashboard updated successfully', 'success');
+            }
         }
     })
     .catch(error => {
@@ -1181,9 +1315,6 @@ function checkForNewOrders(recentOrders = null) {
 
 function showNewOrderNotification(order) {
     showToast(`New order #${order.id} received from ${order.customer_name}!`, 'success');
-    
-    // You could also play a sound
-    // playNotificationSound();
 }
 
 // ==================== TOAST NOTIFICATIONS ====================
@@ -1247,7 +1378,6 @@ function showToast(message, type = 'success') {
 }
 
 // ==================== PAGE VISIBILITY API ====================
-// Pause real-time updates when page is not visible
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         stopRealTimeUpdates();
@@ -1266,9 +1396,10 @@ window.refreshDashboardStats = refreshDashboardStats;
 window.filterOrders = filterOrders;
 </script>
 
-<!-- Font Awesome for icons -->
+<!-- Bootstrap 5 JS (for modal) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<!-- Bootstrap 5 -->
-
+<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}

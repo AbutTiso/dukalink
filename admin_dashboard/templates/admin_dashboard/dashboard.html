@@ -17,6 +17,10 @@
             <p class="text-muted mb-0">
                 <i class="fas fa-calendar-alt me-2" style="color: var(--duka-yellow);"></i>
                 {{ today|date:"l, F j, Y" }} • Real-time overview
+                <span class="live-indicator ms-3" id="liveIndicator">
+                    <span class="dot"></span>
+                    <span class="small">Live</span>
+                </span>
             </p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-lg-0">
@@ -28,32 +32,6 @@
             </span>
         </div>
     </div>
-
-    <!-- Super Admin Management Section - Full Width 
-    {% if user.is_superuser %}
-    <div class="card-modern mb-4" style="border: 2px solid rgba(234, 179, 8, 0.2);">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-3 p-3 me-3" style="background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));">
-                            <i class="fas fa-crown fa-2x" style="color: #0f172a;"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-1">Super Admin Access</h5>
-                            <p class="text-muted mb-0">You have full system privileges. Manage users, approve vendors, and configure platform settings.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                    <a href="#superadmin-section" class="btn-duka-yellow" style="display: inline-flex; align-items: center;">
-                        <i class="fas fa-crown me-2"></i>Manage Superadmins
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}-->
 
     <!-- Key Metrics Row -->
     <div class="row g-4 mb-4">
@@ -88,12 +66,12 @@
                         </div>
                         <div>
                             <span class="small text-uppercase fw-semibold text-muted">Total Orders</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ total_orders }}</h2>
+                            <h2 class="display-6 fw-bold mb-0" id="totalOrders">{{ total_orders }}</h2>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted"><i class="fas fa-clock me-1"></i> Today: </span>
-                        <span class="fw-bold" style="color: var(--duka-blue);">{{ today_orders }}</span>
+                        <span class="fw-bold" style="color: var(--duka-blue);" id="todayOrders">{{ today_orders }}</span>
                     </div>
                 </div>
             </div>
@@ -109,7 +87,7 @@
                         </div>
                         <div>
                             <span class="small text-uppercase fw-semibold text-muted">Vendors</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ total_vendors }}</h2>
+                            <h2 class="display-6 fw-bold mb-0" id="totalVendors">{{ total_vendors }}</h2>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
@@ -130,19 +108,19 @@
                         </div>
                         <div>
                             <span class="small text-uppercase fw-semibold text-muted">Products</span>
-                            <h2 class="display-6 fw-bold mb-0">{{ total_products }}</h2>
+                            <h2 class="display-6 fw-bold mb-0" id="totalProducts">{{ total_products }}</h2>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted"><i class="fas fa-chart-line me-1"></i> This week: </span>
-                        <span class="fw-bold" style="color: var(--duka-blue-light);">+{{ weekly_new_products }}</span>
+                        <span class="fw-bold" style="color: var(--duka-blue-light);" id="weeklyNewProducts">+{{ weekly_new_products }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ============= NEW: Document Verification Alert & Quick Access ============= -->
+    <!-- Document Verification Alert & Quick Access -->
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card-modern" style="border-left: 6px solid #3b82f6;">
@@ -168,7 +146,7 @@
                             <div class="d-flex gap-2 justify-content-lg-end">
                                 <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn-duka-blue" style="display: inline-flex; align-items: center; padding: 0.75rem 1.5rem;">
                                     <i class="fas fa-file-invoice me-2"></i>Review Documents
-                                    {% if pending_documents > 0 %}
+                                    {% if pending_documents|default:0 > 0 %}
                                     <span class="badge bg-white ms-2" style="color: var(--duka-blue);">{{ pending_documents }}</span>
                                     {% endif %}
                                 </a>
@@ -183,9 +161,9 @@
         </div>
     </div>
 
-    <!-- Pending Approvals & Weekly Stats Row (UPDATED with Document Verification) -->
+    <!-- Pending Approvals & Weekly Stats Row -->
     <div class="row g-4 mb-4">
-        <!-- Pending Approvals - NOW WITH DOCUMENT VERIFICATION -->
+        <!-- Pending Approvals -->
         <div class="col-lg-6">
             <div class="card-modern h-100">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
@@ -210,7 +188,7 @@
                             </div>
                         </div>
                         
-                        <!-- Document Verification - NEW -->
+                        <!-- Document Verification -->
                         <div class="col-6">
                             <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1));">
                                 <div class="d-flex align-items-center mb-2">
@@ -238,7 +216,7 @@
                             </div>
                         </div>
                         
-                        <!-- More Info Needed - NEW -->
+                        <!-- More Info Needed -->
                         <div class="col-6">
                             <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.05), rgba(249, 115, 22, 0.1));">
                                 <div class="d-flex align-items-center mb-2">
@@ -256,7 +234,7 @@
             </div>
         </div>
 
-        <!-- Weekly Stats (Existing - Unchanged) -->
+        <!-- Weekly Stats -->
         <div class="col-lg-6">
             <div class="card-modern h-100">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
@@ -270,7 +248,7 @@
                         <div class="col-4">
                             <div class="text-center p-3">
                                 <span class="text-muted small d-block mb-1">Orders</span>
-                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue);">{{ weekly_orders }}</h4>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue);" id="weeklyOrders">{{ weekly_orders }}</h4>
                                 <small class="text-success">
                                     <i class="fas fa-arrow-up me-1"></i>+12%
                                 </small>
@@ -279,7 +257,7 @@
                         <div class="col-4">
                             <div class="text-center p-3">
                                 <span class="text-muted small d-block mb-1">New Vendors</span>
-                                <h4 class="fw-bold mb-0" style="color: var(--duka-yellow-dark);">{{ weekly_new_vendors }}</h4>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-yellow-dark);" id="weeklyNewVendors">{{ weekly_new_vendors }}</h4>
                                 <small class="text-success">
                                     <i class="fas fa-arrow-up me-1"></i>+8%
                                 </small>
@@ -288,7 +266,7 @@
                         <div class="col-4">
                             <div class="text-center p-3">
                                 <span class="text-muted small d-block mb-1">Products</span>
-                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue-light);">{{ weekly_new_products }}</h4>
+                                <h4 class="fw-bold mb-0" style="color: var(--duka-blue-light);" id="weeklyNewProducts">{{ weekly_new_products }}</h4>
                                 <small class="text-success">
                                     <i class="fas fa-arrow-up me-1"></i>+15%
                                 </small>
@@ -296,16 +274,16 @@
                         </div>
                     </div>
                     
-                    <!-- NEW: Document Verification Stats -->
+                    <!-- Document Verification Stats -->
                     <div class="mt-4 pt-3 border-top">
                         <div class="row g-2">
                             <div class="col-6">
                                 <small class="text-muted d-block">Verified this week</small>
-                                <span class="fw-bold" style="color: #10b981;">{{ verified_this_week|default:"0" }} vendors</span>
+                                <span class="fw-bold" style="color: #10b981;" id="verifiedThisWeek">{{ verified_this_week|default:"0" }} vendors</span>
                             </div>
                             <div class="col-6">
                                 <small class="text-muted d-block">Rejected this week</small>
-                                <span class="fw-bold" style="color: #ef4444;">{{ rejected_this_week|default:"0" }} vendors</span>
+                                <span class="fw-bold" style="color: #ef4444;" id="rejectedThisWeek">{{ rejected_this_week|default:"0" }} vendors</span>
                             </div>
                         </div>
                     </div>
@@ -314,7 +292,7 @@
         </div>
     </div>
 
-    <!-- NEW: Quick Actions Row -->
+    <!-- Quick Actions Row -->
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card-modern">
@@ -330,9 +308,12 @@
                         <a href="{% url 'admin_dashboard:vendors' %}" class="btn btn-lg" style="background: var(--duka-blue); color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
                             <i class="fas fa-store me-2"></i> Manage Vendors
                         </a>
-                        <a href="{% url 'admin_dashboard:export_vendors' %}" class="btn btn-lg" style="background: #10b981; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
+                        {% url 'admin_dashboard:export_vendors' as export_url %}
+                        {% if export_url %}
+                        <a href="{{ export_url }}" class="btn btn-lg" style="background: #10b981; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
                             <i class="fas fa-download me-2"></i> Export Data
                         </a>
+                        {% endif %}
                         <a href="{% url 'admin_dashboard:analytics' %}" class="btn btn-lg" style="background: #8b5cf6; color: white; border-radius: 50px; padding: 0.75rem 1.5rem;">
                             <i class="fas fa-chart-pie me-2"></i> Analytics
                         </a>
@@ -342,7 +323,7 @@
         </div>
     </div>
 
-    <!-- Top Performers Row (Existing - Unchanged) -->
+    <!-- Top Performers Row -->
     <div class="row g-4 mb-4">
         <!-- Top Vendors -->
         <div class="col-lg-6">
@@ -379,8 +360,7 @@
                                             <div>
                                                 <span class="fw-medium d-block">{{ vendor.name }}</span>
                                                 <small class="text-muted">{{ vendor.owner.username }}</small>
-                                                <!-- NEW: Verification badge -->
-                                                {% if vendor.is_verified %}
+                                                {% if vendor.verification_status == 'verified' or vendor.is_verified %}
                                                 <span class="badge bg-success ms-1" style="font-size: 0.6rem;">✓ Verified</span>
                                                 {% endif %}
                                             </div>
@@ -405,7 +385,7 @@
             </div>
         </div>
 
-        <!-- Top Products (Existing - Unchanged) -->
+        <!-- Top Products -->
         <div class="col-lg-6">
             <div class="card-modern">
                 <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
@@ -464,9 +444,9 @@
         </div>
     </div>
 
-    <!-- Recent Activity Row (Updated with Document Verification Activity) -->
+    <!-- Recent Activity Row -->
     <div class="row g-4">
-        <!-- Recent Orders (Existing) -->
+        <!-- Recent Orders -->
         <div class="col-lg-4">
             <div class="card-modern h-100">
                 <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
@@ -502,7 +482,7 @@
             </div>
         </div>
 
-        <!-- Recent Shops (Updated with Verification Status) -->
+        <!-- Recent Shops -->
         <div class="col-lg-4">
             <div class="card-modern h-100">
                 <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
@@ -534,6 +514,8 @@
                             <span class="badge bg-info">Under Review</span>
                             {% elif shop.verification_status == 'rejected' %}
                             <span class="badge bg-danger">Rejected</span>
+                            {% elif shop.verification_status == 'info_needed' %}
+                            <span class="badge bg-warning">Info Needed</span>
                             {% else %}
                                 {% if shop.is_approved %}
                                 <span class="badge bg-success">Approved</span>
@@ -553,7 +535,7 @@
             </div>
         </div>
 
-        <!-- NEW: Recent Document Verifications -->
+        <!-- Recent Document Verifications -->
         <div class="col-lg-4">
             <div class="card-modern h-100">
                 <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-4 px-4">
@@ -566,40 +548,40 @@
                     </a>
                 </div>
                 <div class="card-body p-4 pt-2">
-                    {% for vendor in recent_verifications|default:recent_shops|slice:":5" %}
-                    {% if vendor.verified_at %}
-                    <div class="d-flex align-items-center {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
-                             style="width: 40px; height: 40px; background: {% if vendor.verification_status == 'verified' %}#10b981{% else %}#ef4444{% endif %};">
-                            <i class="fas fa-{% if vendor.verification_status == 'verified' %}check-circle{% else %}times-circle{% endif %} text-white"></i>
+                    {% if recent_verifications %}
+                        {% for vendor in recent_verifications|slice:":5" %}
+                        <div class="d-flex align-items-center {% if not forloop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 40px; background: {% if vendor.verification_status == 'verified' %}#10b981{% else %}#ef4444{% endif %};">
+                                <i class="fas fa-{% if vendor.verification_status == 'verified' %}check-circle{% else %}times-circle{% endif %} text-white"></i>
+                            </div>
+                            <div>
+                                <span class="fw-medium d-block">{{ vendor.name|truncatechars:20 }}</span>
+                                <small class="text-muted">
+                                    {% if vendor.verified_by %}
+                                        Verified by {{ vendor.verified_by.username }}
+                                    {% else %}
+                                        {{ vendor.get_verification_status_display|default:vendor.verification_status|title }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="ms-auto text-end">
+                                <small class="text-muted d-block">{{ vendor.verified_at|timesince }} ago</small>
+                                <span class="badge {% if vendor.verification_status == 'verified' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ vendor.get_verification_status_display|default:vendor.verification_status|title }}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="fw-medium d-block">{{ vendor.name|truncatechars:20 }}</span>
-                            <small class="text-muted">
-                                {% if vendor.verified_by %}
-                                Verified by {{ vendor.verified_by.username }}
-                                {% else %}
-                                {{ vendor.verification_status|title }}
-                                {% endif %}
-                            </small>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-invoice fa-2x mb-2" style="color: #cbd5e1;"></i>
+                            <p class="text-muted mb-0">No recent verifications</p>
+                            <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-sm mt-3" style="color: var(--duka-blue);">
+                                Start verifying <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
                         </div>
-                        <div class="ms-auto text-end">
-                            <small class="text-muted d-block">{{ vendor.verified_at|timesince }} ago</small>
-                            <span class="badge {% if vendor.verification_status == 'verified' %}bg-success{% else %}bg-danger{% endif %}">
-                                {{ vendor.get_verification_status_display }}
-                            </span>
-                        </div>
-                    </div>
                     {% endif %}
-                    {% empty %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-file-invoice fa-2x mb-2" style="color: #cbd5e1;"></i>
-                        <p class="text-muted mb-0">No recent verifications</p>
-                        <a href="{% url 'admin_dashboard:vendor_documents' %}" class="btn btn-sm mt-3" style="color: var(--duka-blue);">
-                            Start verifying <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -656,6 +638,35 @@
         color: white;
         transform: translateY(-2px);
     }
+    
+    /* Live indicator */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 50px;
+        color: #059669;
+    }
+    
+    .live-indicator .dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    
+    /* Pulse animation for updates */
+    .pulse {
+        animation: pulse 1s ease-in-out;
+    }
 </style>
 
 <script>
@@ -665,10 +676,77 @@
         if (pendingCount) {
             const count = parseInt(pendingCount.innerText);
             if (count > 0) {
-                // Play notification sound or show alert (optional)
                 console.log(`${count} vendors pending document verification`);
             }
         }
+        
+        // Start real-time updates
+        startRealTimeUpdates();
     });
+    
+    // Real-time updates
+    function startRealTimeUpdates() {
+        setInterval(fetchLatestData, 30000); // Update every 30 seconds
+    }
+    
+    function fetchLatestData() {
+        fetch('/admin-panel/analytics/live/')
+            .then(response => response.json())
+            .then(data => {
+                updateMetrics(data);
+            })
+            .catch(error => console.log('Real-time update failed:', error));
+    }
+    
+    function updateMetrics(data) {
+        // Update total orders
+        if (data.total_orders) {
+            const el = document.getElementById('totalOrders');
+            if (el) {
+                el.textContent = data.total_orders;
+                highlightElement(el);
+            }
+        }
+        
+        // Update today's orders
+        if (data.today_orders) {
+            const el = document.getElementById('todayOrders');
+            if (el) {
+                el.textContent = data.today_orders;
+                highlightElement(el);
+            }
+        }
+        
+        // Update weekly orders
+        if (data.weekly_orders) {
+            const el = document.getElementById('weeklyOrders');
+            if (el) {
+                el.textContent = data.weekly_orders;
+                highlightElement(el);
+            }
+        }
+        
+        // Update verification counts
+        if (data.verified_this_week) {
+            const el = document.getElementById('verifiedThisWeek');
+            if (el) {
+                el.textContent = data.verified_this_week + ' vendors';
+                highlightElement(el);
+            }
+        }
+        
+        if (data.rejected_this_week) {
+            const el = document.getElementById('rejectedThisWeek');
+            if (el) {
+                el.textContent = data.rejected_this_week + ' vendors';
+                highlightElement(el);
+            }
+        }
+    }
+    
+    function highlightElement(element) {
+        element.classList.add('pulse');
+        setTimeout(() => element.classList.remove('pulse'), 1000);
+    }
 </script>
 {% endblock %}

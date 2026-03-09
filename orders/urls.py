@@ -28,7 +28,7 @@ urlpatterns = [
     path('api/cart/count/', views.cart_count_api, name='cart_count_api'),
     path('api/cart/add/<int:product_id>/', views.cart_add_api_alt, name='cart_add_api_with_id'),
     path('cart/decrement/<int:product_id>/', views.cart_decrement, name='cart_decrement'),
-    
+    path('ajax/cart/clear/', views.cart_clear_ajax, name='cart_clear_ajax'),
     # Silence service worker requests
     path('navbar-notifications/', views.dummy_notifications, name='dummy_notifications'),
     re_path(r'^api/sync/.*$', views.dummy_api, name='dummy_sync'),

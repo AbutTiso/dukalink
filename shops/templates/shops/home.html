@@ -205,11 +205,19 @@
                     </div>
                     
                     <div class="product-actions mt-3">
-                        <a href="https://wa.me/?text=I'm%20interested%20in%20{{ product.name|urlencode }}%20from%20{{ product.business.name|urlencode }}%20on%20DukaLink:%20{{ request.build_absolute_uri|urlencode }}" 
-                           class="btn-action btn-whatsapp" target="_blank" rel="noopener noreferrer"
-                           onclick="trackWhatsAppClick('{{ product.name }}')">
-                            <i class="fab fa-whatsapp me-1"></i> Order on WhatsApp
-                        </a>
+                        {% if user.is_authenticated %}
+                            <a href="https://wa.me/?text=I'm%20interested%20in%20{{ product.name|urlencode }}%20from%20{{ product.business.name|urlencode }}%20on%20DukaLink:%20{{ request.build_absolute_uri|urlencode }}" 
+                               class="btn-action btn-whatsapp" target="_blank" rel="noopener noreferrer"
+                               onclick="trackWhatsAppClick('{{ product.name }}')">
+                                <i class="fab fa-whatsapp me-1"></i> Order on WhatsApp
+                            </a>
+                        {% else %}
+                            <button onclick="showLoginRequired('{{ product.name }}')" 
+                                    class="btn-action btn-whatsapp" 
+                                    style="opacity: 0.8; cursor: pointer;">
+                                <i class="fab fa-whatsapp me-1"></i> Login to Order
+                            </button>
+                        {% endif %}
                         <a href="{% url 'products:product_detail' product.id %}" class="btn-action btn-view">
                             <i class="fas fa-eye me-1"></i> Quick View
                         </a>
@@ -633,7 +641,7 @@
     </div>
 </section>
 
-<!-- CTA Section - For Shoppers -->
+<!-- CTA Section - For Shoppers (UPDATED: Removed "No account needed" message) -->
 <section class="container my-5">
     <div class="card-modern" style="background: linear-gradient(135deg, var(--duka-blue) 0%, var(--duka-blue-dark) 100%); padding: 4rem;">
         <div class="row align-items-center">
@@ -645,19 +653,31 @@
                         <i class="fas fa-check-circle me-2"></i>
                         <span>Free to browse</span>
                     </div>
+                    <!-- Removed "No account needed to shop" line -->
                     <div class="d-flex align-items-center">
                         <i class="fas fa-check-circle me-2"></i>
-                        <span>No account needed to shop</span>
+                        <span>Create account to shop</span>
                     </div>
                     <div class="d-flex align-items-center">
                         <i class="fas fa-check-circle me-2"></i>
                         <span>Secure payments</span>
                     </div>
                 </div>
+                <!-- Add login/register buttons for non-authenticated users -->
+                {% if not user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{% url 'accounts:login' %}?next={% url 'products:product_list' %}" class="btn btn-light me-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{% url 'accounts:register_choice' %}" class="btn btn-outline-light">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </a>
+                </div>
+                {% endif %}
             </div>
             <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
                 <a href="{% url 'products:product_list' %}" class="btn-duka-yellow btn-lg" style="background: white; color: var(--duka-blue); padding: 1rem 2.5rem;">
-                    Start Shopping <i class="fas fa-arrow-right ms-2"></i>
+                    Browse Products <i class="fas fa-arrow-right ms-2"></i>
                 </a>
             </div>
         </div>
@@ -707,6 +727,64 @@ function trackWhatsAppClick(productName) {
         });
     }
     console.log('WhatsApp click tracked:', productName);
+}
+
+// NEW FUNCTION: Show login required modal
+function showLoginRequired(productName) {
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="loginRequiredModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 20px; border: none;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #2563eb, #1e40af); color: white; border-radius: 20px 20px 0 0;">
+                        <h5 class="modal-title"><i class="fas fa-lock me-2"></i>Login Required</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-shopping-cart fa-4x mb-3" style="color: #2563eb;"></i>
+                            <h4>Create an account to shop</h4>
+                            <p class="text-muted">You need to be logged in to order products on DukaLink.</p>
+                            ${productName ? `<p class="text-muted"><strong>${productName}</strong> - Login to order this product.</p>` : ''}
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary w-100" style="border-radius: 50px; padding: 0.75rem;">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{% url 'accounts:register_choice' %}" class="btn btn-success w-100" style="border-radius: 50px; padding: 0.75rem;">
+                                    <i class="fas fa-user-plus me-2"></i>Sign Up
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-check-circle text-success me-1"></i>
+                                Free account • Track orders • Save favorites
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('loginRequiredModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('loginRequiredModal'));
+    modal.show();
 }
 
 // Smooth scroll for anchor links

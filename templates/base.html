@@ -349,10 +349,11 @@
                         {% endif %}
                         
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}" href="{% url 'dashboard:vendor_dashboard' %}">
-                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
+    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_redirect' or request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}" 
+       href="{% url 'accounts:dashboard_redirect' %}">
+        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+    </a>
+</li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %}" href="{% url 'orders:cart_detail' %}" id="cart-nav-link">
                                 <i class="fas fa-shopping-cart me-1"></i> Cart
@@ -522,7 +523,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Cart Manager JavaScript -->
+    <!-- Cart Manager JavaScript with UPDATED getCSRFToken method -->
     <script>
         // Cart Manager for real-time updates
         class CartManager {
@@ -559,6 +560,32 @@
                         this.removeFromCart(productId, btn);
                     });
                 });
+            }
+
+            // UPDATED getCSRFToken method - gets from cookie or form
+            getCSRFToken() {
+                // First try to get from cookie
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                
+                // Try to get from a form first
+                const formToken = document.querySelector('form [name=csrfmiddlewaretoken]')?.value;
+                if (formToken) return formToken;
+                
+                // Fallback to cookie
+                return getCookie('csrftoken') || '';
             }
 
             addToCart(productId, quantity = 1, button = null) {
@@ -757,10 +784,6 @@
                     }, 300);
                 }, 3000);
             }
-
-            getCSRFToken() {
-                return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-            }
         }
 
         // Auto-dismiss alerts after 5 seconds
@@ -792,7 +815,6 @@
     
     {% block extra_js %}{% endblock %}
     
-    <!-- CSRF Token for AJAX requests -->
-    {% csrf_token %}
+    <!-- CSRF Token line REMOVED from here -->
 </body>
 </html>

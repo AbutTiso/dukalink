@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from dashboard.views import vendor_dashboard  # Import from dashboard app
 
 app_name = 'vendors'
 
@@ -11,4 +12,8 @@ urlpatterns = [
     path('api/vendors-by-county/', views.get_vendors_by_county, name='vendors_by_county'),
     path('api/geocode/', views.geocode_address, name='geocode'),
     path('api/reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
+    # Use the imported vendor_dashboard (without views.)
+    path('dashboard/', vendor_dashboard, name='vendor_dashboard'),
+    #                  ^^^^^^^^^^^^^^^^  No 'views.' prefix
+    path('analytics/', views.vendor_analytics, name='vendor_analytics'),
 ]

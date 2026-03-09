@@ -20,5 +20,7 @@ urlpatterns = [
     path('confirm-vendor-payment/<int:order_id>/', views.confirm_vendor_payment, name='confirm_vendor_payment'),
     path('pochi-instructions/<int:order_id>/', views.pochi_payment_instructions, name='pochi_payment_instructions'), 
     path('process-next-payment/', views.process_next_vendor_payment, name='process_next_vendor_payment'),
+    path('success/<int:order_id>/', views.order_success, name='order_success'),
     path('confirm-pochi-payment/<int:order_id>/', views.confirm_pochi_payment, name='confirm_pochi_payment'),
+    path('confirm-delivery/<int:order_id>/', views.confirm_delivery, name='confirm_delivery'),
 ]

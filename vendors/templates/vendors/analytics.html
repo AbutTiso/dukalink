@@ -1,0 +1,811 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ business.name }} Analytics - DukaLink Vendor{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --whatsapp-green: #25D366;
+        --whatsapp-dark: #075E54;
+        --mpesa-teal: #00A3A3;
+        --soft-bg: #f8fafc;
+        --card-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        --hover-shadow: 0 8px 30px rgba(37, 211, 102, 0.15);
+    }
+    
+    body {
+        background-color: var(--soft-bg);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .analytics-header {
+        background: linear-gradient(135deg, var(--whatsapp-dark) 0%, #128C7E 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 30px 30px;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--whatsapp-green), var(--mpesa-teal));
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #1e293b;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .growth-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .growth-positive {
+        background: #e6f9ed;
+        color: #1e7a44;
+    }
+    
+    .growth-negative {
+        background: #ffe6e6;
+        color: #b33a3a;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+    }
+    
+    .chart-title i {
+        color: var(--whatsapp-green);
+        margin-right: 0.5rem;
+    }
+    
+    .period-badge {
+        background: #f1f5f9;
+        padding: 0.35rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 280px;
+        width: 100%;
+    }
+    
+    .table-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        margin-top: 2rem;
+    }
+    
+    .product-table {
+        width: 100%;
+    }
+    
+    .product-table th {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding-bottom: 1rem;
+    }
+    
+    .product-table td {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .product-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .rank-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    
+    .rank-1 { background: #FFD700; color: #1e293b; }
+    .rank-2 { background: #C0C0C0; color: #1e293b; }
+    .rank-3 { background: #CD7F32; color: white; }
+    
+    .filter-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--whatsapp-green);
+        border-color: var(--whatsapp-green);
+        color: white;
+    }
+    
+    .insight-card {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    
+    .insight-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    
+    .insight-label {
+        color: #475569;
+        font-size: 0.875rem;
+    }
+    
+    .insight-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--whatsapp-green), var(--mpesa-teal));
+        border-radius: 4px;
+    }
+    
+    .nav-tabs {
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: #64748b;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        background: #f1f5f9;
+    }
+    
+    .nav-tabs .nav-link.active {
+        background: var(--whatsapp-green);
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .filter-bar {
+            justify-content: flex-start;
+            margin-top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Analytics Header -->
+<div class="analytics-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="fas fa-chart-pie me-2"></i>{{ business.name }} Analytics
+                </h1>
+                <p class="mb-0 opacity-75">
+                    <i class="fas fa-calendar-alt me-1"></i> {{ range_text }} • 
+                    <i class="fas fa-clock ms-2 me-1"></i> Updated: {% now "M d, Y H:i" %}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <!-- Date Range Filter -->
+                <div class="filter-bar">
+                    <a href="?range=7" class="filter-btn {% if days == 7 %}active{% endif %}">7 Days</a>
+                    <a href="?range=30" class="filter-btn {% if days == 30 %}active{% endif %}">30 Days</a>
+                    <a href="?range=90" class="filter-btn {% if days == 90 %}active{% endif %}">90 Days</a>
+                    <a href="?range=365" class="filter-btn {% if days == 365 %}active{% endif %}">1 Year</a>
+                    <a href="?range=0" class="filter-btn {% if days == 0 %}active{% endif %}">All Time</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard:vendor_dashboard' %}">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="{% url 'vendors:vendor_analytics' %}">
+                <i class="fas fa-chart-line me-2"></i>Analytics
+            </a>
+        </li>
+    </ul>
+
+    <!-- Key Metrics Cards -->
+    <div class="stats-grid">
+        <!-- Revenue Card -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e6f9ed; color: #1e7a44;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-value">Ksh {{ total_revenue|floatformat:0 }}</div>
+            <div class="stat-label">Revenue ({{ range_text }})</div>
+            <div class="d-flex align-items-center mt-2">
+                <span class="growth-badge {% if revenue_growth >= 0 %}growth-positive{% else %}growth-negative{% endif %}">
+                    <i class="fas fa-{% if revenue_growth >= 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>
+                    {{ revenue_growth|floatformat:1 }}%
+                </span>
+                <small class="text-muted ms-2">vs previous period</small>
+            </div>
+            <small class="text-muted d-block mt-2">All time: Ksh {{ all_time_revenue|floatformat:0 }}</small>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e6f3ff; color: #0066b3;">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-value">{{ total_orders }}</div>
+            <div class="stat-label">Orders ({{ range_text }})</div>
+            <div class="d-flex align-items-center mt-2">
+                <span class="growth-badge {% if orders_growth >= 0 %}growth-positive{% else %}growth-negative{% endif %}">
+                    <i class="fas fa-{% if orders_growth >= 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>
+                    {{ orders_growth|floatformat:1 }}%
+                </span>
+                <small class="text-muted ms-2">vs previous period</small>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small class="text-success">Completed: {{ completed_orders }}</small>
+                <small class="text-warning">Pending: {{ pending_orders }}</small>
+            </div>
+        </div>
+
+        <!-- Customers Card -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fff7e6; color: #b76e00;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ unique_customers }}</div>
+            <div class="stat-label">Unique Customers</div>
+            <small class="text-muted d-block mt-2">All time: {{ all_time_customers }}</small>
+            <small class="text-muted d-block mt-1">Avg: {% if unique_customers %}{{ total_orders|divisibleby:unique_customers|floatformat:1 }}{% else %}0{% endif %} orders/customer</small>
+        </div>
+
+        <!-- Products Sold Card -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e6fff2; color: #00897b;">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-value">{{ products_sold }}</div>
+            <div class="stat-label">Products Sold</div>
+            <small class="text-muted d-block mt-2">All time: {{ all_time_products }}</small>
+            <small class="text-muted d-block mt-1">{{ vendor_products_count }} active products</small>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Daily Revenue Trend
+                    </h5>
+                    <span class="period-badge">Last 30 Days</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status Chart -->
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Order Status
+                    </h5>
+                    <span class="period-badge">{{ range_text }}</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row g-4 mb-4">
+        <!-- Weekly Performance -->
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-calendar-week"></i>
+                        Weekly Performance
+                    </h5>
+                    <span class="period-badge">Last 7 Days</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Distribution -->
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-clock"></i>
+                        Peak Order Hours
+                    </h5>
+                    <span class="period-badge">{{ range_text }}</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-credit-card"></i>
+                        Payment Methods
+                    </h5>
+                    <span class="period-badge">{{ range_text }}</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="table-card">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h5 class="chart-title mb-0">
+                        <i class="fas fa-trophy me-2" style="color: gold;"></i>
+                        Top Selling Products
+                    </h5>
+                    <span class="period-badge">{{ range_text }}</span>
+                </div>
+
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Product</th>
+                                <th class="text-center">Quantity Sold</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <div class="rank-badge 
+                                        {% if forloop.counter == 1 %}rank-1
+                                        {% elif forloop.counter == 2 %}rank-2
+                                        {% elif forloop.counter == 3 %}rank-3
+                                        {% else %}" style="background: #f1f5f9; color: #475569;{% endif %}">
+                                        {{ forloop.counter }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ product.name }}</strong>
+                                </td>
+                                <td class="text-center">{{ product.quantity }}</td>
+                                <td class="text-end fw-bold">Ksh {{ product.revenue|floatformat:0 }}</td>
+                                <td class="text-end">
+                                    {% if total_revenue %}
+                                    {% widthratio product.revenue total_revenue 100 %}%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x mb-3" style="color: #cbd5e1;"></i>
+                    <h5 class="text-muted">No products sold yet</h5>
+                    <p class="text-muted small">Products you sell will appear here</p>
+                </div>
+                {% endif %}
+
+                <!-- Summary Insights -->
+                <div class="insight-card">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="insight-item">
+                                <span class="insight-label">Average Order Value</span>
+                                <span class="insight-value">Ksh {{ avg_order_value|floatformat:0 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="insight-item">
+                                <span class="insight-label">Items per Order</span>
+                                <span class="insight-value">{{ products_sold|divisibleby:total_orders|floatformat:1 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="insight-item">
+                                <span class="insight-label">Completion Rate</span>
+                                <span class="insight-value">
+                                    {% if total_orders %}
+                                        {% widthratio completed_orders total_orders 100 %}%
+                                    {% else %}0%{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="insight-item">
+                                <span class="insight-label">Conversion</span>
+                                <span class="insight-value">
+                                    {% if total_orders %}
+                                        {% widthratio completed_orders total_orders 100 %}%
+                                    {% else %}0%{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar mt-3">
+                        <div class="progress-fill" style="width: {% if total_orders %}{% widthratio completed_orders total_orders 100 %}{% else %}0{% endif %}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Daily Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_labels|safe }},
+            datasets: [{
+                label: 'Revenue (KES)',
+                data: {{ daily_revenue|safe }},
+                borderColor: '#25D366',
+                backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#075E54',
+                pointBorderColor: 'white',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => 'KES ' + context.parsed.y.toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value) => 'KES ' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusData = {{ status_data|safe }};
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'Processing', 'Completed', 'Cancelled'],
+            datasets: [{
+                data: [
+                    statusData.pending || 0,
+                    statusData.processing || 0,
+                    statusData.completed || 0,
+                    statusData.cancelled || 0
+                ],
+                backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
+                borderWidth: 0,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: { usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+
+    // Weekly Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ week_labels|safe }},
+            datasets: [{
+                label: 'Revenue',
+                data: {{ week_revenue|safe }},
+                backgroundColor: '#25D366',
+                borderRadius: 8,
+                yAxisID: 'y'
+            }, {
+                label: 'Orders',
+                data: {{ week_orders|safe }},
+                backgroundColor: '#075E54',
+                borderRadius: 8,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            if (context.dataset.label === 'Revenue') {
+                                return 'KES ' + context.parsed.y.toLocaleString();
+                            }
+                            return context.parsed.y + ' orders';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    ticks: {
+                        callback: (value) => 'KES ' + value
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: { drawOnChartArea: false },
+                    ticks: {
+                        stepSize: 1,
+                        callback: (value) => value + ' orders'
+                    }
+                }
+            }
+        }
+    });
+
+    // Hourly Chart
+    const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+    new Chart(hourlyCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => i + ':00'),
+            datasets: [{
+                label: 'Orders',
+                data: {{ hourly_counts|safe }},
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+    const paymentData = {{ payment_methods|safe }};
+    new Chart(paymentCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(paymentData),
+            datasets: [{
+                data: Object.values(paymentData),
+                backgroundColor: ['#25D366', '#1e293b', '#00A3A3', '#94a3b8'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    position: 'bottom',
+                    labels: { usePointStyle: true }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}

@@ -1,9 +1,780 @@
-<h2>{{ title }}</h2>
+{% extends 'base.html' %}
+{% load static %}
 
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{{ title }}</button>
-</form>
+{% block title %}{{ title }} - DukaLink Vendor Dashboard{% endblock %}
 
-<a href="{% url 'dashboard:dashboard_home' %}">Back to Dashboard</a>
+{% block extra_css %}
+<style>
+    :root {
+        --duka-blue: #2563eb;
+        --duka-blue-dark: #1e40af;
+        --duka-yellow: #eab308;
+        --duka-yellow-dark: #ca8a04;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 32px;
+        box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.15);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+    
+    .form-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    
+    .form-header h1 i {
+        color: var(--duka-yellow);
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .form-header p {
+        opacity: 0.9;
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .form-body {
+        padding: 2.5rem;
+    }
+    
+    /* Form Field Styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .form-group label i {
+        color: var(--duka-blue);
+        margin-right: 0.5rem;
+        width: 20px;
+    }
+    
+    .form-control, 
+    .form-group input:not([type="checkbox"]):not([type="radio"]),
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .form-control:focus,
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: var(--duka-blue);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    /* Category Section Special Styling */
+    .category-section {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .category-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .category-label i {
+        color: var(--duka-blue);
+        font-size: 1.2rem;
+    }
+    
+    /* File Input Styling */
+    .form-group input[type="file"] {
+        padding: 0.5rem;
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        cursor: pointer;
+    }
+    
+    .form-group input[type="file"]:hover {
+        border-color: var(--duka-blue);
+        background: #f1f5f9;
+    }
+    
+    .form-group input[type="file"]::file-selector-button {
+        background: var(--duka-blue);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        margin-right: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .form-group input[type="file"]::file-selector-button:hover {
+        background: var(--duka-blue-dark);
+        transform: translateY(-2px);
+    }
+    
+    /* Help Text */
+    .helptext {
+        display: block;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+    }
+    
+    .helptext i {
+        color: var(--duka-yellow);
+        margin-right: 0.25rem;
+    }
+    
+    /* Error Styling */
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0;
+    }
+    
+    .errorlist li {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+        color: #991b1b;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .errorlist li i {
+        color: #ef4444;
+        font-size: 1rem;
+    }
+    
+    /* Image Preview */
+    .image-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 2px dashed #cbd5e1;
+        text-align: center;
+    }
+    
+    .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .image-preview p {
+        margin: 0.5rem 0 0;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    
+    /* Current Image Info */
+    .current-image {
+        background: #f1f5f9;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .current-image img {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    
+    .current-image-info {
+        flex: 1;
+    }
+    
+    .current-image-info strong {
+        display: block;
+        color: #0f172a;
+        margin-bottom: 0.25rem;
+    }
+    
+    .current-image-info span {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+    
+    /* Checkbox/Radio Styling */
+    .form-group input[type="checkbox"],
+    .form-group input[type="radio"] {
+        width: auto;
+        margin-right: 0.5rem;
+        accent-color: var(--duka-blue);
+        transform: scale(1.1);
+    }
+    
+    /* Submit Button */
+    .submit-btn {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    }
+    
+    .submit-btn:hover::before {
+        left: 100%;
+    }
+    
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+    
+    .submit-btn i {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .submit-btn:hover i {
+        transform: translateX(5px);
+    }
+    
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    /* Back Button */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        background: white;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .back-link:hover {
+        background: #f8fafc;
+        border-color: var(--duka-blue);
+        color: var(--duka-blue);
+        transform: translateX(-5px);
+    }
+    
+    .back-link i {
+        transition: transform 0.3s ease;
+    }
+    
+    .back-link:hover i {
+        transform: translateX(-3px);
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .form-header {
+            padding: 1.5rem;
+        }
+    }
+    
+    /* Business Info Card */
+    .business-info {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .business-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--duka-yellow), var(--duka-yellow-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f172a;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    .business-details {
+        flex: 1;
+    }
+    
+    .business-details h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #0f172a;
+    }
+    
+    .business-details p {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .verification-badge {
+        background: #10b981;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>
+                    {% if 'Add' in title %}
+                        <i class="fas fa-plus-circle"></i>
+                    {% elif 'Edit' in title %}
+                        <i class="fas fa-edit"></i>
+                    {% else %}
+                        <i class="fas fa-box"></i>
+                    {% endif %}
+                    {{ title }}
+                </h1>
+                <p>
+                    {% if 'Add' in title %}
+                        Create a new product for your shop
+                    {% elif 'Edit' in title %}
+                        Update your product information
+                    {% else %}
+                        Manage your product
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="form-body">
+                <!-- Business Info (if available) -->
+                {% if business %}
+                <div class="business-info">
+                    <div class="business-icon">
+                        {{ business.name|make_list|first|upper }}
+                    </div>
+                    <div class="business-details">
+                        <h3>{{ business.name }}</h3>
+                        <p>
+                            <i class="fas fa-map-marker-alt me-1" style="color: var(--duka-yellow);"></i>
+                            {{ business.location|default:"Location not set" }}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="verification-badge">
+                            <i class="fas fa-check-circle"></i>
+                            {{ business.get_verification_status_display|default:"Verified" }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Main Form -->
+                <form method="POST" enctype="multipart/form-data" id="productForm">
+                    {% csrf_token %}
+                    
+                    <!-- Regular form fields (excluding category which we'll handle separately) -->
+                    {% for field in form %}
+                        {% if field.name != 'category' and field.name != 'new_category' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">
+                                {% if field.name == 'name' %}
+                                    <i class="fas fa-tag"></i>
+                                {% elif field.name == 'description' %}
+                                    <i class="fas fa-align-left"></i>
+                                {% elif field.name == 'price' %}
+                                    <i class="fas fa-money-bill-wave"></i>
+                                {% elif field.name == 'stock' %}
+                                    <i class="fas fa-cubes"></i>
+                                {% elif field.name == 'image' %}
+                                    <i class="fas fa-image"></i>
+                                {% elif 'available' in field.name %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-circle"></i>
+                                {% endif %}
+                                {{ field.label }}
+                            </label>
+                            
+                            {{ field }}
+                            
+                            {% if field.help_text %}
+                            <span class="helptext">
+                                <i class="fas fa-info-circle"></i>
+                                {{ field.help_text }}
+                            </span>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                <li>
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            
+                            <!-- Image Preview for file fields -->
+                            {% if field.name == 'image' and field.value %}
+                            <div class="current-image">
+                                <img src="{{ field.value.url }}" alt="Current image">
+                                <div class="current-image-info">
+                                    <strong>Current Image</strong>
+                                    <span>Upload a new image to replace it</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Category Section - Enhanced with better UX -->
+                    <div class="category-section">
+                        <div class="category-label">
+                            <i class="fas fa-folder"></i>
+                            <span>Product Category</span>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <select name="category" class="form-control" id="categorySelect">
+                                    <option value="">-- Select existing category --</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                        {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Choose from existing categories</small>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="new_category" class="form-control" 
+                                       placeholder="Or type new category" id="newCategory"
+                                       value="{{ form.new_category.value|default:'' }}">
+                                <small class="text-muted">Add a new category (will be created automatically)</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview of selected category -->
+                        <div id="categoryPreview" class="mt-2 small text-success" style="display: none;">
+                            <i class="fas fa-check-circle"></i> 
+                            Selected: <span id="selectedCategoryName"></span>
+                        </div>
+                        
+                        <!-- Display category field errors -->
+                        {% if form.category.errors %}
+                        <div class="text-danger small mt-2">
+                            {% for error in form.category.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <i class="fas {% if 'Add' in title %}fa-plus-circle{% elif 'Edit' in title %}fa-save{% else %}fa-check{% endif %}"></i>
+                        {{ title }}
+                    </button>
+                </form>
+                
+                <!-- Back Link -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'dashboard:dashboard_home' %}" class="back-link">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('productForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Category selection logic
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategory = document.getElementById('newCategory');
+    const categoryPreview = document.getElementById('categoryPreview');
+    const selectedCategoryName = document.getElementById('selectedCategoryName');
+    
+    if (categorySelect && newCategory) {
+        // When selecting from dropdown
+        categorySelect.addEventListener('change', function() {
+            if (this.value) {
+                newCategory.value = '';
+                // Show preview
+                const selectedOption = this.options[this.selectedIndex];
+                selectedCategoryName.textContent = selectedOption.text;
+                categoryPreview.style.display = 'block';
+            } else {
+                categoryPreview.style.display = 'none';
+            }
+        });
+        
+        // When typing new category
+        newCategory.addEventListener('input', function() {
+            if (this.value) {
+                categorySelect.value = '';
+                categoryPreview.style.display = 'none';
+            }
+        });
+        
+        // Show preview if category already selected (for edit form)
+        {% if form.category.value %}
+        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+        if (selectedOption && selectedOption.text) {
+            selectedCategoryName.textContent = selectedOption.text;
+            categoryPreview.style.display = 'block';
+        }
+        {% endif %}
+    }
+    
+    // Image preview functionality
+    const imageInput = document.querySelector('input[type="file"]');
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Check file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    this.value = '';
+                    return;
+                }
+                
+                // Check file type
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Please upload a valid image file (JPEG, PNG, GIF, WebP)');
+                    this.value = '';
+                    return;
+                }
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Remove existing preview if any
+                    const existingPreview = document.querySelector('.image-preview');
+                    if (existingPreview) {
+                        existingPreview.remove();
+                    }
+                    
+                    // Create new preview
+                    const preview = document.createElement('div');
+                    preview.className = 'image-preview';
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <p><i class="fas fa-eye"></i> Image Preview</p>
+                    `;
+                    
+                    // Insert preview after file input
+                    imageInput.parentNode.insertBefore(preview, imageInput.nextSibling);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+        
+        // Client-side validation
+        const priceInput = document.querySelector('input[name="price"]');
+        const stockInput = document.querySelector('input[name="stock"]');
+        
+        if (priceInput) {
+            const price = parseFloat(priceInput.value);
+            if (isNaN(price) || price <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid price greater than 0');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> {{ title }}';
+                return;
+            }
+        }
+        
+        if (stockInput) {
+            const stock = parseInt(stockInput.value);
+            if (isNaN(stock) || stock < 0) {
+                e.preventDefault();
+                alert('Please enter a valid stock quantity (0 or greater)');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> {{ title }}';
+                return;
+            }
+        }
+    });
+    
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+        
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+    
+    // Price formatting
+    const priceField = document.querySelector('input[name="price"]');
+    if (priceField) {
+        priceField.addEventListener('blur', function() {
+            if (this.value) {
+                const value = parseFloat(this.value);
+                if (!isNaN(value)) {
+                    this.value = value.toFixed(2);
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

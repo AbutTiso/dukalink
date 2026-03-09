@@ -246,242 +246,531 @@ try:
 except ImportError:
     CATEGORY_EXISTS = False
 
+# admin_dashboard/views.py - COMPLETELY FIXED VERSION
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Count, Sum, Avg, Q, F
+from django.db.models.functions import TruncMonth, TruncDay, TruncHour
+from django.db.models import ExpressionWrapper, fields
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
+import json
+
+from accounts.models import Business, User
+from accounts.forms import BusinessVerificationForm
+from products.models import Product
+from orders.models import Order, OrderItem
+
+# Try to import VendorPayment - it should be in orders.models
+try:
+    from orders.models import VendorPayment
+    VENDOR_PAYMENT_EXISTS = True
+except ImportError:
+    VENDOR_PAYMENT_EXISTS = False
+    # Create a dummy class to avoid NameError
+    class VendorPayment:
+        class objects:
+            @staticmethod
+            def filter(*args, **kwargs):
+                return []
+            def aggregate(self, *args, **kwargs):
+                return {'commission_amount__sum': 0, 'net_amount__sum': 0}
+
+# Try to import ContactMessage - might be in a different app
+CONTACT_EXISTS = False
+try:
+    from contact.models import ContactMessage
+    CONTACT_EXISTS = True
+except ImportError:
+    try:
+        from accounts.models import ContactMessage
+        CONTACT_EXISTS = True
+    except ImportError:
+        try:
+            from orders.models import ContactMessage
+            CONTACT_EXISTS = True
+        except ImportError:
+            CONTACT_EXISTS = False
+
+
 @staff_member_required
 def admin_analytics(request):
-    """Detailed analytics for admin dashboard"""
+    """Detailed analytics for admin dashboard with REAL data from your models"""
     
-    # Date range (last 6 months)
-    six_months_ago = timezone.now() - timedelta(days=180)
-    thirty_days_ago = timezone.now() - timedelta(days=30)
+    # Get date range from request (default: 6 months)
+    days = int(request.GET.get('range', 180))
+    if days == 0:
+        start_date = timezone.datetime(2020, 1, 1)  # All time
+        range_text = 'All time'
+    else:
+        start_date = timezone.now() - timedelta(days=days)
+        range_text = f'Last {days} days'
     
-    # ===== REVENUE DATA (Monthly for last 6 months) =====
-    monthly_revenue = OrderItem.objects.filter(
-        order__status='completed',
-        order__paid=True,
-        order__created_at__gte=six_months_ago
-    ).annotate(
-        month=TruncMonth('order__created_at')
-    ).values('month').annotate(
-        total=Sum(F('quantity') * F('price'))
-    ).order_by('month')
+    # ===== BASE QUERYSETS FILTERED BY DATE =====
+    orders = Order.objects.filter(created_at__gte=start_date)
+    completed_orders = orders.filter(status='completed', paid=True)
+    pending_orders = orders.filter(status='pending')
+    processing_orders = orders.filter(status='processing')
     
-    months = []
-    revenue_data = []
-    for item in monthly_revenue:
-        months.append(item['month'].strftime('%b %Y'))
-        revenue_data.append(float(item['total']))
+    # OrderItems for completed orders (filtered by date)
+    completed_items = OrderItem.objects.filter(
+        order__in=completed_orders
+    )
     
-    # ===== ORDER STATUS DISTRIBUTION =====
-    order_status = {
-        'pending': Order.objects.filter(status='pending').count(),
-        'processing': Order.objects.filter(status='processing').count(),
-        'completed': Order.objects.filter(status='completed').count(),
-        'cancelled': Order.objects.filter(status='cancelled').count(),
-    }
+    # ===== ALL TIME METRICS (Matches Admin Dashboard EXACTLY) =====
+    # Remove paid=True filter to match admin_dashboard view
+    all_time_completed_items = OrderItem.objects.filter(
+        order__status='completed'  # Only filter by status, same as admin dashboard
+    )
     
-    # ===== KEY METRICS =====
+    # Calculate ALL TIME revenue (same as admin dashboard)
+    all_time_revenue = 0
+    for item in all_time_completed_items:
+        all_time_revenue += item.quantity * item.price
+    
+    # ALL TIME orders - remove paid=True filter
+    all_time_orders = Order.objects.filter(status='completed').count()
+    
+    # ===== KEY METRICS (Filtered by date range) =====
+    
+    # 1. User Metrics (these are always all time - users don't get filtered)
+    vendor_owner_ids = Business.objects.values_list('owner_id', flat=True)
     total_users = User.objects.filter(is_active=True).count()
+    total_buyers = User.objects.filter(
+        is_staff=False, 
+        is_superuser=False
+    ).exclude(
+        id__in=vendor_owner_ids
+    ).count()
+    
+    # 2. Vendor Metrics (all time - vendors don't get filtered by order date)
     total_vendors = Business.objects.filter(is_approved=True).count()
+    pending_vendors = Business.objects.filter(verification_status='pending').count()
+    verified_vendors = Business.objects.filter(verification_status='verified').count()
+    rejected_vendors = Business.objects.filter(verification_status='rejected').count()
+    info_needed_vendors = Business.objects.filter(verification_status='info_needed').count()
+    
+    # 3. Product Metrics (all time)
     total_products = Product.objects.filter(is_available=True).count()
-    total_orders = Order.objects.count()
+    out_of_stock = Product.objects.filter(stock=0, is_available=True).count()
+    low_stock = Product.objects.filter(stock__lte=5, stock__gt=0, is_available=True).count()
     
-    # Revenue metrics
-    total_revenue = OrderItem.objects.filter(
-        order__status='completed',
-        order__paid=True
-    ).aggregate(
-        total=Sum(F('quantity') * F('price'))
-    )['total'] or 0
+    # 4. Order Metrics (filtered by date range)
+    total_orders = orders.count()
+    total_completed = completed_orders.count()
+    completion_rate = round((total_completed / total_orders * 100) if total_orders > 0 else 0, 1)
     
-    monthly_revenue_total = OrderItem.objects.filter(
-        order__status='completed',
-        order__paid=True,
-        order__created_at__gte=thirty_days_ago
-    ).aggregate(
-        total=Sum(F('quantity') * F('price'))
-    )['total'] or 0
+    # 5. Revenue Metrics - Filtered by date range
+    filtered_revenue = 0
+    for item in completed_items:
+        filtered_revenue += item.quantity * item.price
     
-    # Growth percentages
-    previous_month = timezone.now() - timedelta(days=60)
-    last_month_revenue = OrderItem.objects.filter(
-        order__status='completed',
-        order__paid=True,
-        order__created_at__year=previous_month.year,
-        order__created_at__month=previous_month.month
-    ).aggregate(
-        total=Sum(F('quantity') * F('price'))
-    )['total'] or 0
+    # Monthly revenue (last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    monthly_items = OrderItem.objects.filter(
+        order__in=completed_orders.filter(created_at__gte=thirty_days_ago)
+    )
+    monthly_revenue = 0
+    for item in monthly_items:
+        monthly_revenue += item.quantity * item.price
     
-    if last_month_revenue > 0:
-        revenue_growth = round((monthly_revenue_total - last_month_revenue) / last_month_revenue * 100, 1)
+    # Revenue growth (comparing last 30 days to previous 30 days)
+    previous_month_start = thirty_days_ago - timedelta(days=30)
+    previous_month_items = OrderItem.objects.filter(
+        order__in=Order.objects.filter(
+            status='completed', 
+            paid=True,
+            created_at__gte=previous_month_start,
+            created_at__lt=thirty_days_ago
+        )
+    )
+    previous_month_revenue = 0
+    for item in previous_month_items:
+        previous_month_revenue += item.quantity * item.price
+    
+    if previous_month_revenue > 0:
+        revenue_growth = round((monthly_revenue - previous_month_revenue) / previous_month_revenue * 100, 1)
     else:
         revenue_growth = 0
     
-    # Completion rate
-    completed_orders = Order.objects.filter(status='completed').count()
-    completion_rate = round((completed_orders / total_orders * 100) if total_orders > 0 else 0, 1)
-    
-    # Average order value
-    avg_order_value = Order.objects.filter(
-        status='completed',
-        paid=True
-    ).aggregate(avg=Avg('total'))['avg'] or 0
-    
-    # ===== VENDOR STATISTICS =====
-    top_vendors = Business.objects.filter(
-        is_approved=True
-    ).annotate(
-        total_sales=Sum('products__orderitem__quantity', filter=Q(products__orderitem__order__status='completed')),
-        total_revenue=Sum(F('products__orderitem__quantity') * F('products__orderitem__price'), 
-                         filter=Q(products__orderitem__order__status='completed'))
-    ).order_by('-total_revenue')[:5]
-    
-    vendor_stats = []
-    for vendor in top_vendors:
-        vendor_stats.append({
-            'name': vendor.name,
-            'sales': vendor.total_sales or 0,
-            'revenue': float(vendor.total_revenue or 0)
-        })
-    
-    # Total vendor revenue
-    total_vendor_revenue = OrderItem.objects.filter(
-        product__business__is_approved=True,
-        order__status='completed'
-    ).aggregate(
-        total=Sum(F('quantity') * F('price'))
-    )['total'] or 0
-    
-    # ===== PRODUCT CATEGORIES - WITH ERROR HANDLING =====
-    category_names = []
-    category_sales = []
-    
-    if CATEGORY_EXISTS:
-        try:
-            top_categories = Category.objects.annotate(
-                total_sold=Sum('product__orderitem__quantity', filter=Q(product__orderitem__order__status='completed'))
-            ).filter(total_sold__gt=0).order_by('-total_sold')[:5]
-            
-            for cat in top_categories:
-                category_names.append(cat.name)
-                category_sales.append(cat.total_sold or 0)
-        except Exception as e:
-            # If any error occurs with categories, just use empty data
-            pass
-    
-    # ===== DAILY ORDERS (Last 7 days) =====
-    last_7_days = timezone.now() - timedelta(days=7)
-    daily_orders = Order.objects.filter(
-        created_at__gte=last_7_days
-    ).annotate(
-        day=TruncDay('created_at')
-    ).values('day').annotate(
-        count=Count('id')
-    ).order_by('day')
-    
-    days = []
-    order_counts = []
-    for item in daily_orders:
-        days.append(item['day'].strftime('%a, %b %d'))
-        order_counts.append(item['count'])
-    
-    # ===== HOURLY ORDER DISTRIBUTION =====
-    hourly_orders = Order.objects.filter(
-        created_at__gte=thirty_days_ago
-    ).annotate(
-        hour=TruncHour('created_at')
-    ).values('hour').annotate(
-        count=Count('id')
-    ).order_by('hour')
-    
-    hours = list(range(24))
-    hourly_counts = [0] * 24
-    
-    for item in hourly_orders:
-        if item['hour']:
-            hour = item['hour'].hour
-            hourly_counts[hour] = item['count']
-    
-    # ===== PAYMENT METHODS =====
-    mpesa_orders = Order.objects.filter(payment_method='MPESA', paid=True).count()
-    cash_orders = Order.objects.filter(payment_method='CASH', paid=True).count()
-    
-    # ===== AVERAGE PROCESSING TIME =====
-    completed_orders_with_time = Order.objects.filter(
-        status='completed',
-        paid=True
-    ).annotate(
-        processing_time=ExpressionWrapper(
-            F('updated_at') - F('created_at'),
-            output_field=fields.DurationField()
-        )
-    )
-    
-    avg_time = completed_orders_with_time.aggregate(
-        avg=Avg('processing_time')
-    )['avg']
-    
-    if avg_time:
-        hours = avg_time.total_seconds() / 3600
-        avg_processing_time = round(hours, 1)
+    # 6. Average Order Value (filtered by date range)
+    if total_completed > 0:
+        avg_order_value = filtered_revenue / total_completed
     else:
-        avg_processing_time = 0
+        avg_order_value = 0
     
-    # ===== RECENT ACTIVITY =====
+    # 7. Payment Methods (filtered by date range)
+    mpesa_orders = completed_orders.filter(
+        Q(payment_method__icontains='mpesa') | 
+        Q(payment_method__in=['mpesa_till', 'mpesa_paybill'])
+    ).count()
+    
+    cash_orders = completed_orders.filter(payment_method='cash_on_delivery').count()
+    pochi_orders = completed_orders.filter(payment_method='pochi_biashara').count()
+    
+    # 8. Commission Data - ONLY if VendorPayment exists (filtered by date range)
+    total_commission = 0
+    total_paid_to_vendors = 0
+    
+    if VENDOR_PAYMENT_EXISTS:
+        try:
+            vendor_payments = VendorPayment.objects.filter(
+                order__in=completed_orders,
+                status='completed'
+            )
+            total_commission = vendor_payments.aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+            total_paid_to_vendors = vendor_payments.aggregate(Sum('net_amount'))['net_amount__sum'] or 0
+        except Exception as e:
+            print(f"VendorPayment error: {e}")
+            total_commission = 0
+            total_paid_to_vendors = 0
+    
+    # 9. Customer Messages - ONLY if ContactMessage exists
+    unread_messages = 0
+    total_messages = 0
+    
+    if CONTACT_EXISTS:
+        try:
+            unread_messages = ContactMessage.objects.filter(is_read=False).count()
+            total_messages = ContactMessage.objects.filter(created_at__gte=start_date).count()
+        except Exception as e:
+            print(f"ContactMessage error: {e}")
+            unread_messages = 0
+            total_messages = 0
+    
+    # ===== CHART DATA (All filtered by date range) =====
+    
+    # 1. REVENUE CHART (Monthly - filtered by date range)
+    monthly_revenue_data = {}
+    current = start_date.replace(day=1)
+    end = timezone.now().replace(day=1)
+    
+    while current <= end:
+        month_str = current.strftime('%b %Y')
+        monthly_revenue_data[month_str] = 0
+        # Move to next month
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+    
+    # Aggregate revenue by month
+    for item in completed_items:
+        month_str = item.order.created_at.strftime('%b %Y')
+        if month_str in monthly_revenue_data:
+            monthly_revenue_data[month_str] += item.quantity * item.price
+    
+    months = list(monthly_revenue_data.keys())
+    revenue_data = list(monthly_revenue_data.values())
+    
+    # 2. ORDER STATUS CHART (filtered by date range)
+    order_status = {
+        'pending': orders.filter(status='pending').count(),
+        'processing': orders.filter(status='processing').count(),
+        'completed': orders.filter(status='completed').count(),
+        'cancelled': orders.filter(status='cancelled').count(),
+    }
+    
+    # 3. TOP VENDORS (Businesses) - Filtered by date range
+    vendors_with_sales = []
+    for vendor in Business.objects.filter(is_approved=True)[:20]:  # Limit to top 20 for performance
+        # Get vendor's completed order items for the selected period
+        vendor_items = OrderItem.objects.filter(
+            product__business=vendor,
+            order__in=completed_orders
+        )
+        
+        # Calculate totals
+        total_sales = 0
+        total_rev = 0
+        for item in vendor_items:
+            total_sales += item.quantity
+            total_rev += item.quantity * item.price
+        
+        # Only include vendors with sales
+        if total_rev > 0:
+            # Calculate growth
+            previous_period_items = OrderItem.objects.filter(
+                product__business=vendor,
+                order__in=Order.objects.filter(
+                    status='completed',
+                    paid=True,
+                    created_at__gte=start_date - timedelta(days=days),
+                    created_at__lt=start_date
+                )
+            )
+            prev_sales = sum(item.quantity for item in previous_period_items)
+            current_sales = total_sales
+            growth = round(((current_sales - prev_sales) / prev_sales * 100) if prev_sales > 0 else 0, 1)
+            
+            vendors_with_sales.append({
+                'name': vendor.name,
+                'logo': vendor.logo.url if vendor.logo and hasattr(vendor.logo, 'url') else None,
+                'sales': total_sales,
+                'revenue': float(total_rev),
+                'orders': vendor_items.values('order').distinct().count(),
+                'growth': growth if growth > 0 else None,
+            })
+    
+    # Sort by revenue and get top 5
+    top_vendors = sorted(vendors_with_sales, key=lambda x: x['revenue'], reverse=True)[:5]
+    total_vendor_revenue = sum(v['revenue'] for v in top_vendors)
+    
+    # 4. RECENT ACTIVITY (filtered by date range)
     recent_orders = Order.objects.filter(
         status='completed',
-        paid=True
+        paid=True,
+        created_at__gte=start_date
+    ).select_related(
+        'customer'
+    ).prefetch_related(
+        'order_items__product__business'
     ).order_by('-updated_at')[:10]
     
     recent_activity = []
     for order in recent_orders:
+        # Calculate order total
+        order_total = 0
+        vendors = set()
+        items_count = 0
+        
+        for item in order.order_items.all():
+            order_total += item.quantity * item.price
+            items_count += item.quantity
+            if item.product and item.product.business:
+                vendors.add(item.product.business.name)
+        
         recent_activity.append({
             'order_id': order.id,
             'customer': order.customer_name,
-            'amount': float(order.total),
+            'amount': float(order_total),
+            'items': items_count,
+            'vendors': ', '.join(list(vendors)[:2]) + ('...' if len(vendors) > 2 else ''),
             'time': order.updated_at
         })
     
+    # 5. TOP PRODUCTS (filtered by date range)
+    product_sales = {}
+    for item in completed_items:
+        product = item.product
+        if product and product.id not in product_sales:
+            product_sales[product.id] = {
+                'name': product.name,
+                'business': product.business.name if product.business else 'Unknown',
+                'quantity': 0,
+                'revenue': 0
+            }
+        if product and product.id in product_sales:
+            product_sales[product.id]['quantity'] += item.quantity
+            product_sales[product.id]['revenue'] += item.quantity * item.price
+    
+    top_products = sorted(product_sales.values(), key=lambda x: x['revenue'], reverse=True)[:5]
+    
+    # 6. CATEGORIES (by Business Type) - filtered by date range
+    category_data = {}
+    for vendor in Business.objects.filter(is_approved=True):
+        vendor_items = OrderItem.objects.filter(
+            product__business=vendor,
+            order__in=completed_orders
+        )
+        total_sold = sum(item.quantity for item in vendor_items)
+        if total_sold > 0:
+            biz_type = vendor.get_business_type_display() if vendor.business_type else 'Other'
+            if biz_type not in category_data:
+                category_data[biz_type] = 0
+            category_data[biz_type] += total_sold
+    
+    category_names = list(category_data.keys())
+    category_sales = list(category_data.values())
+    
+    # 7. HOURLY DISTRIBUTION (filtered by date range)
+    hourly_counts = [0] * 24
+    for order in completed_orders:
+        hour = order.created_at.hour
+        hourly_counts[hour] += 1
+    
+    hours = list(range(24))
+    
+    # 8. LAST 7 DAYS (filtered by date range)
+    last_7_days = []
+    order_counts = []
+    revenue_by_day = []
+    
+    for i in range(6, -1, -1):
+        day = timezone.now() - timedelta(days=i)
+        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        day_orders = completed_orders.filter(created_at__range=[day_start, day_end])
+        count = day_orders.count()
+        
+        # Calculate day revenue
+        day_revenue = 0
+        for order in day_orders:
+            for item in order.order_items.all():
+                day_revenue += item.quantity * item.price
+        
+        last_7_days.append(day.strftime('%a, %d %b'))
+        order_counts.append(count)
+        revenue_by_day.append(float(day_revenue))
+    
+    # 9. GEOGRAPHIC DISTRIBUTION (by County) - all time
+    county_data = {}
+    for vendor in Business.objects.filter(county__isnull=False).exclude(county=''):
+        if vendor.county not in county_data:
+            county_data[vendor.county] = 0
+        county_data[vendor.county] += 1
+    
+    # Sort and get top 10 counties
+    sorted_counties = sorted(county_data.items(), key=lambda x: x[1], reverse=True)[:10]
+    counties = [item[0] for item in sorted_counties]
+    vendor_counts = [item[1] for item in sorted_counties]
+    
+    # 10. PAYMENT METHODS BREAKDOWN (filtered by date range)
+    payment_methods = {
+        'M-Pesa (Till)': orders.filter(payment_method='mpesa_till').count(),
+        'M-Pesa (Paybill)': orders.filter(payment_method='mpesa_paybill').count(),
+        'Pochi Biashara': orders.filter(payment_method='pochi_biashara').count(),
+        'Cash on Delivery': orders.filter(payment_method='cash_on_delivery').count(),
+    }
+    
+    # 11. VERIFICATION STATUS - all time
+    verification_status = {
+        'pending': Business.objects.filter(verification_status='pending').count(),
+        'under_review': Business.objects.filter(verification_status='under_review').count(),
+        'verified': Business.objects.filter(verification_status='verified').count(),
+        'rejected': Business.objects.filter(verification_status='rejected').count(),
+        'info_needed': Business.objects.filter(verification_status='info_needed').count(),
+    }
+    
+    # 12. AVERAGE PROCESSING TIME (filtered by date range)
+    processing_times = []
+    for order in completed_orders.filter(updated_at__isnull=False):
+        if order.updated_at and order.created_at:
+            time_diff = order.updated_at - order.created_at
+            hours = time_diff.total_seconds() / 3600
+            if hours > 0:
+                processing_times.append(hours)
+    
+    avg_processing_time = round(sum(processing_times) / len(processing_times), 1) if processing_times else 0
+    
+    # 13. DOCUMENT STATS - all time
+    vendors_with_docs = Business.objects.exclude(
+        business_registration_cert=''
+    ).exclude(
+        business_registration_cert__isnull=True
+    ).count()
+    
+    vendors_with_kra = Business.objects.exclude(
+        kra_certificate=''
+    ).exclude(
+        kra_certificate__isnull=True
+    ).count()
+    
+    # ===== PREPARE CONTEXT FOR TEMPLATE =====
     context = {
-        # Chart data
+        # Chart data (JSON serialized)
         'months': json.dumps(months),
-        'revenue_data': json.dumps(revenue_data),
+        'revenue_data': json.dumps([float(r) for r in revenue_data]),
         'order_status': order_status,
-        'days': json.dumps(days),
+        'days': json.dumps(last_7_days),
         'order_counts': json.dumps(order_counts),
+        'revenue_by_day': json.dumps(revenue_by_day),
         'hours': json.dumps(hours),
         'hourly_counts': json.dumps(hourly_counts),
         'category_names': json.dumps(category_names),
         'category_sales': json.dumps(category_sales),
+        'counties': json.dumps(counties),
+        'vendor_counts': json.dumps(vendor_counts),
+        'payment_methods': payment_methods,
+        'verification_status': verification_status,
         
-        # Key metrics
+        # Key metrics - ALL TIME (matches admin dashboard)
+        'all_time_revenue': float(all_time_revenue),
+        'all_time_orders': all_time_orders,
         'total_users': total_users,
+        'total_buyers': total_buyers,
         'total_vendors': total_vendors,
+        'pending_vendors': pending_vendors,
+        'verified_vendors': verified_vendors,
+        'rejected_vendors': rejected_vendors,
+        'info_needed_vendors': info_needed_vendors,
         'total_products': total_products,
+        'out_of_stock': out_of_stock,
+        'low_stock': low_stock,
+        
+        # Filtered metrics (for the selected period)
+        'filtered_revenue': float(filtered_revenue),
         'total_orders': total_orders,
-        'total_revenue': float(total_revenue),
-        'monthly_revenue': float(monthly_revenue_total),
-        'revenue_growth': revenue_growth,
+        'completed_orders': total_completed,
         'completion_rate': completion_rate,
+        'monthly_revenue': float(monthly_revenue),
+        'revenue_growth': revenue_growth,
         'avg_order_value': float(avg_order_value),
         'avg_processing_time': avg_processing_time,
         
-        # Vendor stats
-        'top_vendors': vendor_stats,
+        # Vendor stats (filtered)
+        'top_vendors': top_vendors,
         'total_vendor_revenue': float(total_vendor_revenue),
+        'top_products': top_products,
         
-        # Payment methods
+        # Payment stats (filtered)
         'mpesa_orders': mpesa_orders,
         'cash_orders': cash_orders,
+        'pochi_orders': pochi_orders,
+        'total_commission': float(total_commission),
+        'total_paid_to_vendors': float(total_paid_to_vendors),
         
-        # Recent activity
+        # Document stats (all time)
+        'vendors_with_docs': vendors_with_docs,
+        'vendors_with_kra': vendors_with_kra,
+        
+        # Customer messages (filtered)
+        'unread_messages': unread_messages,
+        'total_messages': total_messages,
+        
+        # Recent activity (filtered)
         'recent_activity': recent_activity,
         
-        # Timestamps
+        # Metadata
         'today': timezone.now(),
+        'range_text': range_text,
+        'days': days,
     }
     
     return render(request, 'admin_dashboard/analytics.html', context)
+
+
+# Add this API endpoint for real-time updates
+@staff_member_required
+def analytics_live_data(request):
+    """Return latest metrics for real-time updates"""
+    last_minute = timezone.now() - timedelta(minutes=1)
+    
+    new_orders = Order.objects.filter(created_at__gte=last_minute).count()
+    
+    new_revenue = 0
+    new_items = OrderItem.objects.filter(
+        order__in=Order.objects.filter(
+            status='completed',
+            paid=True,
+            created_at__gte=last_minute
+        )
+    )
+    for item in new_items:
+        new_revenue += item.quantity * item.price
+    
+    return JsonResponse({
+        'new_orders': new_orders,
+        'new_revenue': float(new_revenue),
+        'timestamp': timezone.now().isoformat(),
+    })
+
+    
 @staff_member_required
 def make_superadmin(request, user_id):
     """Promote a user to superadmin"""

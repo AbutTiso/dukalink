@@ -94,6 +94,23 @@ def checkout(request):
         messages.error(request, "Your cart is empty")
         return redirect("products:product_list")
     
+    # Check stock availability before proceeding
+    stock_errors = []
+    for product_id, item_data in cart.cart.items():
+        try:
+            product = Product.objects.get(id=product_id)
+            cart_qty = item_data.get('quantity', 1)
+            
+            if product.stock < cart_qty:
+                stock_errors.append(f"{product.name} - only {product.stock} available, you have {cart_qty} in cart")
+        except Product.DoesNotExist:
+            stock_errors.append(f"Product with ID {product_id} not found")
+    
+    if stock_errors:
+        for error in stock_errors:
+            messages.error(request, error)
+        return redirect("orders:cart_detail")
+    
     # Group items by vendor
     vendor_items = group_cart_by_vendor(cart)
     
@@ -166,7 +183,7 @@ def handle_pochi_payment(request, cart, vendor_items, customer_name, phone):
                     session_key=request.session.session_key
                 )
                 
-                # Create order items
+                # Create order items and reduce stock
                 for item in vendor_data['items']:
                     OrderItem.objects.create(
                         order=order,
@@ -175,6 +192,12 @@ def handle_pochi_payment(request, cart, vendor_items, customer_name, phone):
                         quantity=item['quantity'],
                         price=item['price']
                     )
+                    
+                    # Reduce product stock
+                    product = item['product']
+                    product.stock -= item['quantity']
+                    product.save()
+                    logger.info(f"Reduced stock for {product.name}: {product.stock} remaining")
                 
                 created_orders.append(order)
                 logger.info(f"Created Pochi order #{order.id} for vendor {vendor_data['vendor'].username}")
@@ -221,7 +244,7 @@ def handle_mpesa_payment(request, cart, vendor_items, customer_name, phone, tota
                     session_key=request.session.session_key
                 )
                 
-                # Create order items
+                # Create order items and reduce stock
                 for item in vendor_data['items']:
                     OrderItem.objects.create(
                         order=order,
@@ -230,6 +253,12 @@ def handle_mpesa_payment(request, cart, vendor_items, customer_name, phone, tota
                         quantity=item['quantity'],
                         price=item['price']
                     )
+                    
+                    # Reduce product stock
+                    product = item['product']
+                    product.stock -= item['quantity']
+                    product.save()
+                    logger.info(f"Reduced stock for {product.name}: {product.stock} remaining")
                 
                 created_orders.append(order)
                 logger.info(f"Created M-Pesa order #{order.id} for vendor {vendor_data['vendor'].username}")
@@ -347,11 +376,11 @@ def process_single_vendor_payment(request, order, phone, current_index, total_or
             if current_index + 1 < total_orders:
                 next_url = reverse('payments:process_next_vendor_payment')
             
-            # Show waiting page - PASS BOTH order.id AND order_id for template compatibility
+            # Show waiting page
             return render(request, 'payments/payment_waiting.html', {
                 'order': order,
-                'order_id': order.id,  # Explicitly pass order_id
-                'orderId': order.id,    # Also pass orderId for JavaScript
+                'order_id': order.id,
+                'orderId': order.id,
                 'vendor': vendor,
                 'checkout_request_id': checkout_request_id,
                 'current': current_index + 1,
@@ -361,17 +390,17 @@ def process_single_vendor_payment(request, order, phone, current_index, total_or
                 'next_url': next_url
             })
         else:
-            # Payment failed - don't delete order, just show error
+            # Payment failed - but stock was already reduced
+            # You might want to restore stock here if payment fails
             error_message = response.get("error", response.get("errorMessage", "Failed to initiate payment"))
             messages.error(request, f"Payment failed: {error_message}")
-            
-            # Return to payment page to try again
             return redirect('payments:process_next_vendor_payment')
             
     except Exception as e:
         logger.exception(f"Error in vendor payment: {str(e)}")
         messages.error(request, f"Payment failed: {str(e)}")
         return redirect('payments:process_next_vendor_payment')
+
 # -----------------------------
 # Handle Cash on Delivery
 # -----------------------------
@@ -394,6 +423,7 @@ def handle_cod_payment(request, cart, vendor_items, customer_name, phone, total_
                     session_key=request.session.session_key
                 )
                 
+                # Create order items and reduce stock
                 for item in vendor_data['items']:
                     OrderItem.objects.create(
                         order=order,
@@ -402,13 +432,19 @@ def handle_cod_payment(request, cart, vendor_items, customer_name, phone, total_
                         quantity=item['quantity'],
                         price=item['price']
                     )
+                    
+                    # Reduce product stock
+                    product = item['product']
+                    product.stock -= item['quantity']
+                    product.save()
+                    logger.info(f"Reduced stock for {product.name}: {product.stock} remaining")
                 
                 created_orders.append(order)
         
         cart.clear()
         
         messages.success(request, f"Orders placed successfully! Pay on delivery.")
-        return redirect('payments:order_success', order_id=created_orders[0].id)
+        return redirect('payments:payment_success', order_id=created_orders[0].id)
         
     except Exception as e:
         logger.error(f"Failed to create COD orders: {str(e)}")
@@ -476,15 +512,27 @@ def process_mpesa_payment(request, order, cart, phone, customer_name, total):
                 }
             )
         else:
-            # STK push failed - delete the order
+            # STK push failed - delete the order and restore stock
+            # Restore stock first
+            for item in order.items.all():
+                product = item.product
+                product.stock += item.quantity
+                product.save()
+                logger.info(f"Restored stock for {product.name}: {product.stock}")
+            
             order.delete()
             error_message = response.get("error", response.get("errorMessage", "Failed to initiate payment"))
             messages.error(request, f"Payment failed: {error_message}")
             return redirect("payments:checkout")
             
     except Exception as e:
-        # Delete order if payment fails
-        order.delete()
+        # Restore stock if order exists
+        if order.pk:
+            for item in order.items.all():
+                product = item.product
+                product.stock += item.quantity
+                product.save()
+            order.delete()
         logger.exception(f"Error in checkout payment: {str(e)}")
         messages.error(request, f"Payment failed: {str(e)}")
         return redirect("payments:checkout")
@@ -736,6 +784,61 @@ def confirm_vendor_payment(request, order_id):
 
 
 # -----------------------------
+# NEW: Confirm Delivery for COD orders
+# -----------------------------
+@login_required
+def confirm_delivery(request, order_id):
+    """Mark COD order as paid after delivery (vendor confirmation)"""
+    if request.method == 'POST':
+        try:
+            business = Business.objects.get(owner=request.user)
+            order = get_object_or_404(Order, id=order_id)
+            
+            # Verify this vendor has products in this order
+            if not order.items.filter(product__business=business).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'You do not have permission to confirm this delivery'
+                })
+            
+            # Check if it's a COD order
+            if order.payment_method == 'cash_on_delivery' and not order.paid:
+                order.paid = True
+                order.payment_confirmed_by = request.user
+                order.payment_confirmed_at = timezone.now()
+                order.status = 'completed'
+                order.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Delivery confirmed for Order #{order.id}. Payment marked as received.'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'This order cannot be marked as paid'
+                })
+                
+        except Business.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have a registered business"
+            })
+        except Order.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Order not found'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+# -----------------------------
 # M-Pesa callback views
 # -----------------------------
 @csrf_exempt
@@ -813,8 +916,18 @@ def mpesa_callback(request):
             
             logger.info(f"Payment completed: {checkout_request_id}")
         else:
-            # Payment failed
+            # Payment failed - restore stock
             payment.status = 'FAILED'
+            if payment.order:
+                order = payment.order
+                # Restore stock for all items in this order
+                for item in order.items.all():
+                    product = item.product
+                    product.stock += item.quantity
+                    product.save()
+                    logger.info(f"Restored stock for {product.name}: {product.stock}")
+                logger.info(f"Stock restored for failed order #{order.id}")
+            
             logger.info(f"Payment failed: {checkout_request_id} - {result_desc}")
         
         payment.save()
@@ -844,6 +957,16 @@ def mpesa_timeout(request):
                 payment.status = 'FAILED'
                 payment.result_description = 'Transaction timed out'
                 payment.save()
+                
+                # Restore stock
+                if payment.order:
+                    order = payment.order
+                    for item in order.items.all():
+                        product = item.product
+                        product.stock += item.quantity
+                        product.save()
+                    logger.info(f"Stock restored for timed out order #{order.id}")
+                    
                 logger.info(f"Payment timed out: {checkout_request_id}")
             except MpesaPayment.DoesNotExist:
                 logger.warning(f"Payment not found for timeout: {checkout_request_id}")
@@ -852,6 +975,7 @@ def mpesa_timeout(request):
     except Exception as e:
         logger.exception(f"Error in timeout callback: {str(e)}")
         return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
+
 
 @login_required
 def confirm_pochi_payment(request, order_id):
@@ -877,3 +1001,20 @@ def confirm_pochi_payment(request, order_id):
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+def order_success(request, order_id):
+    """Order success page after checkout"""
+    try:
+        order = Order.objects.get(id=order_id, customer=request.user)
+    except (Order.DoesNotExist, TypeError):
+        order = None
+    
+    # Clear the cart
+    cart = Cart(request)
+    cart.clear()
+    
+    return render(request, 'payments/success.html', {
+        'order': order,
+        'order_id': order_id
+    })

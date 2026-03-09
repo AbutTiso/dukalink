@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Buyer Account - DukaLink{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    
+    .register-card {
+        max-width: 500px;
+        width: 100%;
+        background: white;
+        border-radius: 32px;
+        box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.15);
+        overflow: hidden;
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        padding: 2rem;
+        text-align: center;
+        color: white;
+    }
+    
+    .register-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .register-header p {
+        opacity: 0.9;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+    
+    .register-body {
+        padding: 2rem;
+    }
+    
+    .benefits-list {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .benefits-list h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 1rem;
+    }
+    
+    .benefits-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .benefits-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        color: #334155;
+        font-size: 0.95rem;
+    }
+    
+    .benefits-list li i {
+        color: #10b981;
+        font-size: 1.1rem;
+        width: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .form-control:focus {
+        border-color: #2563eb;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #ef4444;
+    }
+    
+    .invalid-feedback {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+    
+    .password-requirements {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-size: 0.85rem;
+    }
+    
+    .password-requirements p {
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+    }
+    
+    .password-requirements ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .password-requirements li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+        color: #64748b;
+    }
+    
+    .password-requirements li i {
+        font-size: 0.8rem;
+        width: 16px;
+    }
+    
+    .password-requirements li.valid i {
+        color: #10b981;
+    }
+    
+    .password-requirements li.invalid i {
+        color: #ef4444;
+    }
+    
+    .terms-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+    
+    .terms-check input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        cursor: pointer;
+    }
+    
+    .terms-check label {
+        font-size: 0.9rem;
+        color: #334155;
+    }
+    
+    .terms-check a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .terms-check a:hover {
+        text-decoration: underline;
+    }
+    
+    .btn-register {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    
+    .btn-register:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .login-link p {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    .login-link a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .alert-error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+    
+    .alert-success {
+        background: #dcfce7;
+        border: 1px solid #86efac;
+        color: #166534;
+    }
+    
+    .phone-input-group {
+        display: flex;
+        align-items: center;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .phone-prefix {
+        background: #f1f5f9;
+        padding: 0.75rem 1rem;
+        color: #334155;
+        font-weight: 500;
+        border-right: 2px solid #e2e8f0;
+    }
+    
+    .phone-input-group .form-control {
+        border: none;
+        border-radius: 0;
+    }
+    
+    .phone-input-group .form-control:focus {
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h1>Create Buyer Account</h1>
+            <p>Start shopping on DukaLink</p>
+        </div>
+        
+        <div class="register-body">
+            <!-- Benefits of registering -->
+            <div class="benefits-list">
+                <h3>🎉 Benefits of creating an account:</h3>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Track all your orders in one place</li>
+                    <li><i class="fas fa-check-circle"></i> Save favorite products and shops</li>
+                    <li><i class="fas fa-check-circle"></i> Faster checkout with saved details</li>
+                    <li><i class="fas fa-check-circle"></i> Get order updates and notifications</li>
+                </ul>
+            </div>
+            
+            <!-- Display messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Registration Form -->
+            <form method="POST" action="{% url 'accounts:register_user' %}" id="registerForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" class="form-control" 
+                           value="{{ form.username.value|default:'' }}" required>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_email">Email Address</label>
+                    <input type="email" name="email" id="id_email" class="form-control" 
+                           value="{{ form.email.value|default:'' }}" required>
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_phone">Phone Number</label>
+                    <div class="phone-input-group">
+                        <span class="phone-prefix">+254</span>
+                        <input type="tel" name="phone" id="id_phone" class="form-control" 
+                               placeholder="712345678" value="{{ form.phone.value|default:'' }}">
+                    </div>
+                    <small class="text-muted">Optional: Add your phone for order updates</small>
+                    {% if form.phone.errors %}
+                        <div class="invalid-feedback">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password1">Password</label>
+                    <input type="password" name="password1" id="id_password1" class="form-control" required>
+                    {% if form.password1.errors %}
+                        <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password2">Confirm Password</label>
+                    <input type="password" name="password2" id="id_password2" class="form-control" required>
+                    {% if form.password2.errors %}
+                        <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Password Requirements (visual feedback) -->
+                <div class="password-requirements" id="passwordRequirements">
+                    <p>Password must contain:</p>
+                    <ul>
+                        <li id="req-length" class="invalid">
+                            <i class="fas fa-times-circle"></i> At least 8 characters
+                        </li>
+                        <li id="req-upper" class="invalid">
+                            <i class="fas fa-times-circle"></i> At least one uppercase letter
+                        </li>
+                        <li id="req-lower" class="invalid">
+                            <i class="fas fa-times-circle"></i> At least one lowercase letter
+                        </li>
+                        <li id="req-number" class="invalid">
+                            <i class="fas fa-times-circle"></i> At least one number
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="terms-check">
+                    <input type="checkbox" name="terms" id="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="{% url 'pages:terms_of_service' %}" target="_blank">Terms of Service</a> 
+                        and <a href="{% url 'pages:privacy_policy' %}" target="_blank">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-register" id="submitBtn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            
+            <div class="login-link">
+                <p>Already have an account? <a href="{% url 'accounts:login' %}">Log in here</a></p>
+            </div>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted small">Want to sell on DukaLink? <a href="{% url 'accounts:register_business' %}">Register as a vendor</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('registerForm');
+    
+    // Password requirements check
+    function checkPasswordStrength() {
+        const password = password1.value;
+        
+        const lengthReq = document.getElementById('req-length');
+        const upperReq = document.getElementById('req-upper');
+        const lowerReq = document.getElementById('req-lower');
+        const numberReq = document.getElementById('req-number');
+        
+        // Check length
+        if (password.length >= 8) {
+            lengthReq.className = 'valid';
+            lengthReq.innerHTML = '<i class="fas fa-check-circle"></i> At least 8 characters ✓';
+        } else {
+            lengthReq.className = 'invalid';
+            lengthReq.innerHTML = '<i class="fas fa-times-circle"></i> At least 8 characters';
+        }
+        
+        // Check uppercase
+        if (/[A-Z]/.test(password)) {
+            upperReq.className = 'valid';
+            upperReq.innerHTML = '<i class="fas fa-check-circle"></i> At least one uppercase letter ✓';
+        } else {
+            upperReq.className = 'invalid';
+            upperReq.innerHTML = '<i class="fas fa-times-circle"></i> At least one uppercase letter';
+        }
+        
+        // Check lowercase
+        if (/[a-z]/.test(password)) {
+            lowerReq.className = 'valid';
+            lowerReq.innerHTML = '<i class="fas fa-check-circle"></i> At least one lowercase letter ✓';
+        } else {
+            lowerReq.className = 'invalid';
+            lowerReq.innerHTML = '<i class="fas fa-times-circle"></i> At least one lowercase letter';
+        }
+        
+        // Check number
+        if (/[0-9]/.test(password)) {
+            numberReq.className = 'valid';
+            numberReq.innerHTML = '<i class="fas fa-check-circle"></i> At least one number ✓';
+        } else {
+            numberReq.className = 'invalid';
+            numberReq.innerHTML = '<i class="fas fa-times-circle"></i> At least one number';
+        }
+    }
+    
+    if (password1) {
+        password1.addEventListener('input', checkPasswordStrength);
+    }
+    
+    // Password match validation
+    function validatePasswords() {
+        if (password2 && password2.value && password1.value !== password2.value) {
+            password2.setCustomValidity('Passwords do not match');
+        } else if (password2) {
+            password2.setCustomValidity('');
+        }
+    }
+    
+    if (password1 && password2) {
+        password1.addEventListener('change', validatePasswords);
+        password2.addEventListener('input', validatePasswords);
+    }
+    
+    // Phone number validation (Kenyan format)
+    const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 9) {
+                this.value = this.value.slice(0, 9);
+            }
+        });
+    }
+    
+    // Form submission loading state
+    if (form) {
+        form.addEventListener('submit', function() {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

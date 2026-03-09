@@ -7,18 +7,65 @@ from django.urls import reverse
 import json
 from products.models import Product
 from orders.cart import Cart
-from dashboard.views import order_detail  # Import the existing order_detail view from dashboard
+from dashboard.views import order_detail
+from functools import wraps
+
+# ===== CUSTOM DECORATOR FOR AJAX LOGIN REQUIREMENT =====
+def ajax_login_required(view_func):
+    """Decorator for AJAX views that returns JSON login required response"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'login_required': True,
+                'error': 'Please login to continue',
+                'login_url': '/accounts/login/',
+                'register_url': '/accounts/register/'
+            }, status=403)
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 # Your existing views
 def track_order(request, order_code):
     return render(request, "orders/track_order.html", {"order_code": order_code})
 
 def cart_add(request, product_id):
-    """Regular view - redirects back to shop"""
+    """Regular view - redirects back to shop with quantity support"""
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-    cart.add(product)
-    messages.success(request, f"{product.name} added to cart.")
+    
+    # Get quantity from request (default to 1)
+    quantity = int(request.POST.get('quantity', request.GET.get('quantity', 1)))
+    
+    # Check if product is available
+    if not product.is_available:
+        messages.error(request, f"{product.name} is not available.")
+        return redirect("shops:shop_detail", slug=product.business.slug)
+    
+    # Check if product is in stock
+    if product.stock <= 0:
+        messages.error(request, f"{product.name} is out of stock.")
+        return redirect("shops:shop_detail", slug=product.business.slug)
+    
+    # Get current quantity in cart
+    current_qty = 0
+    if str(product_id) in cart.cart:
+        current_qty = cart.cart[str(product_id)]['quantity']
+    
+    # Check if adding more would exceed stock
+    if current_qty + quantity > product.stock:
+        messages.error(request, f"Only {product.stock} of {product.name} available. You already have {current_qty} in cart.")
+        return redirect("shops:shop_detail", slug=product.business.slug)
+    
+    # Add to cart with specified quantity
+    cart.add(product, quantity=quantity)
+    
+    # Success message based on quantity
+    if quantity > 1:
+        messages.success(request, f"{quantity} x {product.name} added to cart.")
+    else:
+        messages.success(request, f"{product.name} added to cart.")
     
     # Check if it's an AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -26,7 +73,8 @@ def cart_add(request, product_id):
             'success': True,
             'cart_count': len(cart),
             'cart_total': float(cart.get_total()),
-            'message': f"{product.name} added to cart."
+            'message': f"{quantity} x {product.name} added to cart.",
+            'stock_left': product.stock - (current_qty + quantity)
         })
     
     return redirect("shops:shop_detail", slug=product.business.slug)
@@ -51,14 +99,28 @@ def cart_remove(request, product_id):
 
 def cart_detail(request):
     cart = Cart(request)
-    return render(request, "orders/cart_detail.html", {"cart": cart})
+    
+    # Check stock for all items in cart and show warnings
+    stock_warnings = []
+    for product_id, item_data in cart.cart.items():
+        try:
+            product = Product.objects.get(id=product_id)
+            if product.stock < item_data['quantity']:
+                stock_warnings.append(f"{product.name}: Only {product.stock} available, you have {item_data['quantity']} in cart")
+        except Product.DoesNotExist:
+            stock_warnings.append(f"Product with ID {product_id} not found")
+    
+    return render(request, "orders/cart_detail.html", {
+        "cart": cart,
+        "stock_warnings": stock_warnings
+    })
 
 # ===== NEW AJAX ENDPOINTS FOR REAL-TIME CART UPDATES =====
 
 @require_POST
 @csrf_exempt
 def cart_add_ajax(request):
-    """AJAX view to add item to cart without page refresh"""
+    """AJAX view to add item to cart without page refresh with quantity support"""
     try:
         data = json.loads(request.body) if request.body else {}
         product_id = data.get('product_id')
@@ -73,17 +135,43 @@ def cart_add_ajax(request):
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
         
+        # Check if product is available
+        if not product.is_available:
+            return JsonResponse({
+                'success': False,
+                'error': f"{product.name} is not available"
+            }, status=400)
+        
+        # Check stock
+        if product.stock <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': f"{product.name} is out of stock"
+            }, status=400)
+        
+        # Get current quantity in cart
+        current_qty = 0
+        if str(product_id) in cart.cart:
+            current_qty = cart.cart[str(product_id)]['quantity']
+        
+        # Check if adding would exceed stock
+        if current_qty + quantity > product.stock:
+            return JsonResponse({
+                'success': False,
+                'error': f"Only {product.stock} of {product.name} available. You already have {current_qty} in cart."
+            }, status=400)
+        
         # Add product with specified quantity
-        for i in range(quantity):
-            cart.add(product)
+        cart.add(product, quantity=quantity)
         
         return JsonResponse({
             'success': True,
             'cart_count': len(cart),
             'cart_total': float(cart.get_total()),
-            'message': f"{product.name} added to cart.",
+            'message': f"{quantity} x {product.name} added to cart.",
             'product_id': product_id,
-            'quantity': quantity
+            'quantity': quantity,
+            'stock_left': product.stock - (current_qty + quantity)
         })
         
     except Product.DoesNotExist:
@@ -137,7 +225,7 @@ def cart_remove_ajax(request):
 @require_POST
 @csrf_exempt
 def cart_update_ajax(request):
-    """AJAX view to update item quantity"""
+    """AJAX view to update item quantity with stock validation"""
     try:
         data = json.loads(request.body) if request.body else {}
         product_id = data.get('product_id')
@@ -152,6 +240,13 @@ def cart_update_ajax(request):
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
         
+        # Validate stock for new quantity
+        if quantity > product.stock:
+            return JsonResponse({
+                'success': False,
+                'error': f"Cannot set quantity to {quantity}. Only {product.stock} available."
+            }, status=400)
+        
         # Get current quantity
         current_qty = 0
         if str(product_id) in cart.cart:
@@ -162,17 +257,10 @@ def cart_update_ajax(request):
             cart.remove(product)
             item_total = 0
         else:
-            # Calculate difference and update
-            diff = quantity - current_qty
-            if diff > 0:
-                for i in range(diff):
-                    cart.add(product)
-            elif diff < 0:
-                # Need to decrease quantity - we'd need a decrement method
-                # For now, we'll just update directly if you have quantity field
-                if str(product.id) in cart.cart:
-                    cart.cart[str(product.id)]['quantity'] = quantity
-                    cart.save()
+            # Update directly
+            if str(product.id) in cart.cart:
+                cart.cart[str(product.id)]['quantity'] = quantity
+                cart.save()
             
             item_total = float(product.price * quantity)
         
@@ -182,7 +270,8 @@ def cart_update_ajax(request):
             'cart_total': float(cart.get_total()),
             'item_total': item_total,
             'product_id': product_id,
-            'quantity': quantity
+            'quantity': quantity,
+            'stock_left': product.stock - quantity
         })
         
     except Product.DoesNotExist:
@@ -231,16 +320,23 @@ def cart_add_api_alt(request):
                 'success': False,
                 'error': 'Product ID is required'
             }, status=400)
+        
+        # Get quantity from request
+        data = json.loads(request.body) if request.body else {}
+        quantity = int(data.get('quantity', 1))
             
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
-        cart.add(product)
+        
+        # Add product with specified quantity
+        cart.add(product, quantity=quantity)
         
         return JsonResponse({
             'success': True,
             'cart_count': len(cart),
             'cart_total': float(cart.get_total()),
-            'message': f"{product.name} added to cart."
+            'message': f"{quantity} x {product.name} added to cart.",
+            'quantity': quantity
         })
         
     except Exception as e:
@@ -254,6 +350,7 @@ def handle_cart_add_api(request):
     try:
         data = json.loads(request.body) if request.body else {}
         product_id = data.get('product_id')
+        quantity = int(data.get('quantity', 1))
         
         if not product_id:
             return JsonResponse({
@@ -263,13 +360,16 @@ def handle_cart_add_api(request):
         
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
-        cart.add(product)
+        
+        # Add product with specified quantity
+        cart.add(product, quantity=quantity)
         
         return JsonResponse({
             'success': True,
             'cart_count': len(cart),
             'cart_total': float(cart.get_total()),
-            'message': f"{product.name} added to cart."
+            'message': f"{quantity} x {product.name} added to cart.",
+            'quantity': quantity
         })
         
     except Exception as e:
@@ -338,7 +438,7 @@ def cart_decrement(request, product_id):
     if product_id_str in cart.cart:
         current_qty = cart.cart[product_id_str]['quantity']
         if current_qty > 1:
-            # Decrease by 1 - need to update cart
+            # Decrease by 1
             cart.cart[product_id_str]['quantity'] = current_qty - 1
             cart.save()
         else:
@@ -356,7 +456,8 @@ def cart_decrement(request, product_id):
         })
     
     return redirect("orders:cart_detail")
-# orders/views.py
+
+# orders/views.py (continued)
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Order
@@ -393,9 +494,29 @@ def confirm_pochi_payment(request, order_id):
         # Mark as pending verification
         messages.success(request, 'Payment information submitted! Vendor will confirm shortly.')
         
-        # Optional: Send notification to vendor
-        # send_vendor_notification(order)
-        
         return redirect('orders:order_detail', order_id=order.id)
     
     return redirect('orders:pochi_payment_instructions', order_id=order.id)
+
+
+# ===== CART CLEAR AJAX ENDPOINT =====
+@require_POST
+@csrf_exempt
+def cart_clear_ajax(request):
+    """AJAX endpoint to clear the entire cart"""
+    try:
+        cart = Cart(request)
+        cart.clear()
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': 0,
+            'cart_total': 0,
+            'message': 'Cart cleared successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

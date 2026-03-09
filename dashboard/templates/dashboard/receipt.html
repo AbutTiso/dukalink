@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Receipt #{{ order.id }} - {{ business.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    
+    .receipt-header {
+        text-align: center;
+        border-bottom: 2px dashed #e2e8f0;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .receipt-header h1 {
+        color: #2563eb;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .business-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #eab308;
+        margin-bottom: 0.5rem;
+    }
+    
+    .receipt-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-weight: 600;
+        color: #0f172a;
+    }
+    
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+    
+    .items-table th {
+        background: #2563eb;
+        color: white;
+        padding: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .items-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .items-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .total-row {
+        font-weight: 700;
+        font-size: 1.25rem;
+        background: #f8fafc;
+    }
+    
+    .total-row td {
+        padding: 1rem 0.75rem;
+    }
+    
+    .vendor-thanks {
+        background: #eab30810;
+        border-left: 4px solid #eab308;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1.5rem 0;
+        font-size: 1.1rem;
+        color: #0f172a;
+    }
+    
+    .vendor-thanks strong {
+        color: #eab308;
+    }
+    
+    .print-btn {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .print-btn:hover {
+        background: #1e40af;
+        transform: translateY(-2px);
+    }
+    
+    .back-btn {
+        background: #e2e8f0;
+        color: #334155;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+        background: #cbd5e1;
+        transform: translateY(-2px);
+    }
+    
+    @media print {
+        .no-print {
+            display: none;
+        }
+        .receipt-container {
+            box-shadow: none;
+            padding: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h1>DUKALINK</h1>
+            <div class="business-name">{{ business.name }}</div>
+            <p class="mt-2"><strong>OFFICIAL RECEIPT</strong></p>
+        </div>
+        
+        <div class="receipt-details">
+            <div class="detail-item">
+                <span class="detail-label">Receipt No:</span>
+                <span class="detail-value">#{{ order.id }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Date:</span>
+                <span class="detail-value">{{ order.created_at|date:"d M Y, H:i" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Customer:</span>
+                <span class="detail-value">{{ order.customer_name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Phone:</span>
+                <span class="detail-value">{{ order.customer_phone }}</span>
+            </div>
+        </div>
+        
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>KSh {{ item.price|floatformat:2 }}</td>
+                    <td>KSh {{ item.total_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;"><strong>TOTAL:</strong></td>
+                    <td><strong>KSh {{ total_amount|floatformat:2 }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- Vendor Thank You Message -->
+        <div class="vendor-thanks">
+            <i class="fas fa-heart me-2" style="color: #eab308;"></i>
+            Thank you for shopping with <strong>{{ business.name }}</strong>! 
+            We appreciate your business and hope to serve you again soon.
+        </div>
+        
+        <div class="receipt-footer">
+            <p class="text-muted mb-3">This is a computer generated receipt. No signature required.</p>
+            <div class="no-print">
+                <button onclick="window.print()" class="print-btn">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <a href="{% url 'dashboard:order_detail' order.id %}" class="back-btn">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Order
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -34,10 +34,18 @@
         <!-- Product Info -->
         <div class="col-lg-6">
             <div class="mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                     <a href="{% url 'shops:shop_detail' product.business.slug %}" class="badge text-decoration-none" style="background: var(--duka-blue); color: white; padding: 0.75rem 1.25rem; border-radius: 50px; font-size: 0.875rem;">
                         <i class="fas fa-store me-1"></i> {{ product.business.name }}
                     </a>
+                    
+                    <!-- Category Badge if exists -->
+                    {% if product.category %}
+                    <span class="badge" style="background: #e6f3ff; color: #0066b3; padding: 0.75rem 1.25rem; border-radius: 50px;">
+                        <i class="fas fa-folder me-1"></i> {{ product.category.name }}
+                    </span>
+                    {% endif %}
+                    
                     {% if product.stock > 0 %}
                     <span class="badge" style="background: #e6f9ed; color: #1e7a44; padding: 0.75rem 1.25rem; border-radius: 50px;">
                         <i class="fas fa-check-circle me-1"></i> In Stock ({{ product.stock }} available)
@@ -65,21 +73,24 @@
                 {% if product.stock > 0 %}
                 <div class="card-modern p-4 mb-4" style="background: linear-gradient(135deg, #f8fafc, white);">
                     <div class="row align-items-center g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <label class="form-label fw-medium mb-1">Quantity</label>
                             <div class="input-group" style="border-radius: 50px; overflow: hidden;">
-                                <button class="btn btn-outline-secondary" type="button" onclick="decrementQuantity()" style="border: 1px solid #e2e8f0;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="decrementQuantity()" style="border: 1px solid #e2e8f0; padding: 0.75rem 1rem;">
                                     <i class="fas fa-minus"></i>
                                 </button>
-                                <input type="number" id="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock }}" style="border: 1px solid #e2e8f0; border-left: none; border-right: none; padding: 0.5rem;">
-                                <button class="btn btn-outline-secondary" type="button" onclick="incrementQuantity({{ product.stock }})" style="border: 1px solid #e2e8f0;">
+                                <input type="number" id="quantity" class="form-control text-center" value="1" min="1" max="{{ product.stock }}" style="border: 1px solid #e2e8f0; border-left: none; border-right: none; padding: 0.75rem;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="incrementQuantity({{ product.stock }})" style="border: 1px solid #e2e8f0; padding: 0.75rem 1rem;">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
+                            <small class="text-muted mt-1 d-block">
+                                <i class="fas fa-box me-1"></i> {{ product.stock }} units available
+                            </small>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <div class="d-grid gap-2">
-                                <button onclick="addToCart({{ product.id }}, this)" class="btn-duka-yellow btn-lg">
+                                <button onclick="addToCart({{ product.id }}, this)" class="btn-duka-yellow btn-lg" id="addToCartBtn">
                                     <i class="fas fa-cart-plus me-2"></i>Add to Cart
                                 </button>
                             </div>
@@ -161,7 +172,8 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
                 'product_id': productId,
@@ -188,8 +200,9 @@
             // Update cart count display
             updateCartCount(cartCount);
             
-            // Show success message
-            showToast('✅ Product added to cart successfully!', 'success');
+            // Show success message with quantity
+            const successMessage = data.message || `${quantity} x ${productId} added to cart`;
+            showToast('✅ ' + successMessage, 'success');
         })
         .catch(error => {
             console.error('Error:', error);
@@ -329,6 +342,17 @@
     .card-modern:hover {
         transform: translateY(-8px);
         box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Stock indicator styles */
+    .stock-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f8fafc;
+        border-radius: 50px;
+        margin-top: 0.5rem;
     }
 </style>
 {% endblock %}

@@ -116,6 +116,90 @@
         text-decoration: none;
     }
 
+    /* Category Sidebar Styles */
+    .category-sidebar {
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--duka-card-shadow);
+        overflow: hidden;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .category-header {
+        background: linear-gradient(135deg, var(--duka-blue), var(--duka-blue-dark));
+        color: white;
+        padding: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .category-header i {
+        margin-right: 0.5rem;
+    }
+    
+    .category-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .category-item {
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .category-item:last-child {
+        border-bottom: none;
+    }
+    
+    .category-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1.25rem;
+        color: #334155;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .category-link:hover {
+        background: #f8fafc;
+        color: var(--duka-blue);
+        padding-left: 1.5rem;
+    }
+    
+    .category-link.active {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .category-link.active .category-count {
+        background: white;
+        color: var(--duka-blue);
+    }
+    
+    .category-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .category-name i {
+        width: 20px;
+        color: var(--duka-blue);
+    }
+    
+    .category-link.active .category-name i {
+        color: white;
+    }
+    
+    .category-count {
+        background: #f1f5f9;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
     /* Product Badge */
     .product-badge {
         background: var(--duka-blue);
@@ -140,6 +224,34 @@
         text-decoration: underline;
     }
 
+    /* Category Filter Pills */
+    .category-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .category-pill {
+        padding: 0.5rem 1.25rem;
+        background: #f1f5f9;
+        border-radius: 50px;
+        color: #334155;
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .category-pill:hover,
+    .category-pill.active {
+        background: var(--duka-blue);
+        color: white;
+    }
+    
+    .category-pill i {
+        margin-right: 0.25rem;
+    }
+    
     /* Pagination */
     .page-link {
         border: none;
@@ -215,6 +327,26 @@
         to { transform: rotate(360deg); }
     }
 
+    /* Active Category Indicator */
+    .active-category-badge {
+        background: var(--duka-blue);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .active-category-badge a {
+        color: white;
+        opacity: 0.8;
+    }
+    
+    .active-category-badge a:hover {
+        opacity: 1;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .filter-btn {
@@ -225,24 +357,85 @@
         .card-modern {
             border-radius: 20px;
         }
+        
+        .category-sidebar {
+            position: static;
+            margin-bottom: 2rem;
+        }
+    }
+
+    /* Active sort indicator */
+    .active-sort-badge {
+        background: #f1f5f9;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        color: #0f172a;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <!-- Header with Search -->
-    <div class="row mb-5">
+    <!-- Header with Search and Results Count -->
+    <div class="row mb-4">
         <div class="col-lg-8">
             <h1 class="display-5 fw-bold mb-3">
                 <span style="color: var(--duka-blue);">🛍️</span> Browse Products
             </h1>
             <p class="lead text-muted">Discover unique products from Kenyan vendors</p>
+            
+            <!-- Results count and active filters -->
+            <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+                <span class="text-muted">
+                    <i class="fas fa-box me-1"></i> {{ total_results }} products found
+                </span>
+                
+                <!-- Active Category Indicator -->
+                {% if selected_category %}
+                    {% for category in categories %}
+                        {% if category.id == selected_category %}
+                        <span class="active-category-badge">
+                            <i class="fas fa-folder me-1"></i>
+                            {{ category.name }}
+                            <a href="?{% if query %}q={{ query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" class="ms-2">
+                                <i class="fas fa-times-circle"></i>
+                            </a>
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Active Sort Indicator -->
+                {% if current_sort and current_sort != 'newest' %}
+                <span class="active-sort-badge">
+                    <i class="fas fa-sort me-1"></i> 
+                    {% if current_sort == 'price_low' %}Price: Low to High
+                    {% elif current_sort == 'price_high' %}Price: High to Low
+                    {% elif current_sort == 'name_asc' %}Name: A to Z
+                    {% elif current_sort == 'name_desc' %}Name: Z to A
+                    {% endif %}
+                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=newest" class="ms-2 text-danger">
+                        <i class="fas fa-times-circle"></i>
+                    </a>
+                </span>
+                {% endif %}
+            </div>
         </div>
+        
         <div class="col-lg-4">
             <form method="get" class="d-flex">
+                {% if selected_category %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+                {% endif %}
+                {% if current_sort %}
+                <input type="hidden" name="sort" value="{{ current_sort }}">
+                {% endif %}
                 <div class="input-group" style="border-radius: 50px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <input type="text" name="q" class="form-control border-0" placeholder="Search products..." value="{{ request.GET.q }}" style="padding: 0.75rem 1.25rem;">
+                    <input type="text" name="q" class="form-control border-0" placeholder="Search products..." value="{{ query }}" style="padding: 0.75rem 1.25rem;">
                     <button class="btn" type="submit" style="background: var(--duka-blue); color: white; padding: 0.75rem 1.5rem;">
                         <i class="fas fa-search"></i>
                     </button>
@@ -250,128 +443,244 @@
             </form>
         </div>
     </div>
-    
-    <!-- Filter Bar -->
-    <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
-        <span class="fw-medium">Filter by:</span>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=all" class="filter-btn {% if not request.GET.sort or request.GET.sort == 'all' %}active{% endif %}">
-            All Products
-        </a>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=price_low" class="filter-btn {% if request.GET.sort == 'price_low' %}active{% endif %}">
-            Price: Low to High
-        </a>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=price_high" class="filter-btn {% if request.GET.sort == 'price_high' %}active{% endif %}">
-            Price: High to Low
-        </a>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}sort=newest" class="filter-btn {% if request.GET.sort == 'newest' %}active{% endif %}">
-            Newest First
-        </a>
-    </div>
-    
-    <!-- Products Grid -->
-    <div class="row g-4">
-        {% for product in products %}
-        <div class="col-md-4 col-lg-3">
-            <div class="card-modern">
-                <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
-                    <div class="position-relative">
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
-                        {% else %}
-                        <div style="height: 200px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-image fa-4x" style="color: var(--duka-blue); opacity: 0.5;"></i>
+
+    <!-- Main Content Row with Sidebar -->
+    <div class="row">
+        <!-- Category Sidebar - Left Column -->
+        <div class="col-lg-3 mb-4">
+            <div class="category-sidebar">
+                <div class="category-header">
+                    <i class="fas fa-folder"></i> Categories
+                </div>
+                <ul class="category-list">
+                    <li class="category-item">
+                        <a href="?{% if query %}q={{ query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" 
+                           class="category-link {% if not selected_category %}active{% endif %}">
+                            <span class="category-name">
+                                <i class="fas fa-tshirt"></i>
+                                All Products
+                            </span>
+                            <span class="category-count">{{ total_results }}</span>
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                    <li class="category-item">
+                        <a href="?category={{ category.id }}{% if query %}&q={{ query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                           class="category-link {% if selected_category == category.id %}active{% endif %}">
+                            <span class="category-name">
+                                {% if category.image %}
+                                <img src="{{ category.image.url }}" alt="{{ category.name }}" 
+                                     style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover;">
+                                {% else %}
+                                <i class="fas fa-folder"></i>
+                                {% endif %}
+                                {{ category.name }}
+                            </span>
+                            <span class="category-count">{{ category.products.count }}</span>
+                        </a>
+                    </li>
+                    {% empty %}
+                    <li class="category-item">
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-box-open fa-2x mb-2"></i>
+                            <p class="mb-0">No categories yet</p>
                         </div>
-                        {% endif %}
-                        <span class="position-absolute top-0 start-0 m-3 badge product-badge">
-                            <a href="{% url 'shops:shop_detail' product.business.slug %}" class="text-white text-decoration-none">
-                                {{ product.business.name }}
-                            </a>
-                        </span>
-                    </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Price Range Filter -->
+                <div class="p-3 border-top">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-filter me-2" style="color: var(--duka-blue);"></i>Price Range</h6>
+                    <form method="get" action="{% url 'products:product_list' %}">
+                        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                        {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+                        <div class="mb-3">
+                            <label class="form-label small">Min Price (Ksh)</label>
+                            <input type="number" name="min_price" class="form-control form-control-sm" placeholder="0" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Max Price (Ksh)</label>
+                            <input type="number" name="max_price" class="form-control form-control-sm" placeholder="100000" min="0">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary w-100" style="border-radius: 50px;">
+                            <i class="fas fa-search me-2"></i>Apply Filter
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Grid - Right Column -->
+        <div class="col-lg-9">
+            <!-- Filter Bar - Mobile friendly category pills -->
+            <div class="category-pills d-lg-none mb-4">
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if current_sort %}sort={{ current_sort }}{% endif %}" 
+                   class="category-pill {% if not selected_category %}active{% endif %}">
+                    <i class="fas fa-tshirt"></i> All
+                </a>
+                {% for category in categories|slice:":8" %}
+                <a href="?category={{ category.id }}{% if query %}&q={{ query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                   class="category-pill {% if selected_category == category.id %}active{% endif %}">
+                    {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="" style="width: 16px; height: 16px; border-radius: 2px; margin-right: 4px;">
+                    {% else %}
+                    <i class="fas fa-folder"></i>
+                    {% endif %}
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Sort Bar -->
+            <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
+                <span class="fw-medium">Sort by:</span>
+                
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=newest" 
+                   class="filter-btn {% if current_sort == 'newest' or not current_sort %}active{% endif %}">
+                    <i class="fas fa-clock me-1"></i> Newest First
                 </a>
                 
-                <div class="card-body p-4">
-                    <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
-                        <h5 class="card-title fw-bold mb-2 text-dark">{{ product.name }}</h5>
-                        <p class="card-text text-muted small mb-3">{{ product.description|truncatewords:10 }}</p>
-                    </a>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="h4 fw-bold mb-0" style="color: var(--duka-blue);">Ksh {{ product.price }}</span>
-                        {% if product.stock > 0 %}
-                        <span class="badge bg-success" style="padding: 0.5rem;">
-                            <i class="fas fa-check-circle me-1"></i> In Stock
-                        </span>
-                        {% else %}
-                        <span class="badge bg-danger" style="padding: 0.5rem;">
-                            Out of Stock
-                        </span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'products:product_detail' product.id %}" class="btn btn-outline-primary" style="border-radius: 50px; border-color: var(--duka-blue); color: var(--duka-blue); padding: 0.75rem;">
-                            <i class="fas fa-eye me-2"></i>View Details
-                        </a>
-                        {% if product.stock > 0 %}
-                        <button onclick="addToCart({{ product.id }}, this)" class="btn-duka-yellow">
-                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="card-modern p-5 text-center">
-                <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <i class="fas fa-box-open fa-4x" style="color: var(--duka-blue);"></i>
-                </div>
-                <h3 class="fw-bold mb-3">No products found</h3>
-                <p class="text-muted mb-4">Try adjusting your search or filter to find what you're looking for.</p>
-                <a href="{% url 'products:product_list' %}" class="btn-duka-blue">
-                    <i class="fas fa-redo-alt me-2"></i>Clear Filters
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=price_low" 
+                   class="filter-btn {% if current_sort == 'price_low' %}active{% endif %}">
+                    <i class="fas fa-arrow-up me-1"></i> Price: Low to High
                 </a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Pagination -->
-    {% if products.has_other_pages %}
-    <nav class="mt-5">
-        <ul class="pagination justify-content-center">
-            {% if products.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
-                    <i class="fas fa-chevron-left"></i>
+                
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=price_high" 
+                   class="filter-btn {% if current_sort == 'price_high' %}active{% endif %}">
+                    <i class="fas fa-arrow-down me-1"></i> Price: High to Low
                 </a>
-            </li>
-            {% endif %}
-            
-            {% for num in products.paginator.page_range %}
-                {% if products.number == num %}
-                <li class="page-item active">
-                    <span class="page-link" style="background: var(--duka-blue); border-color: var(--duka-blue); border-radius: 50px; margin: 0 5px;">{{ num }}</span>
-                </li>
-                {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue); margin: 0 5px;">{{ num }}</a>
-                </li>
+                
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=name_asc" 
+                   class="filter-btn {% if current_sort == 'name_asc' %}active{% endif %}">
+                    <i class="fas fa-sort-alpha-down me-1"></i> Name: A to Z
+                </a>
+                
+                <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}sort=name_desc" 
+                   class="filter-btn {% if current_sort == 'name_desc' %}active{% endif %}">
+                    <i class="fas fa-sort-alpha-up me-1"></i> Name: Z to A
+                </a>
+                
+                <!-- Clear all filters button -->
+                {% if query or selected_category or current_sort and current_sort != 'newest' %}
+                <a href="{% url 'products:product_list' %}" class="filter-btn" style="border-color: #ef4444; color: #ef4444; margin-left: auto;">
+                    <i class="fas fa-times me-1"></i> Clear All
+                </a>
                 {% endif %}
-            {% endfor %}
+            </div>
             
-            {% if products.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
+            <!-- Products Grid -->
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-md-4 col-lg-3">
+                    <div class="card-modern">
+                        <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                            <div class="position-relative">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                <div style="height: 200px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image fa-4x" style="color: var(--duka-blue); opacity: 0.5;"></i>
+                                </div>
+                                {% endif %}
+                                <span class="position-absolute top-0 start-0 m-3 badge product-badge">
+                                    <a href="{% url 'shops:shop_detail' product.business.slug %}" class="text-white text-decoration-none">
+                                        {{ product.business.name }}
+                                    </a>
+                                </span>
+                                {% if product.category %}
+                                <span class="position-absolute top-0 end-0 m-3 badge" style="background: rgba(37,99,235,0.9); color: white; padding: 0.35rem 0.75rem; border-radius: 50px; font-size: 0.7rem;">
+                                    <i class="fas fa-folder me-1"></i>{{ product.category.name|truncatechars:12 }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        
+                        <div class="card-body p-4">
+                            <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                                <h5 class="card-title fw-bold mb-2 text-dark">{{ product.name }}</h5>
+                                <p class="card-text text-muted small mb-3">{{ product.description|truncatewords:8 }}</p>
+                            </a>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h4 fw-bold mb-0" style="color: var(--duka-blue);">Ksh {{ product.price }}</span>
+                                {% if product.stock > 0 %}
+                                <span class="badge bg-success" style="padding: 0.5rem;">
+                                    <i class="fas fa-check-circle me-1"></i> In Stock
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger" style="padding: 0.5rem;">
+                                    Out of Stock
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.id %}" class="btn btn-outline-primary" style="border-radius: 50px; border-color: var(--duka-blue); color: var(--duka-blue); padding: 0.75rem;">
+                                    <i class="fas fa-eye me-2"></i>View Details
+                                </a>
+                                {% if product.stock > 0 %}
+                                <button onclick="addToCart({{ product.id }}, this)" class="btn-duka-yellow">
+                                    <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card-modern p-5 text-center">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-box-open fa-4x" style="color: var(--duka-blue);"></i>
+                        </div>
+                        <h3 class="fw-bold mb-3">No products found</h3>
+                        <p class="text-muted mb-4">Try adjusting your search or filter to find what you're looking for.</p>
+                        <a href="{% url 'products:product_list' %}" class="btn-duka-blue">
+                            <i class="fas fa-redo-alt me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in products.paginator.page_range %}
+                        {% if products.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: var(--duka-blue); border-color: var(--duka-blue); border-radius: 50px; margin: 0 5px;">{{ num }}</span>
+                        </li>
+                        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue); margin: 0 5px;">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="border-radius: 50px; color: var(--duka-blue);">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
             {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
+        </div>
+    </div>
 </div>
 
 <!-- Hidden CSRF Token for AJAX requests -->
@@ -389,13 +698,12 @@
         cartCountElements.forEach(element => {
             if (element) {
                 element.textContent = count;
-                // Make sure it's visible
                 element.style.display = 'inline-block';
             }
         });
     }
 
-    // Function to add product to cart - UPDATED URL to match your existing view
+    // Function to add product to cart
     function addToCart(productId, buttonElement) {
         // Show loading state on button
         const originalText = buttonElement.innerHTML;
@@ -404,7 +712,6 @@
         
         const csrfToken = getCsrfToken();
         
-        // Use the URL pattern that matches your existing cart_add view
         fetch(`/orders/cart/add/${productId}/`, {
             method: 'POST',
             headers: {
@@ -417,37 +724,25 @@
         })
         .then(response => {
             if (response.redirected) {
-                // This is a redirect response - but we want JSON
-                // Let's try to get cart count from session via another call
                 return fetch('/orders/cart/count/').then(res => res.json());
             }
             return response.json().catch(() => {
-                // If not JSON, it might be a redirect
                 return fetch('/orders/cart/count/').then(res => res.json());
             });
         })
         .then(data => {
-            // Reset button
             buttonElement.innerHTML = originalText;
             buttonElement.disabled = false;
             
-            // Get cart count - either from data or fetch it
             let cartCount = data.cart_count || 0;
-            
-            // Update cart count display
             updateCartCount(cartCount);
-            
-            // Show success message
             showToast('✅ Product added to cart successfully!', 'success');
         })
         .catch(error => {
             console.error('Error:', error);
-            
-            // Reset button
             buttonElement.innerHTML = originalText;
             buttonElement.disabled = false;
             
-            // Try alternative endpoint
             fetch('/orders/api/cart/add/', {
                 method: 'POST',
                 headers: {
@@ -491,7 +786,6 @@
 
     // Toast notification function
     function showToast(message, type = 'success') {
-        // Create toast container if it doesn't exist
         if (!document.getElementById('toast-container')) {
             const container = document.createElement('div');
             container.id = 'toast-container';
@@ -499,12 +793,10 @@
             document.body.appendChild(container);
         }
         
-        // Create toast element
         const toast = document.createElement('div');
         toast.className = `alert alert-${type} alert-modern d-flex align-items-center`;
         toast.style.cssText = 'animation: slideIn 0.3s ease; min-width: 300px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);';
         
-        // Set icon based on type
         let icon = 'fa-check-circle';
         if (type === 'danger') icon = 'fa-exclamation-circle';
         if (type === 'warning') icon = 'fa-exclamation-triangle';
@@ -518,7 +810,6 @@
         
         document.getElementById('toast-container').appendChild(toast);
         
-        // Auto-remove toast after 3 seconds
         setTimeout(() => {
             toast.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
@@ -527,17 +818,28 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Fetch current cart count
         fetchCartCount();
         
         // Handle filter button active state
         const filterButtons = document.querySelectorAll('.filter-btn');
         const currentUrl = new URL(window.location.href);
-        const currentSort = currentUrl.searchParams.get('sort') || 'all';
+        const currentSort = currentUrl.searchParams.get('sort') || 'newest';
         
         filterButtons.forEach(button => {
             if (button.href.includes(`sort=${currentSort}`)) {
                 button.classList.add('active');
+            }
+        });
+        
+        // Add active class to current category in sidebar
+        const categoryLinks = document.querySelectorAll('.category-link');
+        const selectedCategory = currentUrl.searchParams.get('category');
+        
+        categoryLinks.forEach(link => {
+            if (selectedCategory && link.href.includes(`category=${selectedCategory}`)) {
+                link.classList.add('active');
+            } else if (!selectedCategory && link.href.includes('All Products')) {
+                link.classList.add('active');
             }
         });
     });
@@ -545,9 +847,7 @@
 
 {% block extra_js %}
 <script>
-    // Additional JS for cart count if needed
     document.addEventListener('DOMContentLoaded', function() {
-        // Make sure cart count is updated every time page loads
         setTimeout(fetchCartCount, 100);
     });
 </script>

@@ -313,6 +313,62 @@
         font-weight: 800;
     }
 
+    /* Category Badge Styles */
+    .category-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        background: #f1f5f9;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-badge i {
+        color: var(--duka-blue);
+        margin-right: 0.25rem;
+    }
+    
+    .category-filter {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .category-filter-title {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #1e293b;
+    }
+    
+    .category-filter-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .category-filter-item {
+        padding: 0.4rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        color: #475569;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .category-filter-item:hover,
+    .category-filter-item.active {
+        background: var(--duka-blue);
+        border-color: var(--duka-blue);
+        color: white;
+    }
+
     @media (max-width: 768px) {
         .dashboard-header {
             padding: 1.5rem 0;
@@ -412,6 +468,26 @@
         </div>
     </div>
 
+    <!-- Category Filter Section (New) -->
+    {% if categories %}
+    <div class="category-filter mb-4">
+        <div class="category-filter-title">
+            <i class="fas fa-folder me-2" style="color: var(--duka-blue);"></i>
+            Product Categories
+        </div>
+        <div class="category-filter-list">
+            <a href="{% url 'dashboard:dashboard_home' %}" class="category-filter-item {% if not selected_category %}active{% endif %}">
+                All Products
+            </a>
+            {% for category in categories %}
+            <a href="?category={{ category.id }}" class="category-filter-item {% if selected_category == category.id %}active{% endif %}">
+                {{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Shop Link & Actions Row -->
     <div class="row mb-5 g-4">
         <div class="col-lg-7">
@@ -463,7 +539,7 @@
         </a>
     </div>
 
-    <!-- Products Grid -->
+    <!-- Products Grid with Category Display -->
     <div class="row g-4">
         {% for product in products %}
         <div class="col-xl-3 col-lg-4 col-md-6">
@@ -476,31 +552,38 @@
                             <i class="fas fa-image"></i>
                         </div>
                     {% endif %}
-                    {% if product.is_featured %}
-                        <span class="product-badge">
-                            <i class="fas fa-star"></i> Featured
-                        </span>
-                    {% endif %}
                 </div>
                 <div class="product-body">
                     <h3 class="product-title">{{ product.name|truncatechars:30 }}</h3>
+                    
+                    <!-- Category Badge -->
+                    <div class="mb-2">
+                        {% if product.category %}
+                        <span class="category-badge">
+                            <i class="fas fa-folder"></i> {{ product.category.name }}
+                        </span>
+                        {% else %}
+                        <span class="category-badge" style="background: #e2e8f0; color: #64748b;">
+                            <i class="fas fa-folder-open"></i> Uncategorized
+                        </span>
+                        {% endif %}
+                    </div>
+                    
                     <div class="product-price">Ksh {{ product.price|floatformat:2 }}</div>
                     
                     <div class="product-meta">
-                        {% if product.stock_quantity %}
                         <span class="product-stock">
-                            {% if product.stock_quantity > 10 %}
+                            {% if product.stock > 10 %}
                                 <i class="fas fa-check-circle stock-in"></i>
-                                <span class="stock-in">{{ product.stock_quantity }} in stock</span>
-                            {% elif product.stock_quantity > 0 %}
+                                <span class="stock-in">{{ product.stock }} in stock</span>
+                            {% elif product.stock > 0 %}
                                 <i class="fas fa-exclamation-circle stock-low"></i>
-                                <span class="stock-low">Low stock ({{ product.stock_quantity }})</span>
+                                <span class="stock-low">Low stock ({{ product.stock }})</span>
                             {% else %}
                                 <i class="fas fa-times-circle stock-out"></i>
                                 <span class="stock-out">Out of stock</span>
                             {% endif %}
                         </span>
-                        {% endif %}
                     </div>
                     
                     {% if product.description %}
@@ -569,7 +652,6 @@
 <script>
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
-        // Show a temporary tooltip or notification
         alert('Shop link copied to clipboard!');
     }, function(err) {
         console.error('Could not copy text: ', err);
@@ -584,7 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Add this to your base CSS or keep here
+// Add animation keyframes
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInUp {

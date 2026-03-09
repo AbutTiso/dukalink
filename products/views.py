@@ -1,35 +1,73 @@
-from django.shortcuts import render
-
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
-from .models import Product
+from django.db.models import Q
+from django.urls import reverse
+from .models import Product, Category
 
 def product_list(request):
-    products = Product.objects.all()
+    """Display all products with search, filtering, and sorting"""
+    # Start with all available products
+    products = Product.objects.filter(is_available=True).select_related('business', 'category')
     
-    # Search functionality
-    query = request.GET.get('q')
+    # Get all categories for filter sidebar
+    categories = Category.objects.all().order_by('name')
+    
+    # Handle search query
+    query = request.GET.get('q', '')
     if query:
-        products = products.filter(name__icontains=query) | products.filter(description__icontains=query)
+        products = products.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(business__name__icontains=query)
+        ).distinct()
     
-    # Pagination
-    paginator = Paginator(products, 12)  # Show 12 products per page
+    # Handle category filter
+    category_id = request.GET.get('category')
+    if category_id:
+        products = products.filter(category_id=category_id)
+    
+    # Handle sorting
+    sort = request.GET.get('sort', 'newest')
+    
+    if sort == 'price_low':
+        products = products.order_by('price')
+    elif sort == 'price_high':
+        products = products.order_by('-price')
+    elif sort == 'newest':
+        products = products.order_by('-created_at')
+    elif sort == 'name_asc':
+        products = products.order_by('name')
+    elif sort == 'name_desc':
+        products = products.order_by('-name')
+    else:
+        products = products.order_by('-created_at')
+    
+    # Pagination - 12 products per page
+    paginator = Paginator(products, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'products/product_list.html', {'products': page_obj})
+    context = {
+        'products': page_obj,
+        'categories': categories,
+        'query': query,
+        'current_sort': sort,
+        'selected_category': int(category_id) if category_id else None,
+        'total_results': products.count(),
+    }
+    
+    return render(request, 'products/product_list.html', context)
 
-# products/views.py
-from django.shortcuts import render, get_object_or_404
-from .models import Product
 
 def product_detail(request, product_id):
+    """Display single product details"""
     product = get_object_or_404(Product, id=product_id)
     
-    # Get related products from same business
+    # Get related products from same business or same category
     related_products = Product.objects.filter(
-        business=product.business
-    ).exclude(id=product.id)[:4]
+        Q(business=product.business) | Q(category=product.category),
+        is_available=True
+    ).exclude(id=product.id).distinct()[:4]
     
     context = {
         'product': product,
@@ -37,72 +75,48 @@ def product_detail(request, product_id):
     }
     return render(request, 'products/product_detail.html', context)
 
-def product_list(request):
-    products = Product.objects.filter(
-        business__isnull=False
-    ).select_related('business').order_by('-created_at')
-    
-    context = {
-        'products': products,
-    }
-    return render(request, 'products/product_list.html', context)
-
-from django.shortcuts import render
-from django.db.models import Q
-from .models import Product
 
 def product_search(request):
-    """Search products by name, description, or shop"""
+    """Search products - redirects to product_list with search query"""
     query = request.GET.get('q', '')
-    sort = request.GET.get('sort', 'relevance')
+    sort = request.GET.get('sort', 'newest')
+    category = request.GET.get('category', '')
     
-    # Start with all available products - use is_available instead of is_active
-    products = Product.objects.filter(is_available=True)  # ← CHANGED: is_active to is_available
-    
-    # Apply search filter if query exists
+    # Build redirect URL with query and sort parameters
+    url = reverse('products:product_list')
+    params = []
     if query:
-        products = products.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(business__name__icontains=query)
-        ).distinct()
+        params.append(f'q={query}')
+    if sort:
+        params.append(f'sort={sort}')
+    if category:
+        params.append(f'category={category}')
     
-    # Apply sorting
-    if sort == 'price_low':
-        products = products.order_by('price')
-    elif sort == 'price_high':
-        products = products.order_by('-price')
-    elif sort == 'newest':
-        products = products.order_by('-created_at')
-    else:  # relevance - default ordering
-        products = products.order_by('-created_at')
+    if params:
+        url += '?' + '&'.join(params)
+    
+    return redirect(url)
+
+
+def products_by_category(request, category_slug):
+    """Display products filtered by category slug"""
+    category = get_object_or_404(Category, slug=category_slug)
+    products = Product.objects.filter(category=category, is_available=True)
+    
+    # Get all categories for filter sidebar
+    categories = Category.objects.all().order_by('name')
+    
+    # Pagination
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'products': products,
-        'query': query,
-        'sort': sort,
+        'products': page_obj,
+        'categories': categories,
+        'selected_category': category.id,
+        'category': category,
         'total_results': products.count(),
     }
     
-    return render(request, 'products/product_search.html', context)
-
-
-# Also update your product_list view if you want search there too
-def product_list(request):
-    """Display all products with optional search"""
-    products = Product.objects.filter(is_available=True)  # ← CHANGED: is_active to is_available
-    
-    # Handle search query
-    query = request.GET.get('q')
-    if query:
-        products = products.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(business__name__icontains=query)
-        ).distinct()
-    
-    context = {
-        'products': products,
-        'query': query,
-    }
-    return render(request, 'products/product_list.html', context)
+    return render(request, 'products/category_products.html', context)
